@@ -1,0 +1,20 @@
+langchain
+ollama
+neo4j
+sentence-transformers
+transformers
+peft accelerate
+duckdb
+autogluon
+autoviz
+python-dateutil
+lxml
+pypdf2
+python-docx
+openpyxl
+tesseract
+textblob
+gensim
+cryptography
+spacy
+# Add other necessary packages

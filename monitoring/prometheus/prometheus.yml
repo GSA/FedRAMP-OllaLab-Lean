@@ -1,0 +1,16 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'ollama'
+    static_configs:
+      - targets: ['ollama:8000']
+  - job_name: 'jupyter_lab'
+    static_configs:
+      - targets: ['jupyter_lab:8888']
+  - job_name: 'streamlit'
+    static_configs:
+      - targets: ['streamlit:8501']
+  - job_name: 'neo4j'
+    static_configs:
+      - targets: ['neo4j:7474']
