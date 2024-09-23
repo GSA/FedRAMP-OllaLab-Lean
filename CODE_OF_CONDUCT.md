@@ -1,4 +1,4 @@
-# Code of Conduct for OllaDeck
+# Code of Conduct for OllaLab
 
 ## Our Pledge
 
@@ -30,9 +30,9 @@ Examples of unacceptable behavior by participants include:
 
 As a project focused on AI security, we have additional ethical and legal responsibilities:
 
-1. **Responsible Disclosure**: If you discover vulnerabilities through the use of OllaDeck tools, practice responsible disclosure. Do not publicly disclose vulnerabilities without first notifying the affected parties and allowing reasonable time for mitigation.
+1. **Responsible Disclosure**: If you discover vulnerabilities through the use of OllaLab tools, practice responsible disclosure. Do not publicly disclose vulnerabilities without first notifying the affected parties and allowing reasonable time for mitigation.
 
-2. **Legal Compliance**: Ensure that your use of OllaDeck tools complies with all applicable local, national, and international laws and regulations. This includes, but is not limited to, data protection laws, computer misuse acts, and intellectual property rights.
+2. **Legal Compliance**: Ensure that your use of OllaLab tools complies with all applicable local, national, and international laws and regulations. This includes, but is not limited to, data protection laws, computer misuse acts, and intellectual property rights.
 
 3. **Ethical Red Teaming**: When conducting red team activities:
    - Obtain explicit permission before testing any system or AI model you do not own or have the right to test.
@@ -40,13 +40,13 @@ As a project focused on AI security, we have additional ethical and legal respon
    - Minimize potential damage or disruption to systems and data.
    - Maintain detailed records of your activities for accountability.
 
-4. **Data Privacy**: Respect individual privacy and data protection rights. Do not use OllaDeck tools to collect, process, or store personal data without proper authorization and safeguards.
+4. **Data Privacy**: Respect individual privacy and data protection rights. Do not use OllaLab tools to collect, process, or store personal data without proper authorization and safeguards.
 
-5. **Intellectual Property**: Respect the intellectual property rights of AI models and systems. Do not use OllaDeck tools to extract or replicate proprietary AI models without permission.
+5. **Intellectual Property**: Respect the intellectual property rights of AI models and systems. Do not use OllaLab tools to extract or replicate proprietary AI models without permission.
 
 6. **Transparency**: Be transparent about the use of AI and security tools, especially when interacting with end-users or subjects of security testing.
 
-7. **Bias and Fairness**: Work to identify and mitigate biases in AI systems, and do not use OllaDeck tools to perpetuate or exploit societal biases.
+7. **Bias and Fairness**: Work to identify and mitigate biases in AI systems, and do not use OllaLab tools to perpetuate or exploit societal biases.
 
 ## Our Responsibilities
 
@@ -66,12 +66,12 @@ Project maintainers who do not follow or enforce the Code of Conduct in good fai
 
 ## Acknowledgment and Agreement
 
-By participating in the OllaDeck project or cloning the OllaDeck repository, you acknowledge that you have read and agree to abide by this Code of Conduct. You understand the ethical and legal responsibilities associated with AI security tools and commit to using OllaDeck and its components responsibly and legally.
+By participating in the OllaLab project or cloning the OllaLab repository, you acknowledge that you have read and agree to abide by this Code of Conduct. You understand the ethical and legal responsibilities associated with AI security tools and commit to using OllaLab and its components responsibly and legally.
 
-Remember that the goal of OllaDeck is to improve the security and robustness of AI systems, not to cause harm or enable malicious activities. Always prioritize ethical considerations and legal compliance in your contributions and use of the project.
+Remember that the goal of OllaLab is to improve the security and robustness of AI systems, not to cause harm or enable malicious activities. Always prioritize ethical considerations and legal compliance in your contributions and use of the project.
 
 ## Amendments
 
 This Code of Conduct may be amended from time to time to address new ethical challenges or legal requirements in the rapidly evolving field of AI security. Contributors are encouraged to review this document periodically and raise any concerns or suggestions for improvement to the project maintainers.
 
-**Thank you for helping to make OllaDeck a safe, ethical, and legally compliant project for AI security research and development.**
+**Thank you for helping to make OllaLab a safe, ethical, and legally compliant project for AI security research and development.**
