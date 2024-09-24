@@ -3,7 +3,8 @@ ollama
 neo4j
 sentence-transformers
 transformers
-peft accelerate
+peft
+accelerate
 duckdb
 autogluon
 autoviz

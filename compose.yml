@@ -1,0 +1,144 @@
+services:
+  neo4j:
+    user: neo4j:neo4j
+    image: neo4j:5.23
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - ./volumes/neo4j:/data
+    environment:
+      - NEO4J_AUTH=neo4j/${NEO4J_PASSWORD}
+    healthcheck:
+        test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider localhost:7474 || exit 1"]
+        interval: 15s
+        timeout: 30s
+        retries: 10
+    networks:
+      - backend
+    restart: unless-stopped
+
+  ollama:
+    build: ./ollama
+    ports:
+      - "8000:11434"     # Expose Ollama's API port
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    volumes:
+      - ./volumes/ollama:/opt/ollama/models
+    networks:
+      - backend
+    restart: unless-stopped
+
+  jupyter_lab:
+    build: ./jupyter_lab
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./jupyter_lab/notebooks:/home/notebooks
+      - ./streamlit_app/app:/shared_app   # Shared volume with Streamlit
+    environment:
+      - JUPYTER_TOKEN=${JUPYTER_TOKEN}
+      - JUPYTER_ENABLE_LAB= "yes"
+      - NB_USER= "notebooks"
+      - NB_UID= 1000
+      - NB_GID= 100
+      - CHOWN_HOME= "yes"
+    networks:
+      - backend
+    depends_on:
+      - neo4j
+      - ollama
+    restart: unless-stopped
+
+  streamlit:
+    build: ./streamlit_app
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./streamlit_app/app:/app
+    environment:
+      - OLLAMA_HOST=ollama
+      - OLLAMA_PORT=8000
+    networks:
+      - backend
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - monitoring
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    volumes:
+      - ./volumes/grafana:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+    networks:
+      - monitoring
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.9.2
+    environment:
+      - discovery.type=single-node
+    volumes:
+      - ./volumes/elastic:/usr/share/elasticsearch/data
+    networks:
+      - logging
+    restart: unless-stopped
+    profiles:
+      - logging
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.9.2
+    volumes:
+      - ./logging/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    networks:
+      - logging
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+    profiles:
+      - logging
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.9.2
+    ports:
+      - "5601:5601"
+    networks:
+      - logging
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+    profiles:
+      - logging
+    
+
+networks:
+  backend:
+    driver: bridge
+  monitoring:
+    driver: bridge
+  logging:
+    driver: bridge
+

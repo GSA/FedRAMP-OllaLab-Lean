@@ -9,7 +9,7 @@
 [![Static Badge](https://img.shields.io/badge/release-0.1-green?style=flat&color=green)]()
 ![GitHub License](https://img.shields.io/github/license/GSA/FedRAMP-OllaLab-Lean)
 
-OllaLab-Lean is a lean Docker stack designed to help both novice and experienced developers rapidly set up and begin working on LLM-based projects. This is achievable via simplified environment configuration and a cohesive set of tools for Research and Development (R&D). The project includes several key components.
+OllaLab-Lean is a lean stack designed to help both novice and experienced developers rapidly set up and begin working on LLM-based projects. This is achievable via simplified environment configuration and a cohesive set of tools for Research and Development (R&D). The project includes several key components.
 - Pre-made prompt templates and applications to accelerate research and developments.
 - Ollama for managing local openweight Large Language Models (LLMs).
 - LangChain for orchestrating LLM pipelines, allowing users to seamlessly connect, manage, and optimize their workflows.
@@ -44,66 +44,121 @@ OllaLab-Lean supports most LLM and Data Science R&D activities. A few sample use
 - Use Jupyter Lab and the installed AutoML, AutoViz packages to efficiently execute Data Science/AI/ML tasks.
 
 ## Installation
-You should be familiar with the command line interface, have Docker,Git, and other supporting CLI tools installed. If you are planning to use nVidia GPUs, you should have installed all nVidia supporting software. We will provide a detailed pre-installation instruction focusing on nVidia supporting stack at a later time. For now, please check out [Installing Docker Desktop on Windows](https://docs.docker.com/desktop/install/windows-install/) or [Installing Docker Desktop on MAC](https://docs.docker.com/desktop/install/mac-install/) if you don't have it installed. The below installation steps passed the test for AMD64 architecture, 12GB nVidia GPU, and Docker Compose for Widows on WSL2.
+You should be familiar with the command line interface, have Docker or Podman, Git, and other supporting CLI tools installed. If you are planning to use nVidia GPUs, you should have installed all nVidia supporting software. We will provide a detailed pre-installation instruction focusing on nVidia supporting stack at a later time.
 
-1. Test if Docker and Docker Compose are running
+For installing Docker, please check out [Installing Docker Desktop on Windows](https://docs.docker.com/desktop/install/windows-install/) or [Installing Docker Desktop on MAC](https://docs.docker.com/desktop/install/mac-install/).
+
+For installing Podman, please check out [Podman Desktop Download](https://podman-desktop.io/downloads) and follow the Podman's installation instructions to properly set up both Podman and [Podman Compose](https://podman-desktop.io/docs/compose/setting-up-compose).
+
+The below installation steps passed the test for AMD64 architecture, 12GB nVidia GPU, and Docker Compose for Windows on WSL2.
+
+1. Test for installed Container management
+
+Test for Docker and Docker Compose with the following commands
 ```
 docker --version
 docker info
 docker-compose --version
 ```
-2. Clean up Docker (optional but recommended)
+Test for Podman and Podman Compose with the following commands
+```
+podman version
+podman compose version
+```
+
+2. Clean up Container Management System (optional but recommended)
+
+To clean up Docker 
 ```
 docker system prune -f
 docker rmi -f $(docker images -a -q)
 ```
+To clean up Podman
+```
+podman container prune
+podman image prune
+podman volume prune
+podman network prune
+```
+There are also [Podman System Prune](https://docs.podman.io/en/stable/markdown/podman-system-prune.1.html)
+
 3. Clone this repository to your selected current working folder
 ```
 git clone https://github.com/GSA/FedRAMP-OllaLab-Lean.git
 ```
 4. Rename the "env.sample" file to ".env". Change the default password/token/secret/salt values in the ***.env*** file
-5. Build the Docker Compose project
-with cache
+5. Build the project
+
+If you are using Podman, you can skip this step.
+
+If you are using Docker Compose:
+
+- Build with cache
 ```
 docker-compose build
 ```
-or without cache (recommended)
+- Build without cache (recommended)
 ```
 docker-compose build --no-cache
 ```
-6. Run the Docker Compose project
-with Default Services only (recommended for the lean-est stack)
+
+6. Run the compose project project
+
+The below commands are for Docker Compose. If you use Podman, substitude "docker-compose" with "podman compose"
+
+Run the stack with Default Services only (recommended for the lean-est stack)
 ```
 docker-compose up
 ```
-with Default Services and Monitoring Services
+Run the stack with Default Services and Monitoring Services
 ```
 docker-compose --profile monitoring up
 ```
-with Default Services and Logging Services
+Run the stack with Default Services and Logging Services
 ```
 docker-compose --profile logging up
 ```
-with Default Services, Monitoring Services, and Logging Services
+Run the stack with Default Services, Monitoring Services, and Logging Services
 ```
 docker-compose --profile monitoring --profile logging up
 ```
 7. Verify the set up
+
 Your running stack should look similar to this
-![OllaLab-Lean Default Stack](./images/OllaLab-Lean-Default.jpg "OllaLab-Lean Default Stack")
+
+In Docker Desktop
+![OllaLab-Lean Default Stack In Docker Desktop](./images/OllaLab-Lean-Default.jpg "OllaLab-Lean Default Stack In Docker Desktop")
+
+In Podman Desktop
+![OllaLab-Lean Default Stack In Podman Desktop](./images/OllaLab-Lean-Default-Podman.jpg "OllaLab-Lean Default Stack In Podman Desktop")
 
 8. Download llama3.1:8b
-If you are using Docker Desktop, you can click on the Ollama instance and get to the "Exec" tab to get to the instance CLI. In the CLI, run:
+
+If you are using Docker Desktop, you can click on the Ollama instance and get to the "Exec" tab to get to the instance CLI. If you are using Podman Desktop, choose Containers tab, click "Ollama" container, and then choose the "Terminal" tab.
+
+In the CLI, run:
 ```
 ollama pull llama3.1:8b
 ```
+A successful model pull looks similar to this in Podman
+![Successful model pull](./images/model-pull.jpg "Successful model pull")
+
 After it is done, run the following command and verify if **llama3.1:8b** was successfully pulled.
 ```
 ollama list
 ```
 You may pull other models and interact with them via the CLI. However, **llama3.1:8b** must be pulled for the provided Streamlit apps to work. In the next release, we will allow the Streamlit apps to ask you for which LLMs you want to work with.
 
+9. Run the Simple Chat web app
+
+Go to localhost:8501/Simple_Chat to chat with the LLM. Please note:
+- You may need to go to host.docker.internal:8501/Simple_Chat
+- If you have no GPU, getting chat bot responses may take a while depending on your computer hardware.
+- If you have GPU, you may need to do pre-installation step to make sure Docker Desktop or Podman Desktop can leverage the GPU. Once it is done, chat bot response speed should be significantly faster.
+- If your pulled model size is greater than the available GPU-ram capacity, Docker Desktop or Podman Desktop may not use the GPU for LLM inference.
+
 ## Planned Items
+- Add tutorials for advanced usecases of the OllaLab-Lean stack
 - Add more prompt templates for R&D
 - Adjust the Jupyter Notebooks to be compatible with OllaLab-Lean stack
 - Add LLM-based JSON extractor app
