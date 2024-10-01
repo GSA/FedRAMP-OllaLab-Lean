@@ -102,6 +102,13 @@ docker-compose build
 docker-compose build --no-cache
 ```
 
+**NOTE:** If you use [`podman-compose`](https://github.com/containers/podman-compose) in place of [`docker-compose`](https://github.com/docker/compose), you will need to explicitly configure `podman-compose` to interpret the `Dockerfile`s as the Docker format, not the standard OCI format, to properly to process `CMD-SHELL`, `HEALTHCHECK`, and `SHELL` directives by running the commands like below.
+
+```
+podman compose --podman-build-args='--format docker' build
+podman compose --podman-build-args='--format docker' build --no-cache
+```
+
 6. Run the compose project project
 
 The below commands are for Docker Compose. If you use Podman, substitude "docker-compose" with "podman compose"
