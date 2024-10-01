@@ -134,9 +134,11 @@ docker-compose --profile monitoring --profile logging up
 Your running stack should look similar to this
 
 In Docker Desktop
+
 ![OllaLab-Lean Default Stack In Docker Desktop](./images/OllaLab-Lean-Default.jpg "OllaLab-Lean Default Stack In Docker Desktop")
 
 In Podman Desktop
+
 ![OllaLab-Lean Default Stack In Podman Desktop](./images/OllaLab-Lean-Default-Podman.jpg "OllaLab-Lean Default Stack In Podman Desktop")
 
 8. Download llama3.1:8b
@@ -148,6 +150,7 @@ In the CLI, run:
 ollama pull llama3.1:8b
 ```
 A successful model pull looks similar to this in Podman
+
 ![Successful model pull](./images/model-pull.jpg "Successful model pull")
 
 After it is done, run the following command and verify if **llama3.1:8b** was successfully pulled.
@@ -189,7 +192,9 @@ OllaLab_Lean/
 │   ├── Dockerfile
 │   ├── app/
 │   │   ├── main.py             # Streamlit app home
-│   │   └── pages/      
+│   │   ├── data_unificator     # Data Unificator app folder
+│   │   └── pages/     
+│   │       ├── Data_Unificator # App to merge data source files 
 │   │       ├── folder_chat/    # Storing folders created by Folder Chat app
 │   │       ├── Folder_Chat.py  # App to chat with a folder's content
 │   │       ├── API_Chat.py     # App to chat with requested API data (underdevelopment)
@@ -197,23 +202,14 @@ OllaLab_Lean/
 │   │       └── Git_Chat.py      # Chat with a git repository    
 │   └── requirements.txt
 ├── ollama/                     # LLM management and inference API
-│   ├── Dockerfile
-│   └── scripts/
-│       └── entrypoint.sh       # Script to load LLM model
 ├── monitoring/
 │   ├── prometheus/
-│   │   └── prometheus.yml
 │   └── grafana/
-│       └── provisioning/
-│           ├── dashboards/
-│           └── datasources/
 ├── logging/
 │   ├── elasticsearch/
 │   ├── logstash/
-│   │   └── logstash.conf
 │   └── kibana/
 ├── tests/
-│   └── test_services.py
 ├── scripts/
 │   └── firewall_rules.sh       # Host-level firewall configurations
 └── .gitignore
