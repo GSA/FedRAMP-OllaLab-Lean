@@ -271,7 +271,15 @@ The promt template is:
 
 {{section requirements}} is the requirements specific to a section such as
 ```
-
+    Data Normalization
+        The application shall standardize data formats (e.g., dates, numbers, text casing) to ensure consistency.
+        It shall handle different data types and convert them into a unified format.
+        Standardize units of measurement such as time, currency, etc.
+        Detect extreme outliers and ask user for selecting action such as capping, removal, or transformation.
+        Allow user to select fields and apply a common scale (ie. 0-1 range, z-score normalization).
+        Allow user to aggregate new fields from existing fields.
+        Allow user to remove fields.
+        Standardize text encoding.
 ```
 
 ## Step 7 - Final Check Prompt
