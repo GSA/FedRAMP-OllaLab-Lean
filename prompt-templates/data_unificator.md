@@ -4,7 +4,7 @@ This document will guide you through the steps of working with LLMs to build a p
 ## Step 1 - Define and Refine The Project's Problem Statement
 Prompt for the project's refined problem statement
 ```
-I have the following problem statement: data intakes are being supported by multiple google forms, there is a problem with unifying and normalizing gathered data from multiple google forms with potential overlaps among them.
+I have the following problem statement: data intakes are being supported by multiple google forms, there is a problem with unifying and normalizing gathered data from multiple data source files with potential overlaps among them.
 Give me an improved problem statement considering the following guiding questions:
 What are the key components and aspects of the problem statement?
 What potential ambiguities or unclear elements exist in the current problem statement?
