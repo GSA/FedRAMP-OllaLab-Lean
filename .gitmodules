@@ -1,3 +1,0 @@
-[submodule "streamlit_app/app/datasets/defect_dojo"]
-	path = streamlit_app/app/datasets/defect_dojo
-	url = https://github.com/DefectDojo/sample-scan-files.git
