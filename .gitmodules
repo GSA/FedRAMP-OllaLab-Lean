@@ -1,3 +1,0 @@
-[submodule "streamlit_app/app/datasets/security_scans"]
-	path = streamlit_app/app/datasets/security_scans
-	url = https://github.com/Cybonto/DefectDojo.git
