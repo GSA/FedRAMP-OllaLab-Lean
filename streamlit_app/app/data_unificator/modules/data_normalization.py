@@ -2,6 +2,7 @@
 
 import pandas as pd
 from multiprocessing import Pool
+import logging
 from data_unificator.utils.normalization_utils import (
     standardize_formats,
     handle_data_types,

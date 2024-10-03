@@ -1,6 +1,7 @@
 # modules/data_mapping.py
 
 import pandas as pd
+import logging
 from data_unificator.utils.mapping_utils import (
     extract_fields_metadata,
     identify_overlaps,

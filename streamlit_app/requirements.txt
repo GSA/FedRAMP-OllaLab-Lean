@@ -19,5 +19,6 @@ textblob
 gensim
 cryptography
 spacy
+IPython
 # Add other necessary packages
 # the packages should be identical to those for jupyter_lab

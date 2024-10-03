@@ -2,18 +2,17 @@
 
 import logging
 import os
-from data_unificator.config import ConfigManager
 
-config_manager = ConfigManager()
-
-log_level = getattr(logging, config_manager.get('logging', 'log_level', 'INFO').upper(), logging.INFO)
-log_file = config_manager.get('logging', 'log_file', 'logs/app.log')
-
-logging.basicConfig(
-    filename=log_file,
-    level=log_level,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
+def configure_logging(log_level=logging.INFO, log_file='logs/data_unificator_app.log'):
+    """
+    Configure logging settings.
+    """
+    os.makedirs(os.path.dirname(log_file), exist_ok=True)
+    logging.basicConfig(
+        filename=log_file,
+        level=log_level,
+        format='%(asctime)s - %(levelname)s - %(message)s'
+    )
 
 def log_event(message):
     logging.info(message)

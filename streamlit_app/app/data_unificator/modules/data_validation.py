@@ -1,6 +1,7 @@
 # modules/data_validation.py
 
 import pandas as pd
+import logging
 from data_unificator.utils.validation_utils import (
     validate_completeness,
     validate_correctness,

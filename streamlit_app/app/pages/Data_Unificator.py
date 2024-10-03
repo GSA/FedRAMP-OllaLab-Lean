@@ -8,29 +8,23 @@ from streamlit.logger import get_logger
 import multiprocessing
 import logging
 import sys
+
+from data_unificator.config import ConfigManager
+from data_unificator.utils.logging_utils import configure_logging
+
+# Initialize ConfigManager
+config_manager = ConfigManager()
+# Configure logging using settings from ConfigManager
+log_level = getattr(logging, config_manager.get('logging', 'log_level', 'INFO').upper(), logging.INFO)
+log_file = config_manager.get('logging', 'log_file', 'logs/data_unificator_app.log')
+configure_logging(log_level=log_level, log_file=log_file)
+
 from data_unificator.components import import_ui, mapping_ui, normalization_ui, deduplication_ui, validation_ui
-from modules import audit_trail
+from data_unificator.audits import audit_trail
+from data_unificator.utils.exception_utils import setup_global_exception_handler
 
-# Configure logging
-logger = get_logger(__name__)
-logging.basicConfig(
-    filename='logs/data_unificator_app.log',
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
-
-# Implement global exception handling
-def handle_uncaught_exception(exc_type, exc_value, exc_traceback):
-    if issubclass(exc_type, KeyboardInterrupt):
-        # Allow user to interrupt the program
-        sys.__excepthook__(exc_type, exc_value, exc_traceback)
-        return
-    logger.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
-    st.error("An unexpected error occurred. Please check the logs for more details.")
-    st.exception(exc_value)
-    st.stop()
-
-sys.excepthook = handle_uncaught_exception
+# Set up global exception handler
+setup_global_exception_handler()
 
 # Main application
 def main():

@@ -2,6 +2,7 @@
 
 import os
 import pandas as pd
+import logging
 from multiprocessing import Pool
 from data_unificator.utils.file_utils import (
     get_supported_files,

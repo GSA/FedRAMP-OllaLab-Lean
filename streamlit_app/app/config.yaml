@@ -1,0 +1,30 @@
+audit_trail:
+  audit_file: logs/audit.log
+data_deduplication:
+  similarity_threshold: 0.8
+data_import:
+  default_encoding: utf-8
+  supported_formats:
+  - .csv
+  - .json
+  - .xlsx
+  - .xls
+  - .xml
+  - .parquet
+  - .tsv
+data_mapping:
+  mapping_version: 1
+data_normalization:
+  scaling_methods:
+  - Min-Max Scaling (0-1)
+  - Z-score Normalization
+data_validation:
+  allowed_statuses:
+  - Active
+  - Inactive
+  - Pending
+database:
+  connection_string: ''
+logging:
+  log_file: logs/app.log
+  log_level: INFO

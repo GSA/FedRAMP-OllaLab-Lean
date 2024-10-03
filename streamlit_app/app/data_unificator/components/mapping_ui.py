@@ -2,9 +2,9 @@
 
 import streamlit as st
 from streamlit.logger import get_logger
-from modules.data_mapping import DataMapper
-from audits.audit_trail import record_action
-from utils.mapping_utils import verify_data_types
+from data_unificator.modules.data_mapping import DataMapper
+from data_unificator.audits.audit_trail import record_action
+from data_unificator.utils.mapping_utils import verify_data_types
 import traceback
 
 logger = get_logger(__name__)

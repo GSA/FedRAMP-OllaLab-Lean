@@ -2,6 +2,7 @@
 
 import pandas as pd
 from multiprocessing import Pool
+import logging
 from data_unificator.utils.deduplication_utils import (
     detect_duplicates,
     eliminate_duplicates,
