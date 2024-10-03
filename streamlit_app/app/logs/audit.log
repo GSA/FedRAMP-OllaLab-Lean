@@ -1,2 +1,151 @@
 2024-10-03T01:51:20.128705 - Selected Step: Data Import
 2024-10-03T01:51:20.133319 - Number of Workers: 1
+2024-10-03T14:18:33.708229 - Selected Step: Data Import
+2024-10-03T14:18:33.711780 - Number of Workers: 1
+2024-10-03T15:17:32.696088 - User initiated import for 2 files from 'app_data/data_unificator'
+2024-10-03T15:17:32.719796 - Detected encoding 'UTF-8-SIG' for file 'app_data/data_unificator/appspider.xml'
+2024-10-03T15:17:32.986184 - Error importing file 'app_data/data_unificator/appspider.xml': 'tuple' object has no attribute 'columns'
+2024-10-03T15:17:33.007911 - Detected encoding 'ascii' for file 'app_data/data_unificator/burpvulns.xml'
+2024-10-03T15:17:33.024866 - Error importing file 'app_data/data_unificator/burpvulns.xml': 'tuple' object has no attribute 'columns'
+2024-10-03T15:28:34.001846 - Selected Step: Data Import
+2024-10-03T15:28:34.005535 - Number of Workers: 1
+2024-10-03T15:28:38.841510 - User initiated import for 2 files from 'app_data/data_unificator'
+2024-10-03T15:28:38.862608 - Detected encoding 'UTF-8-SIG' for file 'app_data/data_unificator/appspider.xml'
+2024-10-03T15:28:38.919450 - Missing data found in file 'app_data/data_unificator/appspider.xml': {'AppVersion': 10, 'ScanName': 10, 'ScanStarted': 10, 'ScanDuration': 10, 'ScanEnded': 10, 'UTCOffset': 10, 'ResourcesCrawled': 10, 'NumberOfRequests': 10, 'NumberOfFailedRequests': 10, 'Vuln': 10}
+2024-10-03T15:28:38.935421 - Detected encoding 'ascii' for file 'app_data/data_unificator/burpvulns.xml'
+2024-10-03T15:28:38.951962 - Missing data found in file 'app_data/data_unificator/burpvulns.xml': {'serialNumber': 0, 'type': 0, 'name': 0, 'host': 0, 'path': 0, 'location': 0, 'severity': 0, 'confidence': 0, 'issueDetail': 8, 'issueBackground': 5, 'remediationBackground': 7, 'remediationDetail': 15, 'references': 13, 'vulnerabilityClassifications': 12, 'collaboratorEvent': 16}
+2024-10-03T15:28:39.108925 - Data import completed successfully.
+2024-10-03T15:29:53.415081 - User initiated import for 2 files from 'app_data/data_unificator'
+2024-10-03T15:29:53.432632 - Detected encoding 'UTF-8-SIG' for file 'app_data/data_unificator/appspider.xml'
+2024-10-03T15:29:53.475042 - Missing data found in file 'app_data/data_unificator/appspider.xml': {'AppVersion': 10, 'ScanName': 10, 'ScanStarted': 10, 'ScanDuration': 10, 'ScanEnded': 10, 'UTCOffset': 10, 'ResourcesCrawled': 10, 'NumberOfRequests': 10, 'NumberOfFailedRequests': 10, 'Vuln': 10}
+2024-10-03T15:29:53.491280 - Detected encoding 'ascii' for file 'app_data/data_unificator/burpvulns.xml'
+2024-10-03T15:29:53.512943 - Missing data found in file 'app_data/data_unificator/burpvulns.xml': {'serialNumber': 0, 'type': 0, 'name': 0, 'host': 0, 'path': 0, 'location': 0, 'severity': 0, 'confidence': 0, 'issueDetail': 8, 'issueBackground': 5, 'remediationBackground': 7, 'remediationDetail': 15, 'references': 13, 'vulnerabilityClassifications': 12, 'collaboratorEvent': 16}
+2024-10-03T15:29:53.530029 - Data import completed successfully.
+2024-10-03T16:10:07.083597 - Selected Step: Data Import
+2024-10-03T16:10:07.088374 - Number of Workers: 1
+2024-10-03T16:15:55.378028 - Selected Step: Data Import
+2024-10-03T16:15:55.380587 - Number of Workers: 1
+2024-10-03T16:18:01.718269 - Selected Step: Data Import
+2024-10-03T16:18:01.721223 - Number of Workers: 1
+2024-10-03T16:18:08.762532 - User initiated import for 2 files from 'app_data/data_unificator'
+2024-10-03T16:18:08.783068 - Detected encoding 'UTF-8-SIG' for file 'app_data/data_unificator/appspider.xml'
+2024-10-03T16:18:08.828720 - Missing data found in file 'app_data/data_unificator/appspider.xml': {'AppVersion': 10, 'ScanName': 10, 'ScanStarted': 10, 'ScanDuration': 10, 'ScanEnded': 10, 'UTCOffset': 10, 'ResourcesCrawled': 10, 'NumberOfRequests': 10, 'NumberOfFailedRequests': 10, 'Vuln': 10}
+2024-10-03T16:18:08.845589 - Detected encoding 'ascii' for file 'app_data/data_unificator/burpvulns.xml'
+2024-10-03T16:18:08.864483 - Missing data found in file 'app_data/data_unificator/burpvulns.xml': {'serialNumber': 0, 'type': 0, 'name': 0, 'host': 0, 'path': 0, 'location': 0, 'severity': 0, 'confidence': 0, 'issueDetail': 8, 'issueBackground': 5, 'remediationBackground': 7, 'remediationDetail': 15, 'references': 13, 'vulnerabilityClassifications': 12, 'collaboratorEvent': 16}
+2024-10-03T16:18:08.890224 - Data import completed successfully.
+2024-10-03T16:18:29.000009 - User initiated import for 2 files from 'app_data/data_unificator'
+2024-10-03T16:18:29.017502 - Detected encoding 'UTF-8-SIG' for file 'app_data/data_unificator/appspider.xml'
+2024-10-03T16:18:29.059574 - Missing data found in file 'app_data/data_unificator/appspider.xml': {'AppVersion': 10, 'ScanName': 10, 'ScanStarted': 10, 'ScanDuration': 10, 'ScanEnded': 10, 'UTCOffset': 10, 'ResourcesCrawled': 10, 'NumberOfRequests': 10, 'NumberOfFailedRequests': 10, 'Vuln': 10}
+2024-10-03T16:18:29.074812 - Detected encoding 'ascii' for file 'app_data/data_unificator/burpvulns.xml'
+2024-10-03T16:18:29.097734 - Missing data found in file 'app_data/data_unificator/burpvulns.xml': {'serialNumber': 0, 'type': 0, 'name': 0, 'host': 0, 'path': 0, 'location': 0, 'severity': 0, 'confidence': 0, 'issueDetail': 8, 'issueBackground': 5, 'remediationBackground': 7, 'remediationDetail': 15, 'references': 13, 'vulnerabilityClassifications': 12, 'collaboratorEvent': 16}
+2024-10-03T16:18:29.120157 - Data import completed successfully.
+2024-10-03T16:26:25.741847 - Selected Step: Data Import
+2024-10-03T16:26:25.745526 - Number of Workers: 1
+2024-10-03T16:26:29.244502 - User initiated import for 2 files from 'app_data/data_unificator'
+2024-10-03T16:26:29.266034 - Detected encoding 'UTF-8-SIG' for file 'app_data/data_unificator/appspider.xml'
+2024-10-03T16:26:29.308877 - Missing data found in file 'app_data/data_unificator/appspider.xml': {'AppVersion': 10, 'ScanName': 10, 'ScanStarted': 10, 'ScanDuration': 10, 'ScanEnded': 10, 'UTCOffset': 10, 'ResourcesCrawled': 10, 'NumberOfRequests': 10, 'NumberOfFailedRequests': 10, 'Vuln': 10}
+2024-10-03T16:26:29.323679 - Detected encoding 'ascii' for file 'app_data/data_unificator/burpvulns.xml'
+2024-10-03T16:26:29.345005 - Missing data found in file 'app_data/data_unificator/burpvulns.xml': {'serialNumber': 0, 'type': 0, 'name': 0, 'host': 0, 'path': 0, 'location': 0, 'severity': 0, 'confidence': 0, 'issueDetail': 8, 'issueBackground': 5, 'remediationBackground': 7, 'remediationDetail': 15, 'references': 13, 'vulnerabilityClassifications': 12, 'collaboratorEvent': 16}
+2024-10-03T16:26:29.368501 - Data import completed successfully.
+2024-10-03T16:28:42.796402 - Selected Step: Data Import
+2024-10-03T16:28:42.800129 - Number of Workers: 1
+2024-10-03T16:28:45.509252 - User initiated import for 2 files from 'app_data/data_unificator'
+2024-10-03T16:28:45.528234 - Detected encoding 'UTF-8-SIG' for file 'app_data/data_unificator/appspider.xml'
+2024-10-03T16:28:45.576528 - Missing data found in file 'app_data/data_unificator/appspider.xml': {'AppVersion': 10, 'ScanName': 10, 'ScanStarted': 10, 'ScanDuration': 10, 'ScanEnded': 10, 'UTCOffset': 10, 'ResourcesCrawled': 10, 'NumberOfRequests': 10, 'NumberOfFailedRequests': 10, 'Vuln': 10}
+2024-10-03T16:28:45.593756 - Detected encoding 'ascii' for file 'app_data/data_unificator/burpvulns.xml'
+2024-10-03T16:28:45.615817 - Missing data found in file 'app_data/data_unificator/burpvulns.xml': {'serialNumber': 0, 'type': 0, 'name': 0, 'host': 0, 'path': 0, 'location': 0, 'severity': 0, 'confidence': 0, 'issueDetail': 8, 'issueBackground': 5, 'remediationBackground': 7, 'remediationDetail': 15, 'references': 13, 'vulnerabilityClassifications': 12, 'collaboratorEvent': 16}
+2024-10-03T16:28:45.639694 - Data import completed successfully.
+2024-10-03T16:28:55.405283 - Data import completed successfully.
+2024-10-03T16:29:05.124872 - Data import completed successfully.
+2024-10-03T16:29:15.571966 - Data import completed successfully.
+2024-10-03T16:29:18.140176 - Strategy not implemented: Manual Input strategy is not implemented.
+2024-10-03T16:29:18.193047 - Strategy not implemented: Manual Input strategy is not implemented.
+2024-10-03T16:29:18.197234 - Data import completed successfully.
+2024-10-03T16:29:39.086350 - Data import completed successfully.
+2024-10-03T16:29:42.160545 - Data import completed successfully.
+2024-10-03T16:29:45.049134 - Applied 'Statistical Imputation' strategy to 'appspider.xml'
+2024-10-03T16:29:45.130444 - Applied 'Statistical Imputation' strategy to 'burpvulns.xml'
+2024-10-03T16:29:45.134290 - Data import completed successfully.
+2024-10-03T16:29:56.920753 - Selected Step: Data Mapping
+2024-10-03T16:29:56.924711 - Number of Workers: 1
+2024-10-03T16:29:56.930323 - Identified overlapping fields.
+2024-10-03T16:29:56.935704 - User established source hierarchy and weights.
+2024-10-03T16:30:06.863703 - Extracted metadata from 'appspider.xml'
+2024-10-03T16:30:06.868198 - Extracted metadata from 'burpvulns.xml'
+2024-10-03T16:30:06.872054 - User extracted fields and metadata.
+2024-10-03T16:30:06.880292 - Identified overlapping fields.
+2024-10-03T16:30:06.884653 - User viewed overlapping fields.
+2024-10-03T16:30:06.889787 - User established source hierarchy and weights.
+2024-10-03T17:16:57.443321 - Selected Step: Data Import
+2024-10-03T17:16:57.448235 - Number of Workers: 1
+2024-10-03T17:16:57.474113 - Data import completed successfully.
+2024-10-03T17:17:56.560394 - Selected Step: Data Import
+2024-10-03T17:17:56.564237 - Number of Workers: 1
+2024-10-03T17:17:56.585065 - Data import completed successfully.
+2024-10-03T18:33:59.290121 - Selected Step: Data Import
+2024-10-03T18:33:59.294142 - Number of Workers: 1
+2024-10-03T18:34:02.576122 - User initiated import for 2 files from 'app_data/data_unificator'
+2024-10-03T18:34:02.593360 - Detected encoding 'UTF-8-SIG' for file 'app_data/data_unificator/appspider.xml'
+2024-10-03T18:34:02.633882 - Missing data found in file 'app_data/data_unificator/appspider.xml': {'AppVersion': 10, 'ScanName': 10, 'ScanStarted': 10, 'ScanDuration': 10, 'ScanEnded': 10, 'UTCOffset': 10, 'ResourcesCrawled': 10, 'NumberOfRequests': 10, 'NumberOfFailedRequests': 10, 'Vuln': 10}
+2024-10-03T18:34:02.650199 - Detected encoding 'ascii' for file 'app_data/data_unificator/burpvulns.xml'
+2024-10-03T18:34:02.676977 - Missing data found in file 'app_data/data_unificator/burpvulns.xml': {'issueDetail': 8, 'issueBackground': 5, 'remediationBackground': 7, 'remediationDetail': 15, 'references': 13, 'vulnerabilityClassifications': 12, 'collaboratorEvent': 16}
+2024-10-03T18:34:02.697245 - Data import completed successfully.
+2024-10-03T18:34:39.430029 - Data import completed successfully.
+2024-10-03T18:35:13.098991 - Data import completed successfully.
+2024-10-03T18:35:14.718417 - Data import completed successfully.
+2024-10-03T18:35:55.155324 - Data import completed successfully.
+2024-10-03T18:35:57.582640 - Data import completed successfully.
+2024-10-03T18:37:26.506483 - Data import completed successfully.
+2024-10-03T18:56:56.634257 - Selected Step: Data Import
+2024-10-03T18:56:56.639160 - Number of Workers: 1
+2024-10-03T18:57:01.020625 - User initiated import for 2 files from 'app_data/data_unificator'
+2024-10-03T18:57:01.038670 - Detected encoding 'UTF-8-SIG' for file 'app_data/data_unificator/appspider.xml'
+2024-10-03T18:57:01.086576 - Missing data found in file 'app_data/data_unificator/appspider.xml': {'AppVersion': 10, 'ScanName': 10, 'ScanStarted': 10, 'ScanDuration': 10, 'ScanEnded': 10, 'UTCOffset': 10, 'ResourcesCrawled': 10, 'NumberOfRequests': 10, 'NumberOfFailedRequests': 10, 'Vuln': 10}
+2024-10-03T18:57:01.103285 - Detected encoding 'ascii' for file 'app_data/data_unificator/burpvulns.xml'
+2024-10-03T18:57:01.126111 - Missing data found in file 'app_data/data_unificator/burpvulns.xml': {'issueDetail': 8, 'issueBackground': 5, 'remediationBackground': 7, 'remediationDetail': 15, 'references': 13, 'vulnerabilityClassifications': 12, 'collaboratorEvent': 16}
+2024-10-03T18:57:01.145253 - Data import completed successfully.
+2024-10-03T18:58:15.664066 - Data import completed successfully.
+2024-10-03T18:58:34.949403 - Data import completed successfully.
+2024-10-03T21:04:16.510956 - Selected Step: Data Import
+2024-10-03T21:04:16.514611 - Number of Workers: 1
+2024-10-03T21:04:19.543872 - User initiated import for 2 files from 'app_data/data_unificator'
+2024-10-03T21:04:19.584701 - Detected encoding 'UTF-8-SIG' for file 'app_data/data_unificator/appspider.xml'
+2024-10-03T21:04:19.626141 - Missing data found in file 'app_data/data_unificator/appspider.xml': {'AppVersion': 10, 'ScanName': 10, 'ScanStarted': 10, 'ScanDuration': 10, 'ScanEnded': 10, 'UTCOffset': 10, 'ResourcesCrawled': 10, 'NumberOfRequests': 10, 'NumberOfFailedRequests': 10, 'Vuln': 10}
+2024-10-03T21:04:19.661679 - Detected encoding 'ascii' for file 'app_data/data_unificator/burpvulns.xml'
+2024-10-03T21:04:19.679651 - Missing data found in file 'app_data/data_unificator/burpvulns.xml': {'issueDetail': 8, 'issueBackground': 5, 'remediationBackground': 7, 'remediationDetail': 15, 'references': 13, 'vulnerabilityClassifications': 12, 'collaboratorEvent': 16}
+2024-10-03T21:04:19.697549 - Data import completed successfully.
+2024-10-03T21:15:34.040910 - Selected Step: Data Import
+2024-10-03T21:15:34.044842 - Number of Workers: 1
+2024-10-03T21:15:36.802012 - User initiated import for 2 files from 'app_data/data_unificator'
+2024-10-03T21:15:36.824023 - Detected encoding 'UTF-8-SIG' for file 'app_data/data_unificator/appspider.xml'
+2024-10-03T21:15:36.868026 - Error importing file 'app_data/data_unificator/appspider.xml': name 'find_discrepancies' is not defined
+2024-10-03T21:15:36.896641 - Detected encoding 'ascii' for file 'app_data/data_unificator/burpvulns.xml'
+2024-10-03T21:15:36.913360 - Error importing file 'app_data/data_unificator/burpvulns.xml': name 'find_discrepancies' is not defined
+2024-10-03T21:15:36.928128 - Data import completed successfully.
+2024-10-03T21:16:46.026982 - Selected Step: Data Import
+2024-10-03T21:16:46.031481 - Number of Workers: 1
+2024-10-03T21:16:48.712383 - User initiated import for 2 files from 'app_data/data_unificator'
+2024-10-03T21:16:48.729644 - Detected encoding 'UTF-8-SIG' for file 'app_data/data_unificator/appspider.xml'
+2024-10-03T21:16:48.775975 - Error importing file 'app_data/data_unificator/appspider.xml': name 'find_discrepancies' is not defined
+2024-10-03T21:16:48.805903 - Detected encoding 'ascii' for file 'app_data/data_unificator/burpvulns.xml'
+2024-10-03T21:16:48.826143 - Error importing file 'app_data/data_unificator/burpvulns.xml': name 'find_discrepancies' is not defined
+2024-10-03T21:16:48.847749 - Data import completed successfully.
+2024-10-03T21:22:33.814247 - Selected Step: Data Import
+2024-10-03T21:22:33.818470 - Number of Workers: 1
+2024-10-03T21:22:36.987171 - User initiated import for 2 files from 'app_data/data_unificator'
+2024-10-03T21:22:37.029779 - Error importing file 'app_data/data_unificator/appspider.xml': name 'log_event' is not defined
+2024-10-03T21:22:37.068292 - Error importing file 'app_data/data_unificator/burpvulns.xml': name 'log_event' is not defined
+2024-10-03T21:22:37.086870 - Data import completed successfully.
+2024-10-03T21:26:15.093353 - Selected Step: Data Import
+2024-10-03T21:26:15.098497 - Number of Workers: 1
+2024-10-03T21:26:18.058592 - User initiated import for 2 files from 'app_data/data_unificator'
+2024-10-03T21:26:18.111877 - Detected encoding 'UTF-8-SIG' for file 'app_data/data_unificator/appspider.xml'
+2024-10-03T21:26:18.162260 - Missing data found in file 'app_data/data_unificator/appspider.xml': {'AppVersion': 10, 'ScanName': 10, 'ScanStarted': 10, 'ScanDuration': 10, 'ScanEnded': 10, 'UTCOffset': 10, 'ResourcesCrawled': 10, 'NumberOfRequests': 10, 'NumberOfFailedRequests': 10, 'Vuln': 10}
+2024-10-03T21:26:18.202427 - Detected encoding 'ascii' for file 'app_data/data_unificator/burpvulns.xml'
+2024-10-03T21:26:18.223184 - Missing data found in file 'app_data/data_unificator/burpvulns.xml': {'issueDetail': 8, 'issueBackground': 5, 'remediationBackground': 7, 'remediationDetail': 15, 'references': 13, 'vulnerabilityClassifications': 12, 'collaboratorEvent': 16}
+2024-10-03T21:26:18.257609 - Data import completed successfully.
+2024-10-03T21:26:54.948156 - Data import completed successfully.
+2024-10-03T21:27:00.757151 - Data import completed successfully.
+2024-10-03T21:27:09.883009 - Applied missing data strategy to 'appspider.xml'
+2024-10-03T21:27:09.970631 - Applied missing data strategy to 'burpvulns.xml'
+2024-10-03T21:27:09.974488 - Data import completed successfully.

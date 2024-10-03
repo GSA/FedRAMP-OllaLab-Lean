@@ -1,3 +1,5 @@
+# Data_Unificator.py
+
 app_version = "0.1"
 app_title = "OllaLab - Data Unificator"
 app_description = "Unify datasets stored in a local folder."
@@ -25,6 +27,9 @@ from data_unificator.utils.exception_utils import setup_global_exception_handler
 
 # Set up global exception handler
 setup_global_exception_handler()
+
+# Define logger
+logger = logging.getLogger(__name__)
 
 # Main application
 def main():

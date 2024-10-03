@@ -20,5 +20,8 @@ gensim
 cryptography
 spacy
 IPython
+chardet
+unidecode
+
 # Add other necessary packages
 # the packages should be identical to those for jupyter_lab
