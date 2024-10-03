@@ -1,10 +1,10 @@
 # Data Unificator Prompt Template
-This document will guide you through the steps of working with LLMs to build a professional and secure "Data Unificator" Project. The goal is to help you jump start your project and you may need to add more steps and prompts. We hope you'll find this document useful and contribute your prompts to improve it.
+This document will guide you through the first steps of working with LLMs to build a professional and secure "Data Unificator" Project. The goal is to help you jump start your project and you may need to add more steps and prompts. We hope you'll find this document useful and contribute your prompts to improve it.
 
 ## Step 1 - Define and Refine The Project's Problem Statement
 Prompt for the project's refined problem statement
 ```
-I have the following problem statement: data intakes are being supported by multiple google forms, there is a problem with unifying and normalizing gathered data from multiple google forms with potential overlaps among them.
+I have the following problem statement: There is a problem with unifying and normalizing gathered data from multiple data source files with potential overlaps among them.
 Give me an improved problem statement considering the following guiding questions:
 What are the key components and aspects of the problem statement?
 What potential ambiguities or unclear elements exist in the current problem statement?
@@ -271,7 +271,15 @@ The promt template is:
 
 {{section requirements}} is the requirements specific to a section such as
 ```
-
+    Data Normalization
+        The application shall standardize data formats (e.g., dates, numbers, text casing) to ensure consistency.
+        It shall handle different data types and convert them into a unified format.
+        Standardize units of measurement such as time, currency, etc.
+        Detect extreme outliers and ask user for selecting action such as capping, removal, or transformation.
+        Allow user to select fields and apply a common scale (ie. 0-1 range, z-score normalization).
+        Allow user to aggregate new fields from existing fields.
+        Allow user to remove fields.
+        Standardize text encoding.
 ```
 
 ## Step 7 - Final Check Prompt

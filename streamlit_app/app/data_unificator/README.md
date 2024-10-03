@@ -2,6 +2,7 @@
 
 This application read all data source files from a local folder and properly merge them all into one file.
 
+```
 app/
 │
 ├── pages/
@@ -40,3 +41,6 @@ app/
         ├── normalization_utils.py
         ├── deduplication_utils.py
         └── validation_utils.py
+```
+
+More details will soon be added.
