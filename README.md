@@ -167,6 +167,28 @@ Go to localhost:8501/Simple_Chat to chat with the LLM. Please note:
 - If you have GPU, you may need to do pre-installation step to make sure Docker Desktop or Podman Desktop can leverage the GPU. Once it is done, chat bot response speed should be significantly faster.
 - If your pulled model size is greater than the available GPU-ram capacity, Docker Desktop or Podman Desktop may not use the GPU for LLM inference.
 
+## Submodules
+Git submodules allow you to keep a Git repository as a subdirectory of another Git repository. Git submodules are simply a reference to another repository at a particular snapshot in time. Currently, OllaLab leverages submodules for sample datasets in streamlit_app/app/datasets
+
+After cloning this repository, you can initialize and update the submodules with
+```
+  git submodule update --init --recursive
+```
+If the submodules get updates, you can pull changes in the submodules and then commit those changes in your main repository.
+```
+  cd submodules/some-repo
+  git pull origin main
+  cd ../..
+  git add .
+  git commit -m "Updated some-repo"
+  git push origin main
+```
+To add a submodule, use the following command:
+```
+git submodule add https://github.com/other-user/other-repo.git local_path/to/submodule
+git submodule update --init --recursive
+```
+
 ## Planned Items
 - Add tutorials for advanced usecases of the OllaLab-Lean stack
 - Add more prompt templates for R&D
