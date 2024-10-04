@@ -44,7 +44,7 @@ def render_import(num_workers):
 
         # Record action
         if not st.session_state['data_imported']:
-            record_action(f"User initiated import for {len(file_paths)} files from '{folder}'")
+            record_action(f"Data Import - {len(file_paths)} files from '{folder}'")
 
             # Progress bar
             progress_bar = st.progress(0)
@@ -63,7 +63,7 @@ def render_import(num_workers):
                 st.session_state['data_imported'] = True
 
             except Exception as e:
-                logger.error(f"Error during import: {str(e)}", exc_info=True)
+                logger.error(f"Data Import - {str(e)}", exc_info=True)
                 st.error("An error occurred during import. Please check the logs for details.")
                 st.exception(e)
                 st.stop()
@@ -85,48 +85,51 @@ def render_import(num_workers):
                 missing_data_info = result['missing_data_info']
                 df = result['data']
 
-                # Create a table with Field, Exist values, Missing values, Type, and Remediation columns
-                table_data = []
+                col1,col2 = st.columns(2)
+
                 for field, count in missing_data_info.items():
                     exist_count = df[field].count()
                     field_type = df[field].dtype
-                    strategies = ["Statistical Imputation", "Predictive Model", "Deletion", "Manual Input"]
+                    #strategies = ["Statistical Imputation", "Predictive Model", "Deletion", "Manual Input"]
 
                     if pd.api.types.is_numeric_dtype(df[field]):
                         available_strategies = ["Statistical Imputation", "Predictive Model", "Deletion", "Manual Input"]
                     else:
-                        available_strategies = ["Predictive Model", "Deletion", "Manual Input"]
+                        available_strategies = ["Deletion", "Manual Input"]
 
-                    selected_strategy = st.selectbox(
-                        label=f"Remediation strategy for '{field}'",
-                        options=available_strategies,
-                        key=f"strategy_{file_name}_{field}"
-                    )
-
-                    # Store strategy for the field
-                    st.session_state['missing_data_strategies'][f"{file_name}_{field}"] = selected_strategy
-
-                    # Allow manual input if selected
-                    if selected_strategy == "Manual Input":
-                        manual_value = st.text_input(
-                            label=f"Input value for missing values in '{field}'",
-                            key=f"manual_input_{file_name}_{field}"
+                    # Display the data
+                    with col1:
+                        st.write(f"**The field of {field}**")
+                        st.write(f"Type: {field_type}")
+                        st.write(f"Missing value ratio: {count}/{count+exist_count}")
+                    with col2:
+                        selected_strategy = st.selectbox(
+                            label=f"Remediation strategy for '{field}'",
+                            options=available_strategies,
+                            key=f"strategy_{file_name}_{field}"
                         )
-                        st.session_state['manual_inputs'][f"{file_name}_{field}"] = manual_value
 
-                    table_data.append([field, exist_count, count, field_type, selected_strategy])
+                        # Store strategy for the field
+                        st.session_state['missing_data_strategies'][f"{file_name}_{field}"] = selected_strategy
 
-                # Display the table
-                table_df = pd.DataFrame(table_data, columns=["Field", "Exist values", "Missing values", "Type", "Remediation"])
-                st.dataframe(table_df)
+                        # Allow manual input if selected
+                        if selected_strategy == "Manual Input":
+                            manual_value = st.text_input(
+                                label=f"Input value for missing values in '{field}'",
+                                key=f"manual_input_{file_name}_{field}"
+                            )
+                            st.session_state['manual_inputs'][f"{file_name}_{field}"] = manual_value
 
                 st.session_state['manual_inputs'] = manual_inputs
                 missing_data_strategies = st.session_state['missing_data_strategies']
 
             elif result['status'] == 'success':
                 st.success(f"Successfully imported '{file_name}'")
+                # Display EDA report
                 with st.expander(f"EDA Report for '{os.path.basename(file_name)}'"):
                     st.write(result['eda_report'])
+                # Display data hierarchy visualization
+                st.image(f"{file_name}_hierarchy.png",caption=f"{file_name} Data Hierarchy")
             elif result['status'] == 'discrepancy':
                 st.warning(f"Discrepancies found in '{file_name}'")
                 st.write(result['discrepancies'])

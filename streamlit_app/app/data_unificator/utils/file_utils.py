@@ -4,6 +4,10 @@ import os
 import pandas as pd
 import chardet
 import shutil
+import xml.etree.ElementTree as ET
+import json
+from pandas import json_normalize
+from typing import Iterator, Optional
 from data_unificator.utils.logging_utils import log_error, log_event
 from data_unificator.config import ConfigManager
 
@@ -48,7 +52,7 @@ def read_file(file_path, encoding=None):
         elif ext in ['.xls', '.xlsx']:
             return pd.read_excel(file_path)
         elif ext == '.json':
-            return pd.read_json(file_path, encoding=encoding, lines=True)
+            return read_json_file(file_path)
         elif ext == '.xml':
             return read_xml_file(file_path)
         elif ext == '.parquet':
@@ -59,19 +63,99 @@ def read_file(file_path, encoding=None):
         log_error(f"Error reading file '{file_path}': {str(e)}")
         raise e
 
-def read_xml_file(file_path):
+def read_json_file(file_path: str, chunk_size: int = 1000, line_delimited: bool = True):
+    """
+    Read a large complex JSON file to a dataframe
+    : param file_path: path to the json file
+    : param chunk_size: The number of records to read per iteration
+    : param line_delimited: True for json file that is line delimited
+    : return: a pandas data frame
+    """
+    def process_chunk(records: list) -> pd.DataFrame:
+        """
+        Flatten chunks and export to data frame
+        """
+        return pd.concat([json_normalize(record) for record in records], ignore_index=True)
+    records = []
+    all_data = []
+    try:
+        with open(file_path, 'r') as f:
+            if line_delimited:
+                for line in f:
+                    try:
+                        record = json.loads(line.strip()) # strip newline chars
+                        records.append(flat_record)
+                        if len(records)  >= chunk_size:
+                            df_chunk = process_chunk(records)
+                            all_data.append(df_chunk)
+                            records = []
+            else:
+                data = json.load(f)
+                if isinstance(data, list): # if root object is a list
+                    for record in data:
+                        records.append(record)
+                        if len(records) >= chunk_size:
+                            df_chunk = process_chunk(records)
+                            all_data.append(df_chunk)
+                            records = []
+                elif isinstance(data, dict): # if root object is dict
+                    df_chunk = json_normalize(data)
+                    all_data.append(df_chunk)
+                else:
+                    log_error(f"JSON - Structure not supported - {file_path}")
+            if records:
+                df_chunk = process_chunk(records)
+                all_data.append(df_chunk)
+        final_df = pd.concat(all_data, ignore_index=True)
+        return final_df
+    except FileNotFoundError:
+        log_error(f"JSON - File not found - {file_path}")
+    except json.JSONDecoderError as e:
+        log_error(f"JSON - Decoder error - {str(e)} - {file_path}")
+    except Exception as e:
+        log_error(f"JSON - Other error - {str(e)} - {file_path}")
+
+def read_xml_file(xml_file):
     """
     Read an XML file into a Pandas DataFrame.
 
-    :param file_path: Path to the XML file.
+    :param xml_file: Path to the XML file.
     :return: DataFrame with the contents of the XML file.
     """
-    try:
-        df = pd.read_xml(file_path)
-        return df
-    except Exception as e:
-        log_error(f"Error reading XML file '{file_path}': {str(e)}")
-        raise e
+    def parse_element(element,parent_path=""):
+        """
+        Recursively parse XML elements and store them in a list of dictionaries
+        """
+        rows = []
+        # Combine parent path with current tag
+        current_path = f"{parent_path}/{element.tag}" if parent_path else elment.tag
+        row = {}
+        # Store element's attributes
+        for key,value in element.attrib.items():
+            row[f"{current_path}@{key}"]=value
+        # Store element text (if any)
+        if element.text and element.text.strip():
+            row[current_path] = element.text.strip()
+        # Recursively parse child element
+        if child in element:
+            child_rows = parse_element(child, current_path)
+            rows.extend(child_rows)
+        # If there are no child elements (a leaf node)
+        if not rows:
+            rows.append(row)
+        else:
+            for r in rows:
+                r.update(row) # combine with parent element
+        return rows
+    # Parse the XML file
+    tree = ET.parse(xml_file)
+    root = tree.getroot()
+    # Parse root into data rows
+    rows = parse_element(root)
+    # Convert dict to df
+    df = pd.DataFrame(rows)
+
+    return df
 
 def detect_encoding(file_path):
     """
@@ -155,3 +239,4 @@ def backup_file(file_path, backup_folder):
     except Exception as e:
         log_error(f"Error backing up file '{file_path}' to '{backup_folder}': {str(e)}")
         raise e
+

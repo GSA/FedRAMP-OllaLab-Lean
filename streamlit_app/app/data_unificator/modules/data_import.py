@@ -13,9 +13,10 @@ from data_unificator.utils.file_utils import (
     save_file,
     backup_file
 )
+from data_unificator.utils
 from data_unificator.utils.logging_utils import log_error
 from data_unificator.utils.security_utils import sanitize_data
-from data_unificator.utils.eda_utils import perform_eda
+from data_unificator.utils.data_utils import perform_eda, extract_hierarchy, visualize_hierarchy
 from data_unificator.audits.audit_trail import record_action
 import traceback
 
@@ -42,7 +43,7 @@ def import_single_file(file_path):
         # Read the file
         df = read_file(file_path, encoding)
         if df is None or df.empty:
-            error_message = f"File '{file_path}' is empty or could not be read."
+            error_message = f"File read error - '{file_path}'"
             log_error(error_message)
             record_action(error_message)
             return {"status": "error", "file": os.path.basename(file_path), "error": error_message}
@@ -72,8 +73,15 @@ def import_single_file(file_path):
             record_action(f"PII data found in file '{file_path}': {pii_fields}")
             return {"status": "pii_found", "file": os.path.basename(file_path), "data": df, "pii_fields": pii_fields}
 
+        # Perform hierarchy extraction
+        hierarchy = extract_hierarchy(df)
+        visualize_hierarchy(hierarchy, save_path=f"{file_path}_hierarchy.png")
+
         # Perform EDA
         eda_report = perform_eda(df, file_path)
+        if eda_report:
+            # display EDA, if not work, may need to switch to st.image
+            st.components.v1.html(eda_report, height=600,scrolling=True)
         record_action(f"EDA performed on file '{file_path}'")
 
         return {"status": "success", "file": os.path.basename(file_path), "data": df, "eda_report": eda_report}
@@ -97,7 +105,7 @@ def apply_missing_data_strategy(file_path, strategy, manual_inputs=None):
         # Read the file into a DataFrame
         df = read_file(file_path)
         if df is None or df.empty:
-            error_message = f"File '{file_path}' is empty or could not be read."
+            error_message = f"File error - {file_path}"
             log_error(error_message)
             record_action(error_message)
             return False
@@ -135,7 +143,7 @@ def apply_missing_data_strategy(file_path, strategy, manual_inputs=None):
         return True
 
     except Exception as e:
-        log_error(f"Error applying missing data strategy '{strategy}' to '{file_path}': {str(e)}")
+        log_error(f"Data Import - Fix missing values with '{strategy}' - '{file_path}': {str(e)}")
         record_action(f"Error applying missing data strategy '{strategy}' to '{file_path}': {str(e)}")
         return False
 

@@ -1,5 +1,5 @@
 audit_trail:
-  audit_file: logs/audit.log
+  audit_file: logs/data_unificator_audit.log
 data_deduplication:
   similarity_threshold: 0.8
 data_import:
@@ -26,5 +26,5 @@ data_validation:
 database:
   connection_string: ''
 logging:
-  log_file: logs/app.log
+  log_file: logs/data_unificator_app.log
   log_level: INFO
