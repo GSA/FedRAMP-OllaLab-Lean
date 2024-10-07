@@ -17,9 +17,9 @@ goal = "The application 'Chat with API' allows users to chat with data received 
 ### Step 1b - Generate Application Architecture
 In this step, you will provide an AI bot with the identified goal and ask for a recommended application architecture. The template is:
 
-{{goal}}
-
-In plain language, describe in as much detail as possible the most reliable and secure structure for this application.
+> {{goal}}
+>
+> In plain language, describe in as much detail as possible the most reliable and secure structure for this application.
 
 Here is an example of a prompt:
 ```
@@ -40,11 +40,11 @@ use_cases = Sample use cases are as follows. Case 1: A cybersecurity analyst can
 ## Step 2 - Identify Project Requirements
 In this step, you will write the description of the variable **{{requirements}}** by first asking the AI bot to recommend a robust set of requirements. The template is as follows:
 
-{{goal}}
-
-{{architecture}}
-
-{{use_cases}}
+> {{goal}}
+>
+> {{architecture}}
+> 
+> {{use_cases}}
 
 You are an experienced solution architect and project manager. Please help me write a robust set of requirements for the application I am trying to build. Please be as rigorous and specific as possible.
 
@@ -64,13 +64,13 @@ Record the results to the variable
 ## Step 3 - Generate the Initial Application Codes
 In this step, you will ask the AI bot to write the initial application codes. The template is as follows:
 
-{{goal}}
-
-{{architecture}}
-
-{{use_cases}}
-
-{{requirements}}
+> {{goal}}
+>
+> {{architecture}}
+>
+> {{use_cases}}
+>
+> {{requirements}}
 
 You are an experienced programmer. Please help me write the application. Please make sure it is as robust and secure as possible. 
 
@@ -231,3 +231,33 @@ You are an experienced programmer. Please help me write the application. Please 
 
 ## Step 4 - Optimize the Application Codes
 The AI bot will not generate production-ready codes. It is essential that we always review the generated codes, trouble shoot issues, and optimize the codes. There are ways to involve the AI bot in this process and the prompt templates for optimizing application codes will be available in a separate file.
+
+Our current recommended sub-steps are:
+
+1. Ask the AI bot to recommend improvements to a section of your application that may include up to three files. The number of maximum included files in the prompt depends on the files' length and the AI bot's supported context length. The total length of the prompt must be within the supported context length. The prompt is:
+
+> My current {{file_name_1}} is:
+>
+> {{file_1_codes}}
+>
+> My current {{file_name_2}} is:
+>
+> {{file_2_codes}}
+>
+> My current {{file_name_3}} is:
+>
+> {{file_3_codes}}
+>
+> Show me only the code changes, code additions, and the names of the updated files. Provide concise explanation as needed.
+
+2. Carefully incorporate the AI bot's proposed updates to the files. If the proposed updates center around a very few particular functions within the file, use the following prompt to ask the AI to give you the complete updated functions. The prompt for requesting each function is:
+
+> Double check and give me a complete implementation of {{function_name}} function
+
+3. Ask the AI bot to double check your updated file with incorporated code changes/additions from the previous step. Double check the results and polish your files. The prompt for each file is:
+
+> Here is my current {{file_name}}:
+>
+> {{file_content}}
+>
+> Please double check the file for potential bugs and improve the file. Give me the complete implementation of the file and other files with related updates. If you remove any code line from my current file, give me concise explanation.

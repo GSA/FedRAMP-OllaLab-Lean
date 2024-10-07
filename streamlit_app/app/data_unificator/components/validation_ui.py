@@ -4,7 +4,7 @@ import streamlit as st
 from streamlit.logger import get_logger
 from data_unificator.modules.data_validation import DataValidator
 from data_unificator.audits.audit_trail import record_action
-from data_unificator.utils.eda_utils import perform_eda
+from data_unificator.utils.data_utils import perform_eda
 import traceback
 
 logger = get_logger(__name__)

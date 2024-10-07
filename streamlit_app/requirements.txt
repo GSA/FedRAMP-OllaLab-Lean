@@ -22,6 +22,7 @@ spacy
 IPython
 chardet
 unidecode
+ydata_profiling
 
 # Add other necessary packages
 # the packages should be identical to those for jupyter_lab

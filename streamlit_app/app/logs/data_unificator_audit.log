@@ -1,0 +1,6 @@
+2024-10-07T18:50:01.800846 - EDA performed on file 'app_data/data_unificator/owasp-benchmark-sample.csv'
+2024-10-07T18:50:01.814692 - Error importing file 'app_data/data_unificator/owasp-benchmark-sample.csv': [Errno 2] No such file or directory: 'app_data/data_unificator/owasp-benchmark-sample.csv'
+2024-10-07T18:50:01.829270 - Detected encoding 'utf-8' for file 'app_data/data_unificator/VulnerabilitiesSummary.csv'
+2024-10-07T18:50:01.833095 - Error importing file 'app_data/data_unificator/VulnerabilitiesSummary.csv': [Errno 2] No such file or directory: 'app_data/data_unificator/VulnerabilitiesSummary.csv'
+2024-10-07T18:50:34.252513 - Selected Step: Data Import
+2024-10-07T18:50:34.255519 - Number of Workers: 1

@@ -2,29 +2,84 @@
 
 import streamlit as st
 from streamlit.logger import get_logger
-from data_unificator.modules.data_import import import_files_parallel, apply_missing_data_strategy
-from data_unificator.utils.file_utils import get_supported_files
+from data_unificator.modules.data_import import import_files_parallel, apply_data_fixes
+from data_unificator.utils.file_utils import get_supported_files, save_file
 from data_unificator.audits.audit_trail import record_action
 import os
-import shutil
 import pandas as pd
 
 logger = get_logger(__name__)
 
 @st.fragment
+def handle_missing_data(df,missing_data_info,file_name):
+    st.subheader(f"Missing Data in '{file_name}'")
+    for field, count in missing_data_info.items():
+        col1, col2 = st.columns(2)
+        exist_count = df[field].count()
+        field_type = df[field].dtype
+
+        if pd.api.types.is_numeric_dtype(df[field]):
+            available_strategies = [
+                "Statistical Imputation", "Predictive Model",
+                "Deletion", "Manual Input"
+            ]
+        else:
+            available_strategies = ["Manual Input", "Deletion"]
+
+        # Display the data
+        with col1:
+            st.write(f"**Field: {field}**")
+            st.write(f"Type: {field_type}")
+            st.write(f"Missing values: {count}/{count + exist_count}")
+        with col2:
+            selected_strategy = st.selectbox(
+                label=f"Strategy: ",
+                options=available_strategies,
+                key=f"strategy_{file_name}_{field}"
+            )
+
+            # Store strategy for the field
+            st.session_state['missing_data_strategies'][f"{file_name}_{field}"] = selected_strategy
+
+            # Allow manual input if selected
+            if selected_strategy == "Manual Input":
+                manual_value = st.text_input(
+                    label=f"Input value: ",
+                    value="some_value",
+                    key=f"manual_input_{file_name}_{field}"
+                )
+                st.session_state['manual_inputs'][f"{file_name}_{field}"] = manual_value
+
+@st.fragment
+def handle_pii(pii_fields,file_name):
+    st.subheader(f"PII Data in '{file_name}'")
+    st.write(f"PII Fields: {pii_fields}")
+    for pii_field in pii_fields:
+        action = st.selectbox(
+            label=f"Action for PII field '{pii_field}' in '{file_name}'",
+            options=["Remove Field", "Anonymize Field"],
+            key=f"pii_action_{file_name}_{pii_field}"
+        )
+        st.session_state['pii_actions'][f"{file_name}_{pii_field}"] = action
+
 def render_import(num_workers):
     st.header("Data Import")
     st.write("Please select the folder containing your data files.")
 
-    # Initialize session state variables
-    if 'results' not in st.session_state:
-        st.session_state['results'] = []
-    if 'missing_data_strategies' not in st.session_state:
-        st.session_state['missing_data_strategies'] = {}
-    if 'data_imported' not in st.session_state:
-        st.session_state['data_imported'] = False
-    if 'manual_inputs' not in st.session_state:
-        st.session_state['manual_inputs'] = {}
+    # Initialize session state variables with appropriate default values
+    session_state_defaults = {
+        'results': [],                      # List to store results
+        'missing_data_strategies': {},      # Dictionary for missing data strategies
+        'data_imported': False,             # Boolean flag
+        'manual_inputs': {},                # Dictionary for manual inputs
+        'pii_actions': {},                  # Dictionary for PII actions
+        'results_to_fix': [],               # List to store results needing fixes
+        'hierarchy_data': {}                # Dictionary for hierarchy data
+    }
+
+    for var, default_value in session_state_defaults.items():
+        if var not in st.session_state:
+            st.session_state[var] = default_value
 
     folder = st.text_input("Folder Path", "app_data/data_unificator")
     start_import = st.button("Start Import")
@@ -73,94 +128,111 @@ def render_import(num_workers):
         else:
             results = st.session_state['results']
 
-        missing_data_strategies = st.session_state['missing_data_strategies']
-        manual_inputs = st.session_state['manual_inputs']
         all_files_handled = True
 
         for result in results:
             file_name = result['file']
+            st.write(f"Skipped Entries: {result.get('skipped_entries', 0)} for '{file_name}'")
 
-            if result['status'] == 'missing_data':
-                st.warning(f"Missing data in '{file_name}'")
-                missing_data_info = result['missing_data_info']
+            if result['status'] == 'issues_found':
+                st.warning(f"Issues found in '{file_name}'")
                 df = result['data']
+                st.session_state['results_to_fix'].append(result)
 
-                col1,col2 = st.columns(2)
+                # Handle missing data
+                missing_data_info = result.get('missing_data_info')
+                if missing_data_info is not None and not missing_data_info.empty:
+                    handle_missing_data(df,missing_data_info,file_name)
 
-                for field, count in missing_data_info.items():
-                    exist_count = df[field].count()
-                    field_type = df[field].dtype
-                    #strategies = ["Statistical Imputation", "Predictive Model", "Deletion", "Manual Input"]
+                # Handle PII fields
+                if result.get('pii_fields'):
+                    handle_pii(result.get('pii_fields'),file_name)
 
-                    if pd.api.types.is_numeric_dtype(df[field]):
-                        available_strategies = ["Statistical Imputation", "Predictive Model", "Deletion", "Manual Input"]
-                    else:
-                        available_strategies = ["Deletion", "Manual Input"]
-
-                    # Display the data
-                    with col1:
-                        st.write(f"**The field of {field}**")
-                        st.write(f"Type: {field_type}")
-                        st.write(f"Missing value ratio: {count}/{count+exist_count}")
-                    with col2:
-                        selected_strategy = st.selectbox(
-                            label=f"Remediation strategy for '{field}'",
-                            options=available_strategies,
-                            key=f"strategy_{file_name}_{field}"
-                        )
-
-                        # Store strategy for the field
-                        st.session_state['missing_data_strategies'][f"{file_name}_{field}"] = selected_strategy
-
-                        # Allow manual input if selected
-                        if selected_strategy == "Manual Input":
-                            manual_value = st.text_input(
-                                label=f"Input value for missing values in '{field}'",
-                                key=f"manual_input_{file_name}_{field}"
-                            )
-                            st.session_state['manual_inputs'][f"{file_name}_{field}"] = manual_value
-
-                st.session_state['manual_inputs'] = manual_inputs
-                missing_data_strategies = st.session_state['missing_data_strategies']
+                # Handle discrepancies
+                discrepancies = result.get('discrepancies')
+                if discrepancies:
+                    st.subheader(f"Discrepancies in '{file_name}'")
+                    for discrepancy in discrepancies:
+                        st.write(f"- {discrepancy}")
 
             elif result['status'] == 'success':
                 st.success(f"Successfully imported '{file_name}'")
+                original_file_path =  result.get('file_path')
+                df = result['data']
+                # Save the modified DataFrame back to a CSV file
+                csv_path = save_file(df, original_file_path)
                 # Display EDA report
                 with st.expander(f"EDA Report for '{os.path.basename(file_name)}'"):
-                    st.write(result['eda_report'])
+                    if result.get('eda_report'):
+                        st.components.v1.html(result['eda_report'], height=600, scrolling=True)
+                    else:
+                        st.write("No EDA report available.")
+                # Store hierarchy data for next phase
+                st.session_state['hierarchy_data'][file_name] = result.get('hierarchy_data')
                 # Display data hierarchy visualization
-                st.image(f"{file_name}_hierarchy.png",caption=f"{file_name} Data Hierarchy")
-            elif result['status'] == 'discrepancy':
-                st.warning(f"Discrepancies found in '{file_name}'")
-                st.write(result['discrepancies'])
-            elif result['status'] == 'pii_found':
-                st.warning(f"PII data found in '{file_name}'")
-                st.write(f"PII Fields: {result['pii_fields']}")
+                hierarchy_image_path = os.path.join(
+                    os.path.dirname(file_paths[0]),
+                    f"{file_name.replace('.', '_')}_hierarchy.png"
+                )
+                if os.path.exists(hierarchy_image_path):
+                    st.image(hierarchy_image_path, caption=f"{file_name} Data Hierarchy")
+                else:
+                    st.write("Data hierarchy visualization not available.")
             elif result['status'] == 'error':
                 st.error(f"Error importing '{file_name}': {result['error']}")
 
-        if st.button("Fix Missing Data") and missing_data_strategies:
-            for result in results:
-                file_name = result['file']
-                backup_folder = os.path.join(folder, "backup")
-                os.makedirs(backup_folder, exist_ok=True)
-                original_file_path = [fp for fp in file_paths if os.path.basename(fp) == file_name][0]
-                backup_file_path = os.path.join(backup_folder, os.path.basename(original_file_path))
-                shutil.copy2(original_file_path, backup_file_path)
-                st.info(f"Backed up '{file_name}' to '{backup_file_path}'")
+        # Check if there are any issues to fix
+        has_issues_to_fix = len(st.session_state['results_to_fix']) > 0
 
-                success = apply_missing_data_strategy(
-                    original_file_path, st.session_state['missing_data_strategies'], st.session_state['manual_inputs']
-                )
-                if success:
-                    st.success(f"Fixed missing data in '{file_name}'")
-                    record_action(f"Applied missing data strategy to '{file_name}'")
-                else:
-                    st.error(f"Failed to fix missing data in '{file_name}'")
+        if has_issues_to_fix:
+            if st.button("Fix Data Issues"):
+                for result in st.session_state['results_to_fix']:
+                    file_name = result['file']
+                    original_file_path = [
+                        fp for fp in file_paths if os.path.basename(fp) == file_name
+                    ][0]
 
-        if results:
-            st.success("Data import completed.")
-            record_action("Data import completed successfully.")
-            st.session_state['imported_data'] = results
-        else:
-            st.warning("No data was imported.")
+                    # Prepare the strategies and actions
+                    missing_data_strategies = {
+                        k.split('_', 1)[1]: v
+                        for k, v in st.session_state['missing_data_strategies'].items()
+                        if k.startswith(f"{file_name}_")
+                    }
+                    manual_inputs = {
+                        k.split('_', 1)[1]: v
+                        for k, v in st.session_state['manual_inputs'].items()
+                        if k.startswith(f"{file_name}_")
+                    }
+                    pii_actions = {
+                        k.split('_', 1)[1]: v
+                        for k, v in st.session_state['pii_actions'].items()
+                        if k.startswith(f"{file_name}_")
+                    }
+                    discrepancies = result.get('discrepancies')
+
+                    # Apply fixes
+                    success, hierarchy = apply_data_fixes(
+                        original_file_path,
+                        missing_data_strategies=missing_data_strategies,
+                        manual_inputs=manual_inputs,
+                        pii_actions=pii_actions,
+                        discrepancies=discrepancies
+                    )
+                    if success:
+                        st.success(f"Fixed data issues in '{file_name}'")
+                        record_action(f"Applied data fixes to '{file_name}'")
+                        # Update hierarchy data
+                        st.session_state['hierarchy_data'][file_name] = hierarchy
+                    else:
+                        st.error(f"Failed to fix data issues in '{file_name}'")
+
+                # Reset data import state to allow re-import
+                st.session_state['data_imported'] = False
+
+                if st.button("Re-import Data"):
+                    # Clear session state variables related to data import
+                    for var in ['results', 'missing_data_strategies', 'manual_inputs',
+                                'pii_actions', 'results_to_fix']:
+                        st.session_state[var] = {} if 'dict' in var or 'results' in var else False
+                    # Re-run the data import process
+                    render_import(num_workers)
