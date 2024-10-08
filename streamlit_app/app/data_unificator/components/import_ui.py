@@ -11,6 +11,97 @@ import pandas as pd
 logger = get_logger(__name__)
 
 @st.fragment
+def handle_manual_hierarchy(df, file_path):
+    file_name = os.path.basename(file_path)
+    st.subheader(f"Specify Data Hierarchy for '{file_name}'")
+    # Initialize hierarchy data structures
+    if 'manual_hierarchy' not in st.session_state:
+        st.session_state['manual_hierarchy'] = {}
+    if 'assigned_nodes' not in st.session_state:
+        st.session_state['assigned_nodes'] = {}
+    if file_name not in st.session_state['manual_hierarchy']:
+        st.session_state['manual_hierarchy'][file_name] = {}
+    if file_name not in st.session_state['assigned_nodes']:
+        st.session_state['assigned_nodes'][file_name] = set()  
+
+    columns = df.columns.tolist()
+    assigned_nodes = st.session_state['assigned_nodes'][file_name]
+    available_columns = [col for col in columns if col not in assigned_nodes]
+
+    # Select top level nodes
+    level_1_nodes = st.multiselect(
+        f"Select Top-level Nodes",
+        options=available_columns,
+        key=f"top_level_nodes_{file_name}"
+    )
+    # Update assigned nodes
+    assigned_nodes.update(level_1_nodes)
+
+    # Function to recursively get children of a top-levle node
+    def recursive_hierarchy (node):
+        available_columns = [col for col in columns if col not in assigned_nodes]
+        if not available_columns:
+            return
+        children = st.multiselect(
+            f"Select children of '{node}'",
+            options=available_columns,
+            key=f"children_{file_name}_{node}"
+        )
+        st.session_state['manual_hierarchy'][file_name][node] = children
+        # update assigned nodes
+        assigned_nodes.update(children)
+        # specify a child's children
+        for child in children:
+            recursive_hierarchy(child)
+    for node in level_1_nodes:
+        recursive_hierarchy(node)
+
+    # Check for consistency
+    if st.button(f"Validate Hierarchy"):
+        hierarchy = st.session_state['manual_hierarchy'][file_name]
+        if check_hierarchy_consistency(hierarchy):
+            st.success(f"Hierarchy for '{file_name}' is consistent.")
+            # store hierarchy data
+            st.session_state['hierarchy_data'][file_name] = hierarchy
+            # visualize hierarchy
+            hierarchy_graph = extract_hierarchy(manual_hierarchy=hierarchy)
+            hierarchy_image_path = os.path.join(
+                os.path.dirname(file_path),
+                f"{file_name.replace('.','_')}_hierarchy.png"
+            )
+            visualize_hierarchy(hierarchy_graph, save_path=hierarchy_image_path)
+            if os.path.exists(hierarchy_image_path):
+                st.image(hierarchy_image_path, caption=f"{file_name} Data Hierarchy")
+    else:
+        st.error(f"Hierarchy for '{file_name}' is inconsistent. Please revise.")
+
+def check_hierarchy_consistency(hierarchy):
+    # flatten hierarchy to parent-child pairs
+    parent_child_pairs = []
+    for parent, children in hierarchy.items():
+        for child in children:
+            parent_child_pairs.apptend((parent,child))
+    
+    # Reconstruct the hierarchy graph and compare for inconsistencies
+    G = nx.DiGraph()
+    G.add_edges_from(parent_child_pairs)
+    try:
+        cycles = list(nx.find_cycle(G, orientation='original'))
+        if cycles:
+            return False
+    except nx.exception.NetworkXNoCycle:
+        pass
+
+    # check for multiple parents
+    node_parents = {}
+    for parent, child in parent_child_pairs:
+        if child in node_parents and node_parents[child] != parent:
+            return False # child has multiple parents
+        node_parents[child] = parents
+
+    return True
+
+@st.fragment
 def handle_missing_data(df,missing_data_info,file_name):
     st.subheader(f"Missing Data in '{file_name}'")
     for field, count in missing_data_info.items():
@@ -133,7 +224,7 @@ def render_import(num_workers):
         for result in results:
             file_name = result['file']
             st.write(f"Skipped Entries: {result.get('skipped_entries', 0)} for '{file_name}'")
-
+            original_file_path =  result.get('file_path')
             if result['status'] == 'issues_found':
                 st.warning(f"Issues found in '{file_name}'")
                 df = result['data']
@@ -157,7 +248,6 @@ def render_import(num_workers):
 
             elif result['status'] == 'success':
                 st.success(f"Successfully imported '{file_name}'")
-                original_file_path =  result.get('file_path')
                 df = result['data']
                 # Save the modified DataFrame back to a CSV file
                 csv_path = save_file(df, original_file_path)

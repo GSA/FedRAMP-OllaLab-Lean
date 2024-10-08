@@ -35,15 +35,21 @@ def import_single_file(file_path):
     skipped_entries = 0  # Track skipped entries
     base_path = os.path.dirname(file_path)
     file_name = os.path.basename(file_path)
+    file_extension = os.path.splitext(file_name)[1].lower()
+    discrepancies = None
+    missing_data_info = None
+    pii_fields = None
+    eda_report = None
+
     try:
         # Detect encoding
         encoding = detect_encoding(file_path)
         record_action(f"Detected encoding '{encoding}' for file '{file_path}'")
 
         # Read the file
-        df, skipped = read_file(file_path, encoding)
+        data_or_df, skipped = read_file(file_path, encoding, return_as_df=(file_extension not in ['.json', '.xml']))
         skipped_entries += skipped
-        if df is None or df.empty:
+        if data_or_df is None or (isinstance(data_or_df,pd.dataframe) and data_or_df.empty):
             error_message = f"File read error - '{file_path}'"
             log_error(error_message)
             record_action(error_message)
@@ -52,42 +58,50 @@ def import_single_file(file_path):
                 "file": file_name,
                 "error": error_message,
                 "file_path": file_path,
+                "file_extension": file_extension,
                 "skipped_entries": skipped_entries
             }
 
-        # Sanitize cell data
-        df = df.applymap(lambda x: str(x) if isinstance(x, (list, dict)) else x)
-        # Sanitize column names
-        df.columns = [str(col) for col in df.columns]
+        if file_extension in ['.json','.xml']:
+            data = data_or_df
+            discrepancies = find_discrepancies_in_structure(data)
+            missing_data_info = find_missing_data_in_structure(data)
+            pii_fields = check_for_pii_in_structure(data)
+        else:
+            df = data_or_df
+            # Sanitize cell data
+            df = df.applymap(lambda x: str(x) if isinstance(x, (list, dict)) else x)
+            # Sanitize column names
+            df.columns = [str(col) for col in df.columns]
 
-        # Sanitize data to prevent issues like memory overflow
-        df = sanitize_data(df)
+            # Sanitize data to prevent issues like memory overflow
+            df = sanitize_data(df)
 
-        # Remove duplicates
-        df = remove_duplicates_in_df(df)
+            # Remove duplicates
+            df = remove_duplicates_in_df(df)
 
-        # Check for discrepancies
-        discrepancies = find_discrepancies(df)
+            # Check for discrepancies
+            discrepancies = find_discrepancies(df)
 
-        # Check for missing data and show missing value counts per field
-        missing_data_info = None
-        if df.isnull().values.any():
-            missing_data_info = df.isnull().sum()
-            missing_data_info = missing_data_info[missing_data_info > 0]
-            record_action(f"Missing data found in file '{file_path}': {missing_data_info.to_dict()}")
+            # Check for missing data and show missing value counts per field
+            if df.isnull().values.any():
+                missing_data_info = df.isnull().sum()
+                missing_data_info = missing_data_info[missing_data_info > 0]
+                record_action(f"Missing data found in file '{file_path}': {missing_data_info.to_dict()}")
 
-        # Check for PII
-        pii_fields = check_for_pii(df)
-        if pii_fields:
-            record_action(f"PII data found in file '{file_path}': {pii_fields}")
+            # Check for PII
+            pii_fields = check_for_pii(df)
+            if pii_fields:
+                record_action(f"PII data found in file '{file_path}': {pii_fields}")
 
         # If there are any issues, return with status 'issues_found'
-        if discrepancies or (missing_data_info is not None and not missing_data_info.empty) or pii_fields:
+        if discrepancies or (missing_data_info is not None and (missing_data_info if isinstance(missing_data_info, pd.Series) else missing_data_info != {})) or pii_fields:
             return {
                 "status": "issues_found",
                 "file": file_name,
                 "file_path": file_path,
-                "data": df,
+                "file_extension": file_extension,
+                "data": data_or_df,
                 "discrepancies": discrepancies,
                 "missing_data_info": missing_data_info,
                 "pii_fields": pii_fields,
@@ -97,15 +111,19 @@ def import_single_file(file_path):
         # No issues found, proceed to perform hierarchy extraction and EDA
 
         # Perform hierarchy extraction
-        hierarchy = extract_hierarchy(df)
+        if file_extension in ['.json','.xml']:
+            hierarchy = extract_hierarchy_from_data_structure(data)
+        else:
+            hierarchy = extract_hierarchy(df)
         hierarchy_path = os.path.join(
             base_path, f"{file_name.replace('.', '_')}_hierarchy.png"
         )
         visualize_hierarchy(hierarchy, save_path=hierarchy_path)
 
-        # Perform EDA
-        eda_report = perform_eda(df, file_path)
-        record_action(f"EDA performed on file '{file_path}'")
+        # Perform EDA for tabular data
+        if file_extension not in ['.json','.xml']:
+            eda_report = perform_eda(df, file_path)
+            record_action(f"EDA performed on file '{file_path}'")
 
         # Copy the file to the backup folder while keeping the original
         backup_folder = os.path.join(base_path, "backup")
@@ -117,7 +135,8 @@ def import_single_file(file_path):
             "status": "success",
             "file": file_name,
             "file_path": file_path,
-            "data": df,
+            "file_extension": file_extension,
+            "data": data_or_df,
             "eda_report": eda_report,
             "hierarchy_data": hierarchy,
             "skipped_entries": skipped_entries
@@ -133,10 +152,44 @@ def import_single_file(file_path):
             "status": "error",
             "file": file_name,
             "file_path": file_path,
+            "file_extension": file_extension,
             "error": error_message,
             "skipped_entries": skipped_entries
         }
 
+def find_discrepancies_in_structure (data):
+    discrepancies=[]
+    non_negative_fields = ['age','quantity','price'] #update as needed
+
+    def traverse(data, path=""):
+        if isinstance(data,dict):
+            for key, value in data.items():
+                current_path = f"{path}.{key}" if path else key
+                check_value_discrepancies(value,current_path)
+                traverse(value,current_path)
+        elif isinstance(data,list):
+            for index, item in enumerate(data):
+                current_path = f"{path}[{index}]"
+                check_value_discrepancies(item, current_path)
+                traverse(item, current_path)
+        else: #leaf node
+            pass
+    def check_value_discrepancies(value, path):
+        # Check for non-Asccii chars
+        if isinstance(value, str):
+            if re.search(r'[^\x00-\x7F]',value):
+                discrepancies.append(f"Non-ASCCII characters at '{path}'")
+            if infer_date_format(value) is None and is_possible_date(value):
+                discrepancies.append(f"Inconsistent date format at 'path'")
+        elif isinstance(value,(int,float)):
+            field_name = path.split('.')[-1]
+            if field_name in non_negative_fields and value <0:
+                discrepancies.append(f"Negative value at 'path'")
+    def is_possible_date(value):
+        return bool(re.match(r'\d{1,4}[/-]\d{1,2}[/-]\d{1,4}', value))
+
+    traverse)(data)
+    return discrepancies if discrepancies else None
 # Fix functions
 def fix_non_ascii_characters(df, column):
     from unidecode import unidecode
@@ -196,6 +249,7 @@ def apply_data_fixes(file_path, missing_data_strategies=None, manual_inputs=None
         backup_folder = os.path.join(os.path.dirname(file_path), "backup")
         os.makedirs(backup_folder, exist_ok=True)
         backup_file(file_path, backup_folder)
+        ext = os.path.splitext(file_path)[1].lower()
 
         # Read the file into a DataFrame
         df, skipped_entries = read_file(file_path)
