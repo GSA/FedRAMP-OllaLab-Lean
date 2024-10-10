@@ -2,18 +2,29 @@
 
 import streamlit as st
 from streamlit.logger import get_logger
-from data_unificator.modules.data_import import import_files_parallel, apply_data_fixes
-from data_unificator.utils.file_utils import get_supported_files, save_file
+from data_unificator.modules.data_import import (
+    import_files_parallel,
+    apply_data_fixes
+)
+from data_unificator.utils.file_utils import (
+    get_supported_files,
+    save_file
+)
 from data_unificator.audits.audit_trail import record_action
+from data_unificator.utils.data_utils import (
+    extract_hierarchy,
+    extract_hierarchy_from_data_structure,
+    visualize_hierarchy
+)
 import os
 import pandas as pd
+import networkx as nx
 
 logger = get_logger(__name__)
 
-@st.fragment
-def handle_manual_hierarchy(df, file_path):
-    file_name = os.path.basename(file_path)
+def handle_manual_hierarchy(df, file_name):
     st.subheader(f"Specify Data Hierarchy for '{file_name}'")
+
     # Initialize hierarchy data structures
     if 'manual_hierarchy' not in st.session_state:
         st.session_state['manual_hierarchy'] = {}
@@ -22,23 +33,24 @@ def handle_manual_hierarchy(df, file_path):
     if file_name not in st.session_state['manual_hierarchy']:
         st.session_state['manual_hierarchy'][file_name] = {}
     if file_name not in st.session_state['assigned_nodes']:
-        st.session_state['assigned_nodes'][file_name] = set()  
+        st.session_state['assigned_nodes'][file_name] = set()
 
     columns = df.columns.tolist()
     assigned_nodes = st.session_state['assigned_nodes'][file_name]
-    available_columns = [col for col in columns if col not in assigned_nodes]
 
-    # Select top level nodes
+    # Level 1 nodes
+    available_columns = [col for col in columns if col not in assigned_nodes]
     level_1_nodes = st.multiselect(
-        f"Select Top-level Nodes",
+        f"Select Level 1 Nodes (Top Level) for '{file_name}'",
         options=available_columns,
-        key=f"top_level_nodes_{file_name}"
+        key=f"level_1_nodes_{file_name}"
     )
+
     # Update assigned nodes
     assigned_nodes.update(level_1_nodes)
 
-    # Function to recursively get children of a top-levle node
-    def recursive_hierarchy (node):
+    # Function to recursively get children for a node
+    def recursive_hierarchy(node):
         available_columns = [col for col in columns if col not in assigned_nodes]
         if not available_columns:
             return
@@ -48,61 +60,72 @@ def handle_manual_hierarchy(df, file_path):
             key=f"children_{file_name}_{node}"
         )
         st.session_state['manual_hierarchy'][file_name][node] = children
-        # update assigned nodes
+
+        # Update assigned nodes
         assigned_nodes.update(children)
-        # specify a child's children
+
+        # For each child, allow to specify its children
         for child in children:
             recursive_hierarchy(child)
+
     for node in level_1_nodes:
         recursive_hierarchy(node)
 
-    # Check for consistency
-    if st.button(f"Validate Hierarchy"):
+    # After hierarchy is specified, check for consistency
+    if st.button(f"Validate Hierarchy for '{file_name}'"):
         hierarchy = st.session_state['manual_hierarchy'][file_name]
+        # Implement hierarchy consistency check
         if check_hierarchy_consistency(hierarchy):
             st.success(f"Hierarchy for '{file_name}' is consistent.")
-            # store hierarchy data
+            # Store the hierarchy data
             st.session_state['hierarchy_data'][file_name] = hierarchy
-            # visualize hierarchy
+            # Visualize hierarchy
+            file_path = get_file_path_by_name(file_name)
             hierarchy_graph = extract_hierarchy(manual_hierarchy=hierarchy)
             hierarchy_image_path = os.path.join(
                 os.path.dirname(file_path),
-                f"{file_name.replace('.','_')}_hierarchy.png"
+                f"{file_name.replace('.', '_')}_hierarchy.png"
             )
             visualize_hierarchy(hierarchy_graph, save_path=hierarchy_image_path)
             if os.path.exists(hierarchy_image_path):
                 st.image(hierarchy_image_path, caption=f"{file_name} Data Hierarchy")
-    else:
-        st.error(f"Hierarchy for '{file_name}' is inconsistent. Please revise.")
+        else:
+            st.error(f"Hierarchy for '{file_name}' is inconsistent. Please revise.")
 
 def check_hierarchy_consistency(hierarchy):
-    # flatten hierarchy to parent-child pairs
+    # Flatten the hierarchy into parent-child pairs
     parent_child_pairs = []
     for parent, children in hierarchy.items():
         for child in children:
-            parent_child_pairs.apptend((parent,child))
-    
-    # Reconstruct the hierarchy graph and compare for inconsistencies
+            parent_child_pairs.append((parent, child))
+
+    # Build a graph and check for cycles and multiple parents
     G = nx.DiGraph()
     G.add_edges_from(parent_child_pairs)
+
     try:
         cycles = list(nx.find_cycle(G, orientation='original'))
         if cycles:
             return False
     except nx.exception.NetworkXNoCycle:
-        pass
+        pass  # No cycles
 
-    # check for multiple parents
+    # Check if any node has multiple parents
     node_parents = {}
     for parent, child in parent_child_pairs:
         if child in node_parents and node_parents[child] != parent:
-            return False # child has multiple parents
-        node_parents[child] = parents
+            return False  # Child has multiple parents
+        node_parents[child] = parent
 
     return True
 
-@st.fragment
-def handle_missing_data(df,missing_data_info,file_name):
+def get_file_path_by_name(file_name):
+    for fp in st.session_state['file_paths']:
+        if os.path.basename(fp) == file_name:
+            return fp
+    return None
+
+def handle_missing_data(df, missing_data_info, file_name):
     st.subheader(f"Missing Data in '{file_name}'")
     for field, count in missing_data_info.items():
         col1, col2 = st.columns(2)
@@ -124,7 +147,7 @@ def handle_missing_data(df,missing_data_info,file_name):
             st.write(f"Missing values: {count}/{count + exist_count}")
         with col2:
             selected_strategy = st.selectbox(
-                label=f"Strategy: ",
+                label=f"Strategy for '{field}': ",
                 options=available_strategies,
                 key=f"strategy_{file_name}_{field}"
             )
@@ -135,14 +158,13 @@ def handle_missing_data(df,missing_data_info,file_name):
             # Allow manual input if selected
             if selected_strategy == "Manual Input":
                 manual_value = st.text_input(
-                    label=f"Input value: ",
-                    value="some_value",
+                    label=f"Input value for '{field}': ",
+                    value="",
                     key=f"manual_input_{file_name}_{field}"
                 )
                 st.session_state['manual_inputs'][f"{file_name}_{field}"] = manual_value
 
-@st.fragment
-def handle_pii(pii_fields,file_name):
+def handle_pii(pii_fields, file_name):
     st.subheader(f"PII Data in '{file_name}'")
     st.write(f"PII Fields: {pii_fields}")
     for pii_field in pii_fields:
@@ -165,7 +187,8 @@ def render_import(num_workers):
         'manual_inputs': {},                # Dictionary for manual inputs
         'pii_actions': {},                  # Dictionary for PII actions
         'results_to_fix': [],               # List to store results needing fixes
-        'hierarchy_data': {}                # Dictionary for hierarchy data
+        'hierarchy_data': {},               # Dictionary for hierarchy data
+        'file_paths': [],                   # List to store file paths
     }
 
     for var, default_value in session_state_defaults.items():
@@ -188,9 +211,12 @@ def render_import(num_workers):
 
         st.write(f"Found {len(file_paths)} files to import.")
 
+        # Store file paths in session state
+        st.session_state['file_paths'] = file_paths
+
         # Record action
         if not st.session_state['data_imported']:
-            record_action(f"Data Import - {len(file_paths)} files from '{folder}'")
+            record_action(f"Data Import - Import - {folder}")
 
             # Progress bar
             progress_bar = st.progress(0)
@@ -224,20 +250,26 @@ def render_import(num_workers):
         for result in results:
             file_name = result['file']
             st.write(f"Skipped Entries: {result.get('skipped_entries', 0)} for '{file_name}'")
-            original_file_path =  result.get('file_path')
+            original_file_path = result.get('file_path')
+            file_extension = result.get('file_extension')
+
             if result['status'] == 'issues_found':
                 st.warning(f"Issues found in '{file_name}'")
-                df = result['data']
+                data = result['data']
                 st.session_state['results_to_fix'].append(result)
 
                 # Handle missing data
                 missing_data_info = result.get('missing_data_info')
-                if missing_data_info is not None and not missing_data_info.empty:
-                    handle_missing_data(df,missing_data_info,file_name)
+                if missing_data_info is not None and (
+                        isinstance(missing_data_info, pd.Series) or missing_data_info != {}):
+                    if isinstance(data, pd.DataFrame):
+                        handle_missing_data(data, missing_data_info, file_name)
+                    else:
+                        st.write(f"Missing data handling for JSON/XML files is not implemented.")
 
                 # Handle PII fields
                 if result.get('pii_fields'):
-                    handle_pii(result.get('pii_fields'),file_name)
+                    handle_pii(result.get('pii_fields'), file_name)
 
                 # Handle discrepancies
                 discrepancies = result.get('discrepancies')
@@ -248,26 +280,31 @@ def render_import(num_workers):
 
             elif result['status'] == 'success':
                 st.success(f"Successfully imported '{file_name}'")
-                df = result['data']
-                # Save the modified DataFrame back to a CSV file
-                csv_path = save_file(df, original_file_path)
-                # Display EDA report
-                with st.expander(f"EDA Report for '{os.path.basename(file_name)}'"):
-                    if result.get('eda_report'):
-                        st.components.v1.html(result['eda_report'], height=600, scrolling=True)
+                data = result['data']
+                if file_extension in ['.csv', '.tsv']:
+                    if isinstance(data, pd.DataFrame):
+                        csv_path = save_file(data, original_file_path)
+                        handle_manual_hierarchy(data, file_name)
                     else:
-                        st.write("No EDA report available.")
-                # Store hierarchy data for next phase
-                st.session_state['hierarchy_data'][file_name] = result.get('hierarchy_data')
-                # Display data hierarchy visualization
-                hierarchy_image_path = os.path.join(
-                    os.path.dirname(file_paths[0]),
-                    f"{file_name.replace('.', '_')}_hierarchy.png"
-                )
-                if os.path.exists(hierarchy_image_path):
-                    st.image(hierarchy_image_path, caption=f"{file_name} Data Hierarchy")
+                        st.error(f"Data for '{file_name}' is not a DataFrame.")
                 else:
-                    st.write("Data hierarchy visualization not available.")
+                    st.session_state['hierarchy_data'][file_name] = result.get('hierarchy_data')
+                    hierarchy_image_path = os.path.join(
+                        os.path.dirname(file_paths[0]),
+                        f"{file_name.replace('.', '_')}_hierarchy.png"
+                    )
+                    if os.path.exists(hierarchy_image_path):
+                        st.image(hierarchy_image_path, caption=f"{file_name} Data Hierarchy")
+                    else:
+                        st.write("Data hierarchy visualization not available.")
+
+                # Display EDA report for tabular data
+                if file_extension not in ['.json', '.xml']:
+                    with st.expander(f"EDA Report for '{os.path.basename(file_name)}'"):
+                        if result.get('eda_report'):
+                            st.components.v1.html(result['eda_report'], height=600, scrolling=True)
+                        else:
+                            st.write("No EDA report available.")
             elif result['status'] == 'error':
                 st.error(f"Error importing '{file_name}': {result['error']}")
 
@@ -281,6 +318,7 @@ def render_import(num_workers):
                     original_file_path = [
                         fp for fp in file_paths if os.path.basename(fp) == file_name
                     ][0]
+                    file_extension = result.get('file_extension')
 
                     # Prepare the strategies and actions
                     missing_data_strategies = {
@@ -323,6 +361,11 @@ def render_import(num_workers):
                     # Clear session state variables related to data import
                     for var in ['results', 'missing_data_strategies', 'manual_inputs',
                                 'pii_actions', 'results_to_fix']:
-                        st.session_state[var] = {} if 'dict' in var or 'results' in var else False
+                        if isinstance(st.session_state[var], dict):
+                            st.session_state[var] = {}
+                        elif isinstance(st.session_state[var], list):
+                            st.session_state[var] = []
+                        else:
+                            st.session_state[var] = False
                     # Re-run the data import process
                     render_import(num_workers)

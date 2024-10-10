@@ -1,12 +1,11 @@
-# utils/eda_utils.py
+# utils/data_utils.py
 
 import os
 import networkx as nx
-from networkx import DiGraph, draw
 import matplotlib.pyplot as plt
 import pandas as pd
 from ydata_profiling import ProfileReport
-from data_unificator.utils.logging_utils import log_error,log_event
+from data_unificator.utils.logging_utils import log_error, log_event
 
 def perform_eda(df, file_path):
     """
@@ -38,13 +37,16 @@ def perform_eda(df, file_path):
         log_error(f"Error performing EDA: {str(e)}")
         return None
 
-
-def extract_hierarchy(df, column_separator='.'):
+def extract_hierarchy(df=None, column_separator='.', manual_hierarchy=None):
     """
-    Extracts the hierarchy from a DataFrame based on column names.
+    Extracts the hierarchy from a DataFrame based on column names or from a manual hierarchy.
     """
     hierarchy = nx.DiGraph()
-    if any(column_separator in col for col in df.columns):
+    if manual_hierarchy:
+        for parent, children in manual_hierarchy.items():
+            for child in children:
+                hierarchy.add_edge(parent, child)
+    elif df is not None and any(column_separator in col for col in df.columns):
         for col in df.columns:
             parts = col.split(column_separator)
             for i in range(1, len(parts)):
@@ -53,16 +55,37 @@ def extract_hierarchy(df, column_separator='.'):
                 hierarchy.add_edge(parent, child)
     else:
         log_event("No hierarchy detected in the DataFrame columns.")
-    return hierarchy    
+    return hierarchy
+
+def extract_hierarchy_from_data_structure(data):
+    """
+    Extracts the hierarchy from a JSON/XML data structure.
+    """
+    hierarchy = nx.DiGraph()
+
+    def traverse(data, parent=None):
+        if isinstance(data, dict):
+            for key, value in data.items():
+                if parent is not None:
+                    hierarchy.add_edge(parent, key)
+                traverse(value, key)
+        elif isinstance(data, list):
+            for index, item in enumerate(data):
+                item_key = f"{parent}[{index}]" if parent else f"[{index}]"
+                if parent is not None:
+                    hierarchy.add_edge(parent, item_key)
+                traverse(item, item_key)
+        else:
+            pass  # Leaf node
+
+    traverse(data)
+    return hierarchy
 
 def visualize_hierarchy(hierarchy, save_path):
     """
     Visualizes the data hierarchy and saves the visualization to a file.
     """
     try:
-        import matplotlib.pyplot as plt
-        import networkx as nx
-
         if len(hierarchy.nodes) == 0:
             log_event("No hierarchy to visualize")
             return
@@ -74,10 +97,3 @@ def visualize_hierarchy(hierarchy, save_path):
         plt.close()
     except Exception as e:
         log_error(f"Error visualizing hierarchy: {str(e)}")
-
-
-def hierarchy_layout(hierarchy):
-    """
-    Custom layout function for hierarchy
-    """
-    return nx.spring_layout(hierarchy)
