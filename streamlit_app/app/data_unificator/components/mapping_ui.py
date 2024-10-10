@@ -14,35 +14,52 @@ def render_mapping():
     st.header("Data Mapping")
     st.write("Map fields across data sources and resolve conflicts.")
 
-    # Placeholder for dynamic content
-    content_placeholder = st.empty()
-
     try:
         # Assume data_sources is a list of imported data from previous step
-        data_sources = st.session_state.get('imported_data', [])
-        if not data_sources:
+        previous_results = st.session_state.get('results', [])
+        if not previous_results:
             st.warning("No data sources found. Please complete the Data Import step first.")
+            st.stop()
+
+        # Prepare data_sources for DataMapper
+        data_sources = []
+        for result in previous_results:
+            if result['status'] == 'success':
+                # only process sucessfully imported data, need to give a warning on skipped files with issues
+                file_name = result['file']
+                data = result['data']
+                file_extension = result['file_extension']
+                hierarchy = st.session_state['hierarchy_data'].get(file_name, None) #doublecheck
+                data_sources.append({
+                    'file': file_name,
+                    'data': data,
+                    'file_extension': file_extension,
+                    'hierarchy': hierarchy
+                })
+        
+        if not data_sources:
+            st.warning("No valid imported data available for mapping")
             st.stop()
 
         data_mapper = DataMapper(data_sources)
 
         # Step 1: Extract Fields
         if st.button("Extract Fields and Metadata"):
-            data_mapper.extract_fields()
+            data_mapper.extract_fields() # Improve to support JSON/XML separately from Tabular
             st.success("Fields and metadata extracted.")
-            record_action("User extracted fields and metadata.")
 
         # Step 2: Identify Overlapping Fields
-        overlaps = data_mapper.identify_overlapping_fields()
+        overlaps = data_mapper.identify_overlapping_fields() # improve to integrate meta data and parent/child in hierarchy
         if overlaps:
             st.write("Overlapping Fields Identified:")
             for overlap in overlaps:
                 st.write(f"Fields: {overlap['fields']}, Similarity: {overlap['similarity']:.2f}")
-            record_action("User viewed overlapping fields.")
         else:
             st.info("No overlapping fields found.")
 
         # Step 3: Establish Source Hierarchy and Weights
+        # probably need to simplify, bottom line - establish pririty of sources for alignment in the next step
+        # ask user for key fields and their mapping 
         st.subheader("Source Hierarchy and Weights")
         source_files = [source['file'] for source in data_sources]
         default_weights = {file: 5 for file in source_files}
@@ -61,6 +78,9 @@ def render_mapping():
         record_action("User established source hierarchy and weights.")
 
         # Step 4: Align Data Structures
+        # First, attempt automatic alignment based on identified hierarchy, metadata, and source priorities
+        # Second, allow manual alignment
+        # Third, export alignment data to a file for later automation
         if st.button("Align Data Structures"):
             data_mapper.align_structures()
             st.success("Data structures aligned.")
@@ -72,6 +92,8 @@ def render_mapping():
         selected_strategy = st.selectbox("Select Conflict Resolution Strategy", conflict_strategies)
         if selected_strategy == "Manual":
             st.info("Manual conflict resolution will require user input for each conflict.")
+        # Improve to display conflict per priority level and the reasons for conflicts
+        # Print out conflict and let user manually resolve conflict
         # Additional UI for strategy parameters can be added here
 
         if st.button("Detect and Resolve Conflicts"):
@@ -82,7 +104,7 @@ def render_mapping():
         # Step 6: Create Mapping Dictionary
         st.subheader("Field Mapping")
         if st.button("Create Mapping Dictionary"):
-            # Allow user to map fields via GUI
+            # Allow user to inspect the dictionary and make final adjustments as needed, field mapping should be done earlier
             for overlap in data_mapper.overlaps:
                 st.write(f"Map fields for overlap: {overlap['fields']}")
                 standard_name = st.text_input(f"Standard name for fields {overlap['fields']}", value=overlap['fields'][0])
