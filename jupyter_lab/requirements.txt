@@ -1,3 +1,4 @@
+torch
 langchain
 ollama
 neo4j
