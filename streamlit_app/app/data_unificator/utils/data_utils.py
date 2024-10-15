@@ -42,6 +42,11 @@ def extract_hierarchy(df=None, column_separator='.', manual_hierarchy=None):
     Extracts the hierarchy from a DataFrame based on column names or from a manual hierarchy.
     """
     hierarchy = nx.DiGraph()
+    def add_edges(parent, children):
+            for child in children:
+                hierarchy.add_edge(parent, child)
+                if child in manual_hierarchy:
+                    add_edges(child, manual_hierarchy[child])
     if manual_hierarchy:
         for parent, children in manual_hierarchy.items():
             for child in children:

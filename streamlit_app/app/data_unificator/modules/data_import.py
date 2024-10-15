@@ -92,7 +92,12 @@ def import_single_file(file_path):
                 record_action(f"PII data found in file '{file_path}': {pii_fields}")
 
         # If there are any issues, return with status 'issues_found'
-        if discrepancies or (missing_data_info is not None and missing_data_info) or pii_fields:
+        if discrepancies or (
+            missing_data_info is not None and (
+                (isinstance(missing_data_info, pd.Series) and not missing_data_info.empty) or
+                (isinstance(missing_data_info, dict) and bool(missing_data_info))
+            )
+        ) or pii_fields:
             return {
                 "status": "issues_found",
                 "file": file_name,

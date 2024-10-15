@@ -51,3 +51,417 @@
 2024-10-10T11:40:53.903817 - Detected encoding 'ascii' for file 'app_data/data_unificator/VulnerabilitiesSummary.xml'
 2024-10-10T11:41:20.328946 - Selected Step: Data Mapping
 2024-10-10T11:41:20.332275 - Number of Workers: 1
+2024-10-12T19:47:36.338199 - Selected Step: Data Import
+2024-10-12T19:47:36.341461 - Number of Workers: 1
+2024-10-12T19:58:29.582864 - Selected Step: Data Import
+2024-10-12T19:58:29.586736 - Number of Workers: 1
+2024-10-12T19:58:52.059436 - Selected Step: Data Import
+2024-10-12T19:58:52.063363 - Number of Workers: 1
+2024-10-12T20:37:31.441619 - Selected Step: Data Import
+2024-10-12T20:37:31.445674 - Number of Workers: 1
+2024-10-12T20:37:35.056446 - Selected Step: Data Import
+2024-10-12T20:37:35.060187 - Number of Workers: 1
+2024-10-12T20:37:35.082610 - Data Import - Import - app_data/data_unificator
+2024-10-12T20:37:35.166223 - Detected encoding 'ascii' for file 'app_data/data_unificator/power.csv'
+2024-10-12T20:37:41.126230 - EDA performed on file 'app_data/data_unificator/power.csv'
+2024-10-12T20:37:41.186604 - Detected encoding 'ascii' for file 'app_data/data_unificator/processor.csv'
+2024-10-12T20:37:42.041625 - Missing data found in file 'app_data/data_unificator/processor.csv': {'microarchitecture_id': 1578, 'code_name_id': 173, 'technology_id': 1345, 'die_photo_id': 1815, 'model': 555, 'date': 716, 'clock': 31, 'max_clock': 1602, 'hw_nthreadspercore': 6, 'hw_ncores': 4, 'tdp': 335, 'source': 34, 'bus_width': 1557, 'transistors': 1008, 'die_size': 981, 'vdd_low': 1057, 'vdd_high': 943}
+2024-10-12T20:37:42.045579 - Error importing file 'app_data/data_unificator/processor.csv': The truth value of a Series is ambiguous. Use a.empty, a.bool(), a.item(), a.any() or a.all().
+2024-10-12T20:48:31.080355 - Selected Step: Data Import
+2024-10-12T20:48:31.085387 - Number of Workers: 1
+2024-10-12T20:48:35.896905 - Selected Step: Data Import
+2024-10-12T20:48:35.901024 - Number of Workers: 1
+2024-10-12T20:48:35.924474 - Data Import - Import - app_data/data_unificator
+2024-10-12T20:48:35.987636 - Detected encoding 'ascii' for file 'app_data/data_unificator/power.csv'
+2024-10-12T20:48:41.548785 - EDA performed on file 'app_data/data_unificator/power.csv'
+2024-10-12T20:48:41.613377 - Detected encoding 'ascii' for file 'app_data/data_unificator/processor.csv'
+2024-10-12T20:48:42.467335 - Missing data found in file 'app_data/data_unificator/processor.csv': {'microarchitecture_id': 1578, 'code_name_id': 173, 'technology_id': 1345, 'die_photo_id': 1815, 'model': 555, 'date': 716, 'clock': 31, 'max_clock': 1602, 'hw_nthreadspercore': 6, 'hw_ncores': 4, 'tdp': 335, 'source': 34, 'bus_width': 1557, 'transistors': 1008, 'die_size': 981, 'vdd_low': 1057, 'vdd_high': 943}
+2024-10-12T20:48:42.471665 - Error importing file 'app_data/data_unificator/processor.csv': The truth value of a Series is ambiguous. Use a.empty, a.bool(), a.item(), a.any() or a.all().
+2024-10-12T20:51:19.780902 - Selected Step: Data Import
+2024-10-12T20:51:19.784981 - Number of Workers: 1
+2024-10-12T20:52:11.515046 - Selected Step: Data Import
+2024-10-12T20:52:11.518740 - Number of Workers: 1
+2024-10-12T20:52:11.537956 - Data Import - Import - app_data/data_unificator
+2024-10-12T20:52:11.610223 - Detected encoding 'ascii' for file 'app_data/data_unificator/power.csv'
+2024-10-12T20:52:17.767642 - EDA performed on file 'app_data/data_unificator/power.csv'
+2024-10-12T20:52:17.822820 - Detected encoding 'ascii' for file 'app_data/data_unificator/processor.csv'
+2024-10-12T20:52:18.661095 - Missing data found in file 'app_data/data_unificator/processor.csv': {'microarchitecture_id': 1578, 'code_name_id': 173, 'technology_id': 1345, 'die_photo_id': 1815, 'model': 555, 'date': 716, 'clock': 31, 'max_clock': 1602, 'hw_nthreadspercore': 6, 'hw_ncores': 4, 'tdp': 335, 'source': 34, 'bus_width': 1557, 'transistors': 1008, 'die_size': 981, 'vdd_low': 1057, 'vdd_high': 943}
+2024-10-12T21:02:44.673986 - Selected Step: Data Import
+2024-10-12T21:02:44.678339 - Number of Workers: 1
+2024-10-12T21:02:50.101758 - Selected Step: Data Import
+2024-10-12T21:02:50.105886 - Number of Workers: 1
+2024-10-12T21:02:50.126395 - Data Import - Import - app_data/data_unificator
+2024-10-12T21:02:50.177437 - Detected encoding 'ascii' for file 'app_data/data_unificator/power.csv'
+2024-10-12T21:02:55.757570 - EDA performed on file 'app_data/data_unificator/power.csv'
+2024-10-12T21:02:55.823588 - Detected encoding 'ascii' for file 'app_data/data_unificator/processor.csv'
+2024-10-12T21:02:56.670674 - Missing data found in file 'app_data/data_unificator/processor.csv': {'microarchitecture_id': 1578, 'code_name_id': 173, 'technology_id': 1345, 'die_photo_id': 1815, 'model': 555, 'date': 716, 'clock': 31, 'max_clock': 1602, 'hw_nthreadspercore': 6, 'hw_ncores': 4, 'tdp': 335, 'source': 34, 'bus_width': 1557, 'transistors': 1008, 'die_size': 981, 'vdd_low': 1057, 'vdd_high': 943}
+2024-10-14T13:29:00.700085 - Selected Step: Data Import
+2024-10-14T13:29:00.704606 - Number of Workers: 1
+2024-10-14T13:29:14.468738 - Selected Step: Data Import
+2024-10-14T13:29:14.473759 - Number of Workers: 1
+2024-10-14T13:29:14.496383 - Data Import - Import - app_data/data_unificator
+2024-10-14T13:29:14.531895 - Detected encoding 'ascii' for file 'app_data/data_unificator/power.csv'
+2024-10-14T13:29:20.166275 - EDA performed on file 'app_data/data_unificator/power.csv'
+2024-10-14T13:29:20.242877 - Detected encoding 'ascii' for file 'app_data/data_unificator/processor.csv'
+2024-10-14T13:29:21.070639 - Missing data found in file 'app_data/data_unificator/processor.csv': {'microarchitecture_id': 1578, 'code_name_id': 173, 'technology_id': 1345, 'die_photo_id': 1815, 'model': 555, 'date': 716, 'clock': 31, 'max_clock': 1602, 'hw_nthreadspercore': 6, 'hw_ncores': 4, 'tdp': 335, 'source': 34, 'bus_width': 1557, 'transistors': 1008, 'die_size': 981, 'vdd_low': 1057, 'vdd_high': 943}
+2024-10-14T13:29:58.161020 - Selected Step: Data Import
+2024-10-14T13:29:58.164314 - Number of Workers: 1
+2024-10-14T13:30:39.228695 - Selected Step: Data Import
+2024-10-14T13:30:39.232305 - Number of Workers: 1
+2024-10-14T13:30:47.375014 - Selected Step: Data Import
+2024-10-14T13:30:47.379251 - Number of Workers: 1
+2024-10-14T13:31:15.053009 - Selected Step: Data Import
+2024-10-14T13:31:15.057585 - Number of Workers: 1
+2024-10-14T13:31:15.342610 - Applied data fixes to 'processor.csv'
+2024-10-14T13:31:15.545604 - Applied data fixes to 'processor.csv'
+2024-10-14T13:31:15.729361 - Applied data fixes to 'processor.csv'
+2024-10-14T13:31:15.919662 - Applied data fixes to 'processor.csv'
+2024-10-14T13:31:16.104624 - Applied data fixes to 'processor.csv'
+2024-10-14T13:31:22.318386 - Selected Step: Data Import
+2024-10-14T13:31:22.322235 - Number of Workers: 1
+2024-10-14T13:31:24.412881 - Selected Step: Data Import
+2024-10-14T13:31:24.417690 - Number of Workers: 1
+2024-10-14T13:31:24.435008 - Data Import - Import - app_data/data_unificator
+2024-10-14T13:31:24.479344 - Detected encoding 'ascii' for file 'app_data/data_unificator/power.csv'
+2024-10-14T13:31:29.594128 - EDA performed on file 'app_data/data_unificator/power.csv'
+2024-10-14T13:31:29.650851 - Detected encoding 'ascii' for file 'app_data/data_unificator/processor.csv'
+2024-10-14T13:32:11.812209 - EDA performed on file 'app_data/data_unificator/processor.csv'
+2024-10-14T13:33:58.416007 - Selected Step: Data Import
+2024-10-14T13:33:58.420364 - Number of Workers: 1
+2024-10-14T13:34:09.276587 - Selected Step: Data Import
+2024-10-14T13:34:09.280516 - Number of Workers: 1
+2024-10-14T13:34:27.487036 - Selected Step: Data Import
+2024-10-14T13:34:27.490960 - Number of Workers: 1
+2024-10-14T13:34:31.388448 - Selected Step: Data Import
+2024-10-14T13:34:31.392348 - Number of Workers: 1
+2024-10-14T13:45:51.608686 - Selected Step: Data Import
+2024-10-14T13:45:51.613222 - Number of Workers: 1
+2024-10-14T13:45:54.744968 - Selected Step: Data Import
+2024-10-14T13:45:54.749361 - Number of Workers: 1
+2024-10-14T13:45:54.768316 - Data Import - Import - app_data/data_unificator
+2024-10-14T13:45:54.826588 - Detected encoding 'ascii' for file 'app_data/data_unificator/power.csv'
+2024-10-14T13:46:00.089445 - EDA performed on file 'app_data/data_unificator/power.csv'
+2024-10-14T13:46:00.146700 - Detected encoding 'ascii' for file 'app_data/data_unificator/processor.csv'
+2024-10-14T13:46:42.710937 - EDA performed on file 'app_data/data_unificator/processor.csv'
+2024-10-14T13:57:37.312203 - Selected Step: Data Import
+2024-10-14T13:57:37.316749 - Number of Workers: 1
+2024-10-14T13:58:41.809300 - Selected Step: Data Import
+2024-10-14T13:58:41.813216 - Number of Workers: 1
+2024-10-14T13:58:44.844191 - Selected Step: Data Import
+2024-10-14T13:58:44.848955 - Number of Workers: 1
+2024-10-14T13:58:48.309275 - Selected Step: Data Import
+2024-10-14T13:58:48.314359 - Number of Workers: 1
+2024-10-14T13:58:57.884057 - Selected Step: Data Import
+2024-10-14T13:58:57.889077 - Number of Workers: 1
+2024-10-14T14:00:04.985817 - Selected Step: Data Import
+2024-10-14T14:00:04.990001 - Number of Workers: 1
+2024-10-14T14:00:08.316592 - Selected Step: Data Import
+2024-10-14T14:00:08.320745 - Number of Workers: 1
+2024-10-14T14:00:08.407594 - Selected Step: Data Import
+2024-10-14T14:00:08.412550 - Number of Workers: 1
+2024-10-14T14:01:15.041586 - Selected Step: Data Import
+2024-10-14T14:01:15.046518 - Number of Workers: 1
+2024-10-14T14:01:17.733414 - Selected Step: Data Import
+2024-10-14T14:01:17.737561 - Number of Workers: 1
+2024-10-14T14:01:17.819419 - Selected Step: Data Import
+2024-10-14T14:01:17.823413 - Number of Workers: 1
+2024-10-14T14:01:19.548117 - Selected Step: Data Import
+2024-10-14T14:01:19.552876 - Number of Workers: 1
+2024-10-14T14:01:30.658943 - Selected Step: Data Import
+2024-10-14T14:01:30.663403 - Number of Workers: 1
+2024-10-14T14:01:31.971341 - Selected Step: Data Import
+2024-10-14T14:01:31.976196 - Number of Workers: 1
+2024-10-14T14:01:31.997046 - Data Import - Import - app_data/data_unificator
+2024-10-14T14:01:32.054806 - Detected encoding 'ascii' for file 'app_data/data_unificator/power.csv'
+2024-10-14T14:01:36.639416 - EDA performed on file 'app_data/data_unificator/power.csv'
+2024-10-14T14:01:36.703108 - Detected encoding 'ascii' for file 'app_data/data_unificator/processor.csv'
+2024-10-14T14:02:21.628320 - EDA performed on file 'app_data/data_unificator/processor.csv'
+2024-10-14T14:02:50.372687 - Selected Step: Data Import
+2024-10-14T14:02:50.377426 - Number of Workers: 1
+2024-10-14T14:02:53.444828 - Selected Step: Data Import
+2024-10-14T14:02:53.449896 - Number of Workers: 1
+2024-10-14T14:02:53.534729 - Selected Step: Data Import
+2024-10-14T14:02:53.539524 - Number of Workers: 1
+2024-10-14T14:02:54.972955 - Selected Step: Data Import
+2024-10-14T14:02:54.977674 - Number of Workers: 1
+2024-10-14T14:02:54.997376 - Data Import - Import - app_data/data_unificator
+2024-10-14T14:02:55.036872 - Detected encoding 'ascii' for file 'app_data/data_unificator/power.csv'
+2024-10-14T14:02:59.388825 - EDA performed on file 'app_data/data_unificator/power.csv'
+2024-10-14T14:02:59.445355 - Detected encoding 'ascii' for file 'app_data/data_unificator/processor.csv'
+2024-10-14T14:03:43.744341 - EDA performed on file 'app_data/data_unificator/processor.csv'
+2024-10-14T14:11:49.481551 - Selected Step: Data Import
+2024-10-14T14:11:49.485764 - Number of Workers: 1
+2024-10-14T14:11:52.342586 - Selected Step: Data Import
+2024-10-14T14:11:52.346947 - Number of Workers: 1
+2024-10-14T14:11:52.430622 - Selected Step: Data Import
+2024-10-14T14:11:52.434876 - Number of Workers: 1
+2024-10-14T14:11:53.966829 - Selected Step: Data Import
+2024-10-14T14:11:53.970858 - Number of Workers: 1
+2024-10-14T14:11:53.988251 - Data Import - Import - app_data/data_unificator
+2024-10-14T14:11:54.028709 - Detected encoding 'ascii' for file 'app_data/data_unificator/power.csv'
+2024-10-14T14:11:58.315164 - EDA performed on file 'app_data/data_unificator/power.csv'
+2024-10-14T14:11:58.378697 - Detected encoding 'ascii' for file 'app_data/data_unificator/processor.csv'
+2024-10-14T14:12:41.695503 - EDA performed on file 'app_data/data_unificator/processor.csv'
+2024-10-14T14:13:59.268529 - Selected Step: Data Import
+2024-10-14T14:13:59.273609 - Number of Workers: 1
+2024-10-14T14:14:05.176147 - Selected Step: Data Import
+2024-10-14T14:14:05.181144 - Number of Workers: 1
+2024-10-14T14:19:03.532358 - Selected Step: Data Import
+2024-10-14T14:19:03.537454 - Number of Workers: 1
+2024-10-14T14:19:06.041124 - Selected Step: Data Import
+2024-10-14T14:19:06.044803 - Number of Workers: 1
+2024-10-14T14:19:06.129296 - Selected Step: Data Import
+2024-10-14T14:19:06.133643 - Number of Workers: 1
+2024-10-14T14:19:09.144544 - Selected Step: Data Import
+2024-10-14T14:19:09.149363 - Number of Workers: 1
+2024-10-14T14:19:09.171870 - Data Import - Import - app_data/data_unificator
+2024-10-14T14:19:09.210713 - Detected encoding 'ascii' for file 'app_data/data_unificator/power.csv'
+2024-10-14T14:19:13.562795 - EDA performed on file 'app_data/data_unificator/power.csv'
+2024-10-14T14:19:13.622093 - Detected encoding 'ascii' for file 'app_data/data_unificator/processor.csv'
+2024-10-14T14:19:56.616903 - EDA performed on file 'app_data/data_unificator/processor.csv'
+2024-10-14T14:20:10.108334 - Selected Step: Data Import
+2024-10-14T14:20:10.112577 - Number of Workers: 1
+2024-10-14T14:20:38.624639 - Selected Step: Data Import
+2024-10-14T14:20:38.628854 - Number of Workers: 1
+2024-10-14T14:20:55.192037 - Selected Step: Data Import
+2024-10-14T14:20:55.196503 - Number of Workers: 1
+2024-10-14T14:21:59.170453 - Selected Step: Data Import
+2024-10-14T14:21:59.175173 - Number of Workers: 1
+2024-10-14T14:22:06.041383 - Selected Step: Data Import
+2024-10-14T14:22:06.046156 - Number of Workers: 1
+2024-10-14T14:22:06.133727 - Selected Step: Data Import
+2024-10-14T14:22:06.139261 - Number of Workers: 1
+2024-10-14T14:22:07.463730 - Selected Step: Data Import
+2024-10-14T14:22:07.468642 - Number of Workers: 1
+2024-10-14T14:22:07.492391 - Data Import - Import - app_data/data_unificator
+2024-10-14T14:22:07.529395 - Detected encoding 'ascii' for file 'app_data/data_unificator/power.csv'
+2024-10-14T14:22:11.992280 - EDA performed on file 'app_data/data_unificator/power.csv'
+2024-10-14T14:22:12.048695 - Detected encoding 'ascii' for file 'app_data/data_unificator/processor.csv'
+2024-10-14T14:22:55.114843 - EDA performed on file 'app_data/data_unificator/processor.csv'
+2024-10-14T14:23:04.994581 - Selected Step: Data Import
+2024-10-14T14:23:05.000665 - Number of Workers: 1
+2024-10-14T14:24:36.905907 - Selected Step: Data Import
+2024-10-14T14:24:36.910524 - Number of Workers: 1
+2024-10-14T14:35:11.081682 - Selected Step: Data Import
+2024-10-14T14:35:11.085956 - Number of Workers: 1
+2024-10-14T14:35:14.396409 - Selected Step: Data Import
+2024-10-14T14:35:14.400848 - Number of Workers: 1
+2024-10-14T14:35:14.485084 - Selected Step: Data Import
+2024-10-14T14:35:14.490392 - Number of Workers: 1
+2024-10-14T14:35:16.363101 - Selected Step: Data Import
+2024-10-14T14:35:16.367658 - Number of Workers: 1
+2024-10-14T14:35:16.388993 - Data Import - Import - app_data/data_unificator
+2024-10-14T14:35:16.431338 - Detected encoding 'ascii' for file 'app_data/data_unificator/power.csv'
+2024-10-14T14:35:20.932848 - EDA performed on file 'app_data/data_unificator/power.csv'
+2024-10-14T14:35:20.984893 - Detected encoding 'ascii' for file 'app_data/data_unificator/processor.csv'
+2024-10-14T14:36:04.112896 - EDA performed on file 'app_data/data_unificator/processor.csv'
+2024-10-14T14:37:01.868753 - Selected Step: Data Import
+2024-10-14T14:37:01.873807 - Number of Workers: 1
+2024-10-14T14:37:20.224822 - Selected Step: Data Import
+2024-10-14T14:37:20.229023 - Number of Workers: 1
+2024-10-14T14:37:40.349996 - Selected Step: Data Import
+2024-10-14T14:37:40.357726 - Number of Workers: 1
+2024-10-14T14:37:52.284944 - Selected Step: Data Import
+2024-10-14T14:37:52.289524 - Number of Workers: 1
+2024-10-14T14:38:40.075435 - Selected Step: Data Import
+2024-10-14T14:38:40.080249 - Number of Workers: 1
+2024-10-14T14:42:57.693244 - Selected Step: Data Import
+2024-10-14T14:42:57.698086 - Number of Workers: 1
+2024-10-14T14:43:14.053913 - Selected Step: Data Import
+2024-10-14T14:43:14.058690 - Number of Workers: 1
+2024-10-14T14:43:14.152260 - Selected Step: Data Import
+2024-10-14T14:43:14.157032 - Number of Workers: 1
+2024-10-14T14:43:15.220566 - Selected Step: Data Import
+2024-10-14T14:43:15.225922 - Number of Workers: 1
+2024-10-14T14:43:15.249753 - Data Import - Import - app_data/data_unificator
+2024-10-14T14:43:15.295566 - Detected encoding 'ascii' for file 'app_data/data_unificator/power.csv'
+2024-10-14T14:43:19.422713 - EDA performed on file 'app_data/data_unificator/power.csv'
+2024-10-14T14:43:19.477497 - Detected encoding 'ascii' for file 'app_data/data_unificator/processor.csv'
+2024-10-14T14:44:03.065585 - EDA performed on file 'app_data/data_unificator/processor.csv'
+2024-10-14T14:44:20.388869 - Selected Step: Data Import
+2024-10-14T14:44:20.394098 - Number of Workers: 1
+2024-10-14T14:45:15.193199 - Selected Step: Data Import
+2024-10-14T14:45:15.198161 - Number of Workers: 1
+2024-10-14T14:45:17.964909 - Selected Step: Data Import
+2024-10-14T14:45:17.970293 - Number of Workers: 1
+2024-10-14T14:45:18.057694 - Selected Step: Data Import
+2024-10-14T14:45:18.062326 - Number of Workers: 1
+2024-10-14T14:45:19.774298 - Selected Step: Data Import
+2024-10-14T14:45:19.779783 - Number of Workers: 1
+2024-10-14T14:45:19.801580 - Data Import - Import - app_data/data_unificator
+2024-10-14T14:45:19.840196 - Detected encoding 'ascii' for file 'app_data/data_unificator/power.csv'
+2024-10-14T14:45:24.079185 - EDA performed on file 'app_data/data_unificator/power.csv'
+2024-10-14T14:45:24.138298 - Detected encoding 'ascii' for file 'app_data/data_unificator/processor.csv'
+2024-10-14T14:46:07.163030 - EDA performed on file 'app_data/data_unificator/processor.csv'
+2024-10-14T14:46:13.365342 - Selected Step: Data Import
+2024-10-14T14:46:13.370919 - Number of Workers: 1
+2024-10-14T14:46:13.509074 - Selected Step: Data Import
+2024-10-14T14:46:13.513898 - Number of Workers: 1
+2024-10-14T14:46:29.167655 - Selected Step: Data Import
+2024-10-14T14:46:29.172949 - Number of Workers: 1
+2024-10-14T14:46:29.370198 - Selected Step: Data Import
+2024-10-14T14:46:29.375385 - Number of Workers: 1
+2024-10-14T14:46:36.519153 - Selected Step: Data Import
+2024-10-14T14:46:36.524225 - Number of Workers: 1
+2024-10-14T14:46:42.381482 - Selected Step: Data Import
+2024-10-14T14:46:42.386763 - Number of Workers: 1
+2024-10-14T14:47:23.628683 - Selected Step: Data Mapping
+2024-10-14T14:47:23.633060 - Number of Workers: 1
+2024-10-14T14:47:23.639071 - Identified overlapping fields.
+2024-10-14T14:47:23.645815 - User established source hierarchy and weights.
+2024-10-14T14:48:35.108358 - Selected Step: Data Normalization
+2024-10-14T14:48:35.114748 - Number of Workers: 1
+2024-10-14T14:48:36.866530 - Selected Step: Data Mapping
+2024-10-14T14:48:36.870858 - Number of Workers: 1
+2024-10-14T14:48:36.877113 - Identified overlapping fields.
+2024-10-14T14:48:36.882908 - User established source hierarchy and weights.
+2024-10-14T15:32:53.199174 - Selected Step: Data Normalization
+2024-10-14T15:32:53.204744 - Number of Workers: 1
+2024-10-14T15:32:56.435788 - Selected Step: Data Mapping
+2024-10-14T15:32:56.440655 - Number of Workers: 1
+2024-10-14T15:33:00.810661 - Selected Step: Data Normalization
+2024-10-14T15:33:00.814427 - Number of Workers: 1
+2024-10-14T15:33:02.178007 - Selected Step: Data Import
+2024-10-14T15:33:02.182075 - Number of Workers: 1
+2024-10-14T15:33:03.823288 - Selected Step: Data Import
+2024-10-14T15:33:03.827577 - Number of Workers: 1
+2024-10-14T15:33:03.844426 - Data Import - Import - app_data/data_unificator
+2024-10-14T15:33:03.886292 - Detected encoding 'ascii' for file 'app_data/data_unificator/power.csv'
+2024-10-14T15:33:08.308172 - EDA performed on file 'app_data/data_unificator/power.csv'
+2024-10-14T15:33:08.365904 - Detected encoding 'ascii' for file 'app_data/data_unificator/processor.csv'
+2024-10-14T15:33:51.078918 - EDA performed on file 'app_data/data_unificator/processor.csv'
+2024-10-14T17:26:05.250098 - Selected Step: Data Import
+2024-10-14T17:26:05.256705 - Number of Workers: 1
+2024-10-14T17:26:05.395116 - Selected Step: Data Import
+2024-10-14T17:26:05.398013 - Number of Workers: 1
+2024-10-14T17:26:09.066644 - Selected Step: Data Import
+2024-10-14T17:26:09.070085 - Number of Workers: 1
+2024-10-14T17:26:09.253857 - Selected Step: Data Import
+2024-10-14T17:26:09.258238 - Number of Workers: 1
+2024-10-14T17:26:15.332863 - Selected Step: Data Mapping
+2024-10-14T17:26:15.335590 - Number of Workers: 1
+2024-10-14T17:26:15.341329 - Identified overlapping fields.
+2024-10-14T17:26:15.345481 - User established source hierarchy and weights.
+2024-10-14T17:26:28.809489 - Extracted fields and metadata for 'power.csv'
+2024-10-14T17:26:28.818457 - Extracted fields and metadata for 'processor.csv'
+2024-10-14T17:26:28.856570 - Identified overlapping fields.
+2024-10-14T17:26:28.864180 - User established source hierarchy and weights.
+2024-10-14T17:27:58.275011 - Identified overlapping fields.
+2024-10-14T17:27:58.281278 - User established source hierarchy and weights.
+2024-10-14T17:27:58.289085 - Aligned data structures across sources.
+2024-10-14T17:27:58.293054 - User aligned data structures.
+2024-10-14T17:28:10.314452 - Identified overlapping fields.
+2024-10-14T17:28:10.320676 - User established source hierarchy and weights.
+2024-10-14T17:28:10.333574 - Error resolving conflicts: 'DataMapper' object has no attribute 'aligned_data'
+2024-10-14T17:38:46.476101 - Selected Step: Data Normalization
+2024-10-14T17:38:46.478876 - Number of Workers: 1
+2024-10-14T17:42:43.609960 - Selected Step: Data Mapping
+2024-10-14T17:42:43.613556 - Number of Workers: 1
+2024-10-14T17:42:46.154259 - Selected Step: Data Import
+2024-10-14T17:42:46.157323 - Number of Workers: 1
+2024-10-14T17:42:48.148820 - Selected Step: Data Import
+2024-10-14T17:42:48.152329 - Number of Workers: 1
+2024-10-14T17:42:48.174704 - Data Import - Import - app_data/data_unificator
+2024-10-14T17:42:48.220308 - Detected encoding 'ascii' for file 'app_data/data_unificator/power.csv'
+2024-10-14T17:42:53.397189 - EDA performed on file 'app_data/data_unificator/power.csv'
+2024-10-14T17:42:53.457362 - Detected encoding 'ascii' for file 'app_data/data_unificator/processor.csv'
+2024-10-14T17:43:36.137415 - EDA performed on file 'app_data/data_unificator/processor.csv'
+2024-10-14T17:43:40.343833 - Selected Step: Data Import
+2024-10-14T17:43:40.347583 - Number of Workers: 1
+2024-10-14T17:43:40.553588 - Selected Step: Data Import
+2024-10-14T17:43:40.557088 - Number of Workers: 1
+2024-10-14T17:43:49.662468 - Selected Step: Data Import
+2024-10-14T17:43:49.665987 - Number of Workers: 1
+2024-10-14T17:43:49.777615 - Selected Step: Data Import
+2024-10-14T17:43:49.781227 - Number of Workers: 1
+2024-10-14T17:43:55.352059 - Selected Step: Data Import
+2024-10-14T17:43:55.355582 - Number of Workers: 1
+2024-10-14T17:43:55.544626 - Selected Step: Data Import
+2024-10-14T17:43:55.548378 - Number of Workers: 1
+2024-10-14T17:44:03.341510 - Selected Step: Data Mapping
+2024-10-14T17:44:03.343765 - Number of Workers: 1
+2024-10-14T17:44:03.349608 - Identified overlapping fields.
+2024-10-14T17:44:03.355944 - User established source hierarchy and weights.
+2024-10-14T17:44:27.371266 - User created mapping dictionary.
+2024-10-14T17:44:39.313226 - Extracted fields and metadata for 'power.csv'
+2024-10-14T17:44:39.322919 - Extracted fields and metadata for 'processor.csv'
+2024-10-14T17:44:47.060273 - User created mapping dictionary.
+2024-10-14T17:57:29.003130 - Selected Step: Data Normalization
+2024-10-14T17:57:29.006471 - Number of Workers: 1
+2024-10-14T17:57:30.456883 - Selected Step: Data Mapping
+2024-10-14T17:57:30.459222 - Number of Workers: 1
+2024-10-14T17:57:30.464335 - Identified overlapping fields.
+2024-10-14T17:57:30.470846 - User established source hierarchy and weights.
+2024-10-14T17:57:38.443699 - Extracted fields and metadata for 'power.csv'
+2024-10-14T17:57:38.450951 - Extracted fields and metadata for 'processor.csv'
+2024-10-14T17:57:47.827400 - User created mapping dictionary.
+2024-10-14T17:58:08.976098 - Selected Step: Data Import
+2024-10-14T17:58:08.979223 - Number of Workers: 1
+2024-10-14T17:58:12.631723 - Selected Step: Data Import
+2024-10-14T17:58:12.635381 - Number of Workers: 1
+2024-10-14T17:58:12.724123 - Selected Step: Data Import
+2024-10-14T17:58:12.727412 - Number of Workers: 1
+2024-10-14T17:58:13.806827 - Selected Step: Data Import
+2024-10-14T17:58:13.810642 - Number of Workers: 1
+2024-10-14T17:58:13.829163 - Data Import - Import - app_data/data_unificator
+2024-10-14T17:58:13.867728 - Detected encoding 'ascii' for file 'app_data/data_unificator/power.csv'
+2024-10-14T17:58:18.185952 - EDA performed on file 'app_data/data_unificator/power.csv'
+2024-10-14T17:58:18.247240 - Detected encoding 'ascii' for file 'app_data/data_unificator/processor.csv'
+2024-10-14T17:59:01.453351 - EDA performed on file 'app_data/data_unificator/processor.csv'
+2024-10-14T17:59:15.894566 - Selected Step: Data Import
+2024-10-14T17:59:15.898659 - Number of Workers: 1
+2024-10-14T17:59:16.024222 - Selected Step: Data Import
+2024-10-14T17:59:16.027253 - Number of Workers: 1
+2024-10-14T17:59:19.086779 - Selected Step: Data Import
+2024-10-14T17:59:19.090423 - Number of Workers: 1
+2024-10-14T17:59:19.274463 - Selected Step: Data Import
+2024-10-14T17:59:19.277984 - Number of Workers: 1
+2024-10-14T17:59:23.346864 - Selected Step: Data Mapping
+2024-10-14T17:59:23.349971 - Number of Workers: 1
+2024-10-14T17:59:32.020672 - Selected Step: Data Import
+2024-10-14T17:59:32.024760 - Number of Workers: 1
+2024-10-14T17:59:37.623240 - Selected Step: Data Import
+2024-10-14T17:59:37.626584 - Number of Workers: 1
+2024-10-14T17:59:43.111914 - Selected Step: Data Import
+2024-10-14T17:59:43.115144 - Number of Workers: 1
+2024-10-14T17:59:48.279354 - Selected Step: Data Import
+2024-10-14T17:59:48.283512 - Number of Workers: 1
+2024-10-14T17:59:51.635461 - Selected Step: Data Mapping
+2024-10-14T17:59:51.639241 - Number of Workers: 1
+2024-10-14T18:12:20.573874 - Selected Step: Data Mapping
+2024-10-14T18:12:20.577177 - Number of Workers: 1
+2024-10-14T18:12:25.394980 - Selected Step: Data Mapping
+2024-10-14T18:12:25.397778 - Number of Workers: 1
+2024-10-14T18:12:39.468145 - Selected Step: Data Mapping
+2024-10-14T18:12:39.471764 - Number of Workers: 1
+2024-10-14T18:12:43.408915 - Selected Step: Data Normalization
+2024-10-14T18:12:43.411765 - Number of Workers: 1
+2024-10-14T18:12:44.439357 - Selected Step: Data Mapping
+2024-10-14T18:12:44.442388 - Number of Workers: 1
+2024-10-14T18:12:46.669105 - Extracted fields and metadata for 'power.csv'
+2024-10-14T18:12:46.678221 - Extracted fields and metadata for 'processor.csv'
+2024-10-14T18:19:37.610679 - Selected Step: Data Import
+2024-10-14T18:19:37.614462 - Number of Workers: 1
+2024-10-14T18:19:40.541866 - Selected Step: Data Import
+2024-10-14T18:19:40.544509 - Number of Workers: 1
+2024-10-14T18:19:40.559288 - Data Import - Import - app_data/data_unificator
+2024-10-14T18:19:40.602816 - Detected encoding 'ascii' for file 'app_data/data_unificator/power.csv'
+2024-10-14T18:19:44.818423 - EDA performed on file 'app_data/data_unificator/power.csv'
+2024-10-14T18:19:44.875551 - Detected encoding 'ascii' for file 'app_data/data_unificator/processor.csv'
+2024-10-14T18:20:28.057846 - EDA performed on file 'app_data/data_unificator/processor.csv'
+2024-10-14T18:20:33.765585 - Selected Step: Data Import
+2024-10-14T18:20:33.768451 - Number of Workers: 1
+2024-10-14T18:20:33.912799 - Selected Step: Data Import
+2024-10-14T18:20:33.915578 - Number of Workers: 1
+2024-10-14T18:20:37.390711 - Selected Step: Data Import
+2024-10-14T18:20:37.394330 - Number of Workers: 1
+2024-10-14T18:20:37.642165 - Selected Step: Data Import
+2024-10-14T18:20:37.644893 - Number of Workers: 1
+2024-10-14T18:20:42.010408 - Selected Step: Data Mapping
+2024-10-14T18:20:42.012984 - Number of Workers: 1
+2024-10-14T18:20:42.018855 - Identified overlapping fields.
+2024-10-14T18:20:42.025123 - User established source hierarchy and weights.
+2024-10-14T18:20:47.935071 - Extracted fields and metadata for 'power.csv'
+2024-10-14T18:20:47.943859 - Extracted fields and metadata for 'processor.csv'
+2024-10-14T18:23:11.659559 - Selected Step: Data Import
+2024-10-14T18:23:11.662332 - Number of Workers: 1

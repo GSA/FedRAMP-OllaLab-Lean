@@ -34,44 +34,71 @@ def handle_manual_hierarchy(df, file_name):
         st.session_state['manual_hierarchy'][file_name] = {}
     if file_name not in st.session_state['assigned_nodes']:
         st.session_state['assigned_nodes'][file_name] = set()
+    # No need to initialize st.session_state[f"level_1_nodes_{file_name}"] here
 
     columns = df.columns.tolist()
     assigned_nodes = st.session_state['assigned_nodes'][file_name]
 
-    # Level 1 nodes
-    available_columns = [col for col in columns if col not in assigned_nodes]
+    # Place the "Assign all fields as Level 1 Nodes" button before the widget
+    if st.button(f"Assign all fields as Level 1 Nodes for '{file_name}'"):
+        # Update level 1 nodes in session state
+        st.session_state[f"level_1_nodes_{file_name}"] = columns
+        # Reset assigned_nodes and manual_hierarchy for this file
+        st.session_state['assigned_nodes'][file_name] = set(columns)
+        st.session_state['manual_hierarchy'][file_name] = {}
+        # Force rerun to update the widget with new defaults
+        st.rerun()
+
+    # Level 1 nodes selection
     level_1_nodes = st.multiselect(
         f"Select Level 1 Nodes (Top Level) for '{file_name}'",
-        options=available_columns,
+        options=columns,
+        default=st.session_state.get(f"level_1_nodes_{file_name}", []),
         key=f"level_1_nodes_{file_name}"
     )
 
-    # Update assigned nodes
+    # Update assigned nodes after level_1_nodes are determined
     assigned_nodes.update(level_1_nodes)
+    # Do not assign to st.session_state[f"level_1_nodes_{file_name}"] here
 
-    # Function to recursively get children for a node
-    def recursive_hierarchy(node):
-        available_columns = [col for col in columns if col not in assigned_nodes]
-        if not available_columns:
+    # Function to recursively get children for a node, up to a maximum of 5 levels
+    def recursive_hierarchy(node, current_level):
+        if current_level >= 5:
             return
-        children = st.multiselect(
-            f"Select children of '{node}'",
-            options=available_columns,
-            key=f"children_{file_name}_{node}"
-        )
-        st.session_state['manual_hierarchy'][file_name][node] = children
 
-        # Update assigned nodes
-        assigned_nodes.update(children)
+        # Use a unique key for each node to preserve state
+        node_key = f"{file_name}_{node}_{current_level}"
 
-        # For each child, allow to specify its children
-        for child in children:
-            recursive_hierarchy(child)
+        # Initialize the children list for this node if not already
+        if node not in st.session_state['manual_hierarchy'][file_name]:
+            st.session_state['manual_hierarchy'][file_name][node] = []
 
+        # Get available columns (those not assigned yet)
+        available_columns = [col for col in columns if col not in assigned_nodes]
+
+        if available_columns:
+            children = st.multiselect(
+                f"Select Level {current_level + 1} Nodes (children of '{node}')",
+                options=available_columns,
+                default=st.session_state['manual_hierarchy'][file_name].get(node, []),
+                key=f"children_{node_key}"
+            )
+
+            # Update the hierarchy with the selected children
+            st.session_state['manual_hierarchy'][file_name][node] = children
+
+            # Update assigned nodes
+            assigned_nodes.update(children)
+
+            # For each child, allow to specify its children recursively, up to level 5
+            for child in children:
+                recursive_hierarchy(child, current_level + 1)
+
+    # Start the recursive hierarchy building for each Level 1 node
     for node in level_1_nodes:
-        recursive_hierarchy(node)
+        recursive_hierarchy(node, current_level=1)
 
-    # After hierarchy is specified, check for consistency
+    # "Validate Hierarchy" button
     if st.button(f"Validate Hierarchy for '{file_name}'"):
         hierarchy = st.session_state['manual_hierarchy'][file_name]
         # Implement hierarchy consistency check
@@ -93,11 +120,19 @@ def handle_manual_hierarchy(df, file_name):
             st.error(f"Hierarchy for '{file_name}' is inconsistent. Please revise.")
 
 def check_hierarchy_consistency(hierarchy):
+    import networkx as nx
+
     # Flatten the hierarchy into parent-child pairs
     parent_child_pairs = []
-    for parent, children in hierarchy.items():
+    
+    def build_pairs(parent, children):
         for child in children:
             parent_child_pairs.append((parent, child))
+            if child in hierarchy:
+                build_pairs(child, hierarchy[child])
+    
+    for parent in hierarchy:
+        build_pairs(parent, hierarchy[parent])
 
     # Build a graph and check for cycles and multiple parents
     G = nx.DiGraph()
@@ -106,7 +141,7 @@ def check_hierarchy_consistency(hierarchy):
     try:
         cycles = list(nx.find_cycle(G, orientation='original'))
         if cycles:
-            return False
+            return False  # Cycle detected
     except nx.exception.NetworkXNoCycle:
         pass  # No cycles
 
@@ -117,7 +152,8 @@ def check_hierarchy_consistency(hierarchy):
             return False  # Child has multiple parents
         node_parents[child] = parent
 
-    return True
+    return True  # Hierarchy is consistent
+
 
 def get_file_path_by_name(file_name):
     for fp in st.session_state['file_paths']:
@@ -196,7 +232,24 @@ def render_import(num_workers):
             st.session_state[var] = default_value
 
     folder = st.text_input("Folder Path", "app_data/data_unificator")
-    start_import = st.button("Start Import")
+    # Create two columns for "Start Import" and "Clear Cache" buttons
+    col1, col2, col3 = st.columns([2, 2, 6])  # Adjust column widths as needed
+    with col1:
+        start_import = st.button("Start Import", key="start_import")
+    with col2:
+        clear_cache = st.button("Clear Cache",key="clear_cache")
+
+    # Handle "Clear Cache" button click
+    if clear_cache:
+        for var, default_value in session_state_defaults.items():
+            if isinstance(default_value, dict):
+                st.session_state[var] = {}
+            elif isinstance(default_value, list):
+                st.session_state[var] = []
+            else:
+                st.session_state[var] = default_value
+        st.rerun()  # Optional: Rerun the app to reflect changes immediately
+
 
     if start_import or st.session_state['data_imported']:
         if not os.path.isdir(folder):
@@ -261,7 +314,9 @@ def render_import(num_workers):
                 # Handle missing data
                 missing_data_info = result.get('missing_data_info')
                 if missing_data_info is not None and (
-                        isinstance(missing_data_info, pd.Series) or missing_data_info != {}):
+                    (isinstance(missing_data_info, pd.Series) and not missing_data_info.empty) or
+                    (isinstance(missing_data_info, dict) and bool(missing_data_info))
+                ):
                     if isinstance(data, pd.DataFrame):
                         handle_missing_data(data, missing_data_info, file_name)
                     else:
