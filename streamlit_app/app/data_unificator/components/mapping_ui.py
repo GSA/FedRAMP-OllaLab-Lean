@@ -1,5 +1,6 @@
 # components/mapping_ui.py
 
+import os
 import streamlit as st
 from streamlit.logger import get_logger
 from data_unificator.modules.data_mapping import DataMapper
@@ -9,7 +10,6 @@ import traceback
 
 logger = get_logger(__name__)
 
-@st.fragment
 def render_mapping():
     st.header("Data Mapping")
     st.write("Map fields across data sources and resolve conflicts.")
@@ -26,10 +26,11 @@ def render_mapping():
         # Execute steps
         extract_fields_step(data_mapper)
         identify_overlapping_fields_step(data_mapper)
+        establish_hierarchy_step(data_mapper, data_sources)
         create_mapping_dictionary_step(data_mapper)
         save_mapping_dictionary_step(data_mapper)
-        establish_hierarchy_and_weights_step(data_mapper, data_sources)
         align_data_structures_step(data_mapper)
+        save_temporary_merged_file_step(data_mapper)
         detect_and_resolve_conflicts_step(data_mapper)
         verify_and_convert_data_types_step(data_mapper)
 
@@ -62,7 +63,6 @@ def prepare_data_sources():
             })
     return data_sources
 
-@st.fragment
 def extract_fields_step(data_mapper):
     # Step 1: Extract Fields
     if st.button("Extract Fields and Metadata"):
@@ -89,7 +89,6 @@ def extract_fields_step(data_mapper):
             else:
                 st.write("No fields found in this source.")
 
-@st.fragment
 def identify_overlapping_fields_step(data_mapper):
     # Step 2: Identify Overlapping Fields
     overlaps = data_mapper.identify_overlapping_fields()
@@ -100,16 +99,22 @@ def identify_overlapping_fields_step(data_mapper):
             field_name = overlap['field_name']
             sources = overlap['sources']
             data_types = overlap['data_types']
-            value_patterns = overlap['value_patterns']
+            sample_values = overlap['sample_values']
+            same_dtype = overlap['same_dtype']
+            sample_similarity = overlap['sample_similarity']
 
             with st.expander(f"Field: {field_name}"):
                 st.write(f"**Sources:** {', '.join(sources)}")
                 st.write("**Data Types:**")
                 for source_name in sources:
                     st.write(f"- {source_name}: {data_types[source_name]}")
-                st.write("**Value Patterns:**")
+                st.write(f"**Same Data Type:** {'Yes' if same_dtype else 'No'}")
+                st.write("**Sample Values:**")
                 for source_name in sources:
-                    st.write(f"- {source_name}: {value_patterns[source_name]}")
+                    st.write(f"- {source_name}: {sample_values[source_name]}")
+                st.write("**Sample Value Similarity:**")
+                for (source_a, source_b), similarity in sample_similarity.items():
+                    st.write(f"- {source_a} vs {source_b}: {similarity:.2f}")
                 # Ask user to confirm
                 confirm = st.checkbox(f"Include '{field_name}' in mapping?", value=True, key=f"confirm_{field_name}")
                 if confirm:
@@ -118,30 +123,64 @@ def identify_overlapping_fields_step(data_mapper):
     else:
         st.info("No overlapping fields found.")
 
-@st.fragment
 def create_mapping_dictionary_step(data_mapper):
     # Step 3: Create Mapping Dictionary
     st.subheader("Field Mapping")
     if st.button("Create Mapping Dictionary"):
-        if not hasattr(data_mapper, 'confirmed_overlaps') or not data_mapper.confirmed_overlaps:
-            st.error("No confirmed overlaps to create mapping from. Please identify and confirm overlaps first.")
+        if not data_mapper.source_hierarchy:
+            st.error("Source hierarchy is not established. Please establish source hierarchy first.")
             return
-        # Allow user to specify standard names and map source-specific field names
-        for overlap in data_mapper.confirmed_overlaps:
-            field_name = overlap['field_name']
-            sources = overlap['sources']
-            st.write(f"Map field '{field_name}' from sources: {', '.join(sources)}")
-            standard_name = st.text_input(f"Standard name for field '{field_name}'", value=field_name, key=f"standard_{field_name}")
-            if standard_name:
-                # Map the source-specific field names to the standard name
-                for source_name in sources:
-                    if standard_name not in data_mapper.mapping_dictionary:
-                        data_mapper.mapping_dictionary[standard_name] = []
-                    data_mapper.mapping_dictionary[standard_name].append((source_name, field_name))
+
+        # Initialize mapping dictionary
+        data_mapper.mapping_dictionary = {}
+
+        # Start mapping from the highest priority source
+        for idx, source in enumerate(data_mapper.source_hierarchy):
+            st.write(f"### Mapping fields for source '{source}' (Level {idx+1})")
+            source_fields = list(data_mapper.field_metadata[source]['metadata'].keys())
+
+            # For the highest priority source, use its fields as anchor fields
+            if idx == 0:
+                for field in source_fields:
+                    data_mapper.mapping_dictionary[field] = [(source, field)]
+                anchor_fields = list(data_mapper.mapping_dictionary.keys())
+                st.write(f"Anchor fields from '{source}': {anchor_fields}")
+            else:
+                # For lower priority sources, map their fields
+                for field in source_fields:
+                    st.write(f"Field '{field}' from source '{source}'")
+                    # Options: map to anchor field, map to new field, leave as is
+                    mapping_options = ['Map to anchor field', 'Map to new field', 'Leave as is']
+                    selected_option = st.selectbox(
+                        f"Select mapping option for field '{field}' from '{source}'",
+                        mapping_options,
+                        key=f"mapping_option_{source}_{field}"
+                    )
+                    if selected_option == 'Map to anchor field':
+                        # User selects which anchor field to map to
+                        selected_anchor_field = st.selectbox(
+                            f"Select anchor field to map '{field}' to",
+                            anchor_fields,
+                            key=f"anchor_field_{source}_{field}"
+                        )
+                        data_mapper.mapping_dictionary[selected_anchor_field].append((source, field))
+                    elif selected_option == 'Map to new field':
+                        new_field_name = st.text_input(
+                            f"Specify new field name for '{field}'",
+                            key=f"new_field_{source}_{field}"
+                        )
+                        if new_field_name:
+                            if new_field_name not in data_mapper.mapping_dictionary:
+                                data_mapper.mapping_dictionary[new_field_name] = []
+                            data_mapper.mapping_dictionary[new_field_name].append((source, field))
+                    else:
+                        # Leave as is
+                        if field not in data_mapper.mapping_dictionary:
+                            data_mapper.mapping_dictionary[field] = []
+                        data_mapper.mapping_dictionary[field].append((source, field))
         st.success("Mapping dictionary created.")
         record_action("User created mapping dictionary.")
 
-@st.fragment
 def save_mapping_dictionary_step(data_mapper):
     # Step 4: Save Mapping Dictionary
     if st.button("Save Mapping Dictionary"):
@@ -149,27 +188,32 @@ def save_mapping_dictionary_step(data_mapper):
         st.success("Mapping dictionary saved.")
         record_action("User saved mapping dictionary.")
 
-@st.fragment
-def establish_hierarchy_and_weights_step(data_mapper, data_sources):
-    # Step 5: Establish Source Hierarchy and Weights
-    st.subheader("Source Hierarchy and Weights")
-    source_files = [source['file'] for source in data_sources]
-    default_weights = {file: 5 for file in source_files}
-    source_hierarchy = st.multiselect(
-        "Establish Source Hierarchy (top is highest priority)",
-        options=source_files,
-        default=source_files,
-        format_func=lambda x: f"{x}"
+def establish_hierarchy_step(data_mapper, data_sources):
+    # Step 5: Establish Source Hierarchy
+    st.subheader("Source Hierarchy")
+    source_files =  [source['file'] for source in data_sources]
+    max_levels = len(source_files)
+    num_levels = st.number_input(
+        "Specify the number of source hierarchy levels:",
+        min_value=1,
+        max_value=max_levels,
+        value=max_levels,
+        step=1
     )
-    st.write("Adjust Source Weights (higher means more reliable)")
-    for file in source_files:
-        default_weights[file] = st.slider(f"Weight for {file}", 1, 10, 5)
-
+    selected_files = []
+    source_hierarchy = []
+    for level in range(1, num_levels + 1):
+        remaining_files = [f for f in source_files if f not in selected_files]
+        selected_file = st.selectbox(
+            f"Select source file for level {level} (1 is highest priority):",
+            options=remaining_files,
+            key=f"hierarchy_level_{level}"
+        )
+        selected_files.append(selected_file)
+        source_hierarchy.append(selected_file)
     data_mapper.source_hierarchy = source_hierarchy
-    data_mapper.source_weights = default_weights
     record_action("User established source hierarchy and weights.")
 
-@st.fragment
 def align_data_structures_step(data_mapper):
     # Step 6: Align Data Structures
     if st.button("Align Data Structures"):
@@ -180,30 +224,101 @@ def align_data_structures_step(data_mapper):
         st.success("Data structures aligned.")
         record_action("User aligned data structures.")
 
-@st.fragment
+def save_temporary_merged_file_step(data_mapper):
+    # New Step: Save Temporary Merged File
+    st.subheader("Save Temporary Merged File")
+    temp_file_name = st.text_input("Specify a file name for the temporary merged file:")
+    if st.button("Merge and Save Temporary File"):
+        if not data_mapper.mapping_dictionary:
+            st.error("Mapping dictionary is empty. Please create the mapping dictionary before merging.")
+            return
+        if not temp_file_name:
+            st.error("Please specify a valid file name.")
+            return
+        try:
+            data_mapper.merge_data_sources()
+            data_mapper.save_temporary_merged_file(temp_file_name)
+            st.success(f"Temporary merged file saved as '{temp_file_name}'.")
+            st.session_state['temp_merged_file'] = temp_file_name
+            record_action(f"User saved temporary merged file '{temp_file_name}'.")
+        except Exception as e:
+            st.error(f"An error occurred during merging: {str(e)}")
+
 def detect_and_resolve_conflicts_step(data_mapper):
     # Step 7: Detect and Resolve Conflicts
-    st.subheader("Conflict Resolution Strategies")
+    if 'temp_merged_file' not in st.session_state:
+        st.info("Please save a temporary merged file before detecting conflicts.")
+        return
+
+    st.subheader("Conflict Detection and Resolution")
+
     conflict_strategies = ["Manual", "Time-based", "Hierarchy-based", "Weight-based"]
     selected_strategy = st.selectbox("Select Conflict Resolution Strategy", conflict_strategies)
-    if selected_strategy == "Manual":
-        st.info("Manual conflict resolution will require user input for each conflict.")
-    # Additional UI for strategy parameters can be added here
 
-    if st.button("Detect and Resolve Conflicts"):
-        if not hasattr(data_mapper, 'aligned_data'):
-            st.error("Data structures are not aligned yet. Please align data structures before resolving conflicts.")
-        else:
-            data_mapper.detect_and_resolve_conflicts(selected_strategy)
-            st.success("Conflicts resolved using selected strategy.")
-            record_action(f"User resolved conflicts using {selected_strategy} strategy.")
+    if st.button("Detect Conflicts"):
+        temp_file_name = st.session_state['temp_merged_file']
+        try:
+            data_mapper.load_temporary_merged_file(temp_file_name)
+            data_mapper.detect_conflicts(report_row_numbers=True)
+            if data_mapper.conflicts:
+                st.write("### Conflicts Detected:")
+                for keys, conflict in data_mapper.conflicts.items():
+                    st.write(f"Conflict at keys: {keys}")
+                    for field, details in conflict.items():
+                        st.write(f"- Field: {field}")
+                        for source, info in details.items():
+                            st.write(f"  - Source: {source}")
+                            st.write(f"    - Values: {info['values']}")
+                            st.write(f"    - Rows: {info['rows']}")
+                if selected_strategy == "Manual":
+                    st.write("Manual conflict resolution:")
+                    # Allow user to delete conflicting rows or edit values
+                    for conflict_key, conflict_fields in data_mapper.conflicts.items():
+                        st.write(f"Conflict at keys: {conflict_key}")
+                        for field, field_conflict in conflict_fields.items():
+                            st.write(f"Field: {field}")
+                            # Display conflicting rows
+                            conflicting_rows = data_mapper.get_conflicting_rows(conflict_key, field)
+                            st.write(conflicting_rows)
+                            # Allow user to edit or delete rows
+                            action = st.selectbox(f"Action for conflict at {conflict_key} in field '{field}'",
+                                                  options=['Keep First', 'Delete Rows', 'Edit Values'],
+                                                  key=f"conflict_action_{conflict_key}_{field}")
+                            if action == 'Delete Rows':
+                                data_mapper.mark_rows_for_deletion(conflict_key, field)
+                            elif action == 'Edit Values':
+                                # Allow user to input new value
+                                new_value = st.text_input(f"New value for field '{field}' at {conflict_key}",
+                                                          key=f"edit_value_{conflict_key}_{field}")
+                                data_mapper.update_conflict_value(conflict_key, field, new_value)
+                else:
+                    st.write(f"Conflicts will be resolved using the '{selected_strategy}' strategy.")
+                st.session_state['conflict_strategy'] = selected_strategy
+                st.session_state['conflicts_detected'] = True
+            else:
+                st.success("No conflicts detected.")
+                st.session_state['conflicts_detected'] = False
+        except Exception as e:
+            st.error(f"An error occurred during conflict detection: {str(e)}")
 
-@st.fragment
+    if st.session_state.get('conflicts_detected', False):
+        if st.button("Resolve Conflicts"):
+            try:
+                temp_file_name = st.session_state['temp_merged_file']
+                output_file_name = "fixed_conflicts_" + temp_file_name
+                selected_strategy = st.session_state['conflict_strategy']
+                data_mapper.resolve_conflicts(selected_strategy)
+                data_mapper.save_resolved_data(output_file_name)
+                st.success(f"Conflicts resolved and data saved to '{output_file_name}'.")
+                record_action(f"User resolved conflicts and saved data to '{output_file_name}'.")
+            except Exception as e:
+                st.error(f"An error occurred during conflict resolution: {str(e)}")
+
 def verify_and_convert_data_types_step(data_mapper):
     # Step 8: Verify and Convert Data Types
     st.subheader("Data Type Verification and Conversion")
     if hasattr(data_mapper, 'resolved_data'):
-        incompatibilities = verify_data_types(data_mapper.resolved_data)
+        incompatibilities = verify_data_types([{'data': data_mapper.resolved_data}])
         if incompatibilities:
             st.warning("Data type incompatibilities found:")
             st.write(incompatibilities)

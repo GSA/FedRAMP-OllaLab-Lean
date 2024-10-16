@@ -4,6 +4,8 @@ import pandas as pd
 from difflib import SequenceMatcher
 import yaml
 import os
+import re
+from datetime import datetime
 from data_unificator.utils.logging_utils import log_error
 
 def extract_fields_metadata(data):
@@ -66,21 +68,87 @@ def identify_overlaps(field_metadata):
         if len(sources) > 1:
             # Collect data types and sample values from all sources
             data_types = {}
-            value_patterns = {}
+            sample_values_dict = {}
             for source_name, field_meta in sources.items():
                 dtype = field_meta['dtype']
                 sample_values = field_meta['sample_values']
                 data_types[source_name] = dtype
-                # Create a pattern representation of sample values
-                pattern = [type(value).__name__ for value in sample_values]
-                value_patterns[source_name] = pattern
+                sample_values_dict[source_name] = sample_values
+
+            # Check if data types are the same
+            same_dtype = len(set(data_types.values())) == 1
+
+            # Compute sample value similarities
+            sample_similarity = {}
+            source_names = list(sample_values_dict.keys())
+            for i in range(len(source_names)):
+                for j in range(i+1, len(source_names)):
+                    source_a = source_names[i]
+                    source_b = source_names[j]
+                    values_a = sample_values_dict[source_a]
+                    values_b = sample_values_dict[source_b]
+                    similarity = compute_sample_similarity(values_a, values_b)
+                    sample_similarity[(source_a, source_b)] = similarity
+
             overlaps.append({
                 'field_name': field_name,
                 'sources': list(sources.keys()),
                 'data_types': data_types,
-                'value_patterns': value_patterns
+                'sample_values': sample_values_dict,
+                'same_dtype': same_dtype,
+                'sample_similarity': sample_similarity
             })
     return overlaps
+
+def compute_sample_similarity(values_a, values_b):
+    """
+    Compute a similarity score between two lists of sample values.
+    """
+    set_a = set(values_a)
+    set_b = set(values_b)
+    intersection = set_a & set_b
+    union = set_a | set_b
+    if not union:
+        return 0.0
+    similarity = len(intersection) / len(union)
+    return similarity
+
+def check_non_ascii_characters(df):
+    """
+    Check for Non-ASCII characters in DataFrame, allowing specific characters.
+    """
+    allowed_chars = r'()[\]._-:'
+    non_ascii_issues = {}
+    pattern = re.compile(rf'[^\x00-\x7F{re.escape(allowed_chars)}]+')
+    for column in df.columns:
+        issues = df[df[column].astype(str).str.contains(pattern, na=False)]
+        if not issues.empty:
+            non_ascii_issues[column] = issues.index.tolist()
+    return non_ascii_issues
+
+def fix_non_ascii_characters(df):
+    """
+    Fix Non-ASCII characters in DataFrame, replacing them with a placeholder.
+    """
+    allowed_chars = r'()[\]._-:'
+    pattern = re.compile(rf'[^\x00-\x7F{re.escape(allowed_chars)}]+')
+    for column in df.columns:
+        df[column] = df[column].astype(str).apply(lambda x: re.sub(pattern, '', x) if x else x)
+    return df
+
+def backup_file(file_path):
+    """
+    Backup the file with date and time appended to the filename.
+    """
+    directory, filename = os.path.split(file_path)
+    name, ext = os.path.splitext(filename)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    backup_filename = f"{name}_backup_{timestamp}{ext}"
+    backup_path = os.path.join(directory, backup_filename)
+    os.makedirs(directory, exist_ok=True)
+    with open(file_path, 'rb') as original_file, open(backup_path, 'wb') as backup_file:
+        backup_file.write(original_file.read())
+    return backup_path
 
 def rename_fields_in_data_structure(data, field_name_mapping):
     """
@@ -134,7 +202,7 @@ def convert_value_to_type(value, new_type):
         log_error(f"Data type convert - {value} to {new_type} - {str(e)}")
         return value  # Return original value if conversion fails
 
-def detect_conflicts(aligned_data):
+def detect_conflicts(aligned_data, report_row_numbers=False):
     """
     Detect conflicts in data, formats, types, key pairs, and data structure.
     """
@@ -177,9 +245,17 @@ def detect_conflicts(aligned_data):
                 if len(values) > 1:
                     conflicting_values = {}
                     for source in source_names:
-                        source_values = group[group['_source'] == source][column].dropna().unique()
+                        source_group = group[group['_source'] == source]
+                        source_values = source_group[column].dropna().unique()
                         if len(source_values) > 0:
-                            conflicting_values[source] = source_values.tolist()
+                            if report_row_numbers:
+                                row_numbers = source_group.index.tolist()
+                                conflicting_values[source] = {
+                                    'values': source_values.tolist(),
+                                    'rows': row_numbers
+                                }
+                            else:
+                                conflicting_values[source] = source_values.tolist()
                     conflicting_fields[column] = conflicting_values
             if conflicting_fields:
                 conflicts[group_keys] = conflicting_fields
@@ -193,8 +269,6 @@ def resolve_conflicts(aligned_data, conflicts, strategy, source_weights, source_
         return aligned_data  # No implementation for manual resolution
     elif strategy == 'Hierarchy-based':
         resolved_data = resolve_conflicts_hierarchy(aligned_data, source_hierarchy)
-    elif strategy == 'Weight-based':
-        resolved_data = resolve_conflicts_weighted(aligned_data, source_weights)
     elif strategy == 'Time-based':
         resolved_data = resolve_conflicts_time_based(aligned_data)
     else:
@@ -371,7 +445,7 @@ def save_mapping_dictionary(mapping_dictionary, version):
     """
     Save mapping dictionary to a YAML file with versioning.
     """
-    file_name = f"mapping_dictionary_v{version}.yaml"
+    file_name = f"mapping_dictionary_v{version}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.yaml"
     os.makedirs('mappings', exist_ok=True)
     with open(os.path.join('mappings', file_name), 'w') as f:
         yaml.dump(mapping_dictionary, f)
@@ -383,7 +457,7 @@ def load_mapping_dictionary():
     mapping_files = [f for f in os.listdir('mappings') if f.startswith('mapping_dictionary_v') and f.endswith('.yaml')]
     if not mapping_files:
         raise FileNotFoundError("No mapping dictionary found.")
-    mapping_files.sort(key=lambda x: int(x[len('mapping_dictionary_v'):-len('.yaml')]))
+    mapping_files.sort(key=lambda x: os.path.getmtime(os.path.join('mappings', x)))
     latest_file = mapping_files[-1]
     with open(os.path.join('mappings', latest_file), 'r') as f:
         mapping_dictionary = yaml.safe_load(f)
@@ -396,8 +470,33 @@ def version_mapping_dictionary():
     mapping_files = [f for f in os.listdir('mappings') if f.startswith('mapping_dictionary_v') and f.endswith('.yaml')]
     if not mapping_files:
         return 1
-    mapping_files.sort(key=lambda x: int(x[len('mapping_dictionary_v'):-len('.yaml')]))
-    latest_file = mapping_files[-1]
-    version_str = latest_file[len('mapping_dictionary_v'):-len('.yaml')]
-    version = int(version_str)
-    return version + 1
+    versions = []
+    for file in mapping_files:
+        version_part = file[len('mapping_dictionary_v'):]
+        version_str = version_part.split('_')[0]
+        versions.append(int(version_str))
+    return max(versions) + 1
+
+def resolve_conflicts_in_dataframe(df, conflicts, strategy, source_weights, source_hierarchy):
+    """
+    Resolve conflicts in a DataFrame using the selected strategy.
+    """
+    if strategy == 'Hierarchy-based':
+        resolved_df = resolve_conflicts_hierarchy_in_df(df, source_hierarchy)
+    elif strategy == 'Time-based':
+        resolved_df = resolve_conflicts_time_based_in_df(df)
+    else:
+        resolved_df = df  # For manual or unsupported strategies
+    return resolved_df
+
+def resolve_conflicts_hierarchy_in_df(df, source_hierarchy):
+    # Implement conflict resolution in DataFrame based on hierarchy
+    pass  # Replace with actual implementation
+
+def resolve_conflicts_weighted_in_df(df, source_weights):
+    # Implement conflict resolution in DataFrame based on weights
+    pass  # Replace with actual implementation
+
+def resolve_conflicts_time_based_in_df(df):
+    # Implement conflict resolution in DataFrame based on time
+    pass  # Replace with actual implementation

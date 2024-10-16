@@ -465,6 +465,7 @@
 2024-10-14T18:20:47.943859 - Extracted fields and metadata for 'processor.csv'
 2024-10-14T18:23:11.659559 - Selected Step: Data Import
 2024-10-14T18:23:11.662332 - Number of Workers: 1
+<<<<<<< Updated upstream
 2024-10-15T07:41:30.709814 - Selected Step: Data Import
 2024-10-15T07:41:30.710483 - Number of Workers: 1
 2024-10-15T07:52:57.538497 - Selected Step: Data Import
@@ -4000,3 +4001,482 @@
 2024-10-15T09:34:55.235297 - EDA performed on file 'app_data/data_unificator/Auth Log 2.0 - Master Authorization Status.csv'
 2024-10-15T09:34:55.291771 - Detected encoding 'ascii' for file 'app_data/data_unificator/20241011-Salesforce.csv'
 2024-10-15T09:35:32.343573 - EDA performed on file 'app_data/data_unificator/20241011-Salesforce.csv'
+=======
+2024-10-15T23:18:42.587047 - Selected Step: Data Import
+2024-10-15T23:18:42.591238 - Number of Workers: 1
+2024-10-15T23:19:27.697536 - Selected Step: Data Import
+2024-10-15T23:19:27.701699 - Number of Workers: 1
+2024-10-15T23:19:27.828725 - Selected Step: Data Import
+2024-10-15T23:19:27.831844 - Number of Workers: 1
+2024-10-15T23:19:30.168122 - Selected Step: Data Import
+2024-10-15T23:19:30.170430 - Number of Workers: 1
+2024-10-15T23:19:30.184371 - Data Import - Import - app_data/data_unificator
+2024-10-15T23:19:30.216027 - Detected encoding 'ascii' for file 'app_data/data_unificator/CloudWatch_Traffic_Web_Attack.csv'
+2024-10-15T23:19:36.936259 - EDA performed on file 'app_data/data_unificator/CloudWatch_Traffic_Web_Attack.csv'
+2024-10-15T23:19:36.991421 - Detected encoding 'ascii' for file 'app_data/data_unificator/power.csv'
+2024-10-15T23:19:41.273926 - Selected Step: Data Import
+2024-10-15T23:19:41.276410 - Number of Workers: 1
+2024-10-15T23:19:41.442226 - Selected Step: Data Import
+2024-10-15T23:19:41.445322 - Number of Workers: 1
+2024-10-15T23:19:41.535489 - EDA performed on file 'app_data/data_unificator/power.csv'
+2024-10-15T23:19:41.613077 - Detected encoding 'ascii' for file 'app_data/data_unificator/processor.csv'
+2024-10-15T23:20:04.390914 - Selected Step: Data Import
+2024-10-15T23:20:04.393641 - Number of Workers: 1
+2024-10-15T23:20:04.524596 - Selected Step: Data Import
+2024-10-15T23:20:04.527037 - Number of Workers: 1
+2024-10-15T23:20:06.199404 - Selected Step: Data Import
+2024-10-15T23:20:06.203039 - Number of Workers: 1
+2024-10-15T23:20:06.223697 - Data Import - Import - app_data/data_unificator
+2024-10-15T23:20:06.239554 - Detected encoding 'UTF-8-SIG' for file 'app_data/data_unificator/source1.csv'
+2024-10-15T23:20:08.978759 - EDA performed on file 'app_data/data_unificator/source1.csv'
+2024-10-15T23:20:09.008735 - Detected encoding 'UTF-8-SIG' for file 'app_data/data_unificator/source2.csv'
+2024-10-15T23:20:11.947940 - EDA performed on file 'app_data/data_unificator/source2.csv'
+2024-10-15T23:20:26.024765 - Selected Step: Data Import
+2024-10-15T23:20:26.027670 - Number of Workers: 1
+2024-10-15T23:20:26.180493 - Selected Step: Data Import
+2024-10-15T23:20:26.183438 - Number of Workers: 1
+2024-10-15T23:20:28.668580 - EDA performed on file 'app_data/data_unificator/processor.csv'
+2024-10-15T23:20:28.682596 - Error importing file 'app_data/data_unificator/processor.csv': [Errno 2] No such file or directory: 'app_data/data_unificator/processor.csv'
+2024-10-15T23:20:28.708284 - Detected encoding 'ascii' for file 'app_data/data_unificator/source1.csv'
+2024-10-15T23:20:31.056210 - EDA performed on file 'app_data/data_unificator/source1.csv'
+2024-10-15T23:20:31.089763 - Detected encoding 'ascii' for file 'app_data/data_unificator/source2.csv'
+2024-10-15T23:20:34.185376 - EDA performed on file 'app_data/data_unificator/source2.csv'
+2024-10-15T23:20:37.401355 - Selected Step: Data Import
+2024-10-15T23:20:37.404709 - Number of Workers: 1
+2024-10-15T23:20:37.564437 - Selected Step: Data Import
+2024-10-15T23:20:37.567672 - Number of Workers: 1
+2024-10-15T23:20:47.801400 - Selected Step: Data Import
+2024-10-15T23:20:47.804931 - Number of Workers: 1
+2024-10-15T23:21:14.507767 - Selected Step: Data Import
+2024-10-15T23:21:14.511838 - Number of Workers: 1
+2024-10-15T23:21:40.713117 - Selected Step: Data Mapping
+2024-10-15T23:21:40.715640 - Number of Workers: 1
+2024-10-15T23:21:40.720878 - Identified overlapping fields.
+2024-10-15T23:21:40.728401 - User established source hierarchy and weights.
+2024-10-15T23:21:55.440396 - Extracted fields and metadata for 'source1.csv'
+2024-10-15T23:21:55.445487 - Extracted fields and metadata for 'source2.csv'
+2024-10-15T23:27:17.949464 - Selected Step: Data Mapping
+2024-10-15T23:27:17.953423 - Number of Workers: 1
+2024-10-15T23:27:17.960622 - Identified overlapping fields.
+2024-10-15T23:27:17.967744 - User established source hierarchy and weights.
+2024-10-15T23:27:23.617272 - Extracted fields and metadata for 'source1.csv'
+2024-10-15T23:27:23.621898 - Extracted fields and metadata for 'source2.csv'
+2024-10-15T23:27:28.946174 - Selected Step: Data Mapping
+2024-10-15T23:27:28.949661 - Number of Workers: 1
+2024-10-15T23:27:28.956339 - Identified overlapping fields.
+2024-10-15T23:27:28.966095 - User established source hierarchy and weights.
+2024-10-15T23:30:48.668830 - Selected Step: Data Import
+2024-10-15T23:30:48.673986 - Number of Workers: 1
+2024-10-15T23:30:53.572793 - Selected Step: Data Import
+2024-10-15T23:30:53.575204 - Number of Workers: 1
+2024-10-15T23:30:53.600030 - Data Import - Import - app_data/data_unificator
+2024-10-15T23:30:53.626929 - Detected encoding 'ascii' for file 'app_data/data_unificator/source1.csv'
+2024-10-15T23:30:55.949246 - EDA performed on file 'app_data/data_unificator/source1.csv'
+2024-10-15T23:30:56.005035 - Detected encoding 'ascii' for file 'app_data/data_unificator/source2.csv'
+2024-10-15T23:30:58.926045 - EDA performed on file 'app_data/data_unificator/source2.csv'
+2024-10-15T23:32:12.645285 - Selected Step: Data Import
+2024-10-15T23:32:12.648275 - Number of Workers: 1
+2024-10-15T23:32:18.119772 - Selected Step: Data Mapping
+2024-10-15T23:32:18.122431 - Number of Workers: 1
+2024-10-15T23:32:18.129510 - Identified overlapping fields.
+2024-10-15T23:32:18.136907 - User established source hierarchy and weights.
+2024-10-15T23:42:35.858018 - Selected Step: Data Import
+2024-10-15T23:42:35.862247 - Number of Workers: 1
+2024-10-15T23:57:41.425652 - Selected Step: Data Import
+2024-10-15T23:57:41.430746 - Number of Workers: 1
+2024-10-15T23:57:44.305315 - Selected Step: Data Import
+2024-10-15T23:57:44.308401 - Number of Workers: 1
+2024-10-15T23:57:44.331790 - Data Import - Import - app_data/data_unificator
+2024-10-15T23:57:44.352660 - Detected encoding 'ascii' for file 'app_data/data_unificator/source1.csv'
+2024-10-15T23:57:46.949761 - EDA performed on file 'app_data/data_unificator/source1.csv'
+2024-10-15T23:57:46.983696 - Detected encoding 'ascii' for file 'app_data/data_unificator/source2.csv'
+2024-10-15T23:57:49.788239 - EDA performed on file 'app_data/data_unificator/source2.csv'
+2024-10-15T23:57:57.233997 - Selected Step: Data Import
+2024-10-15T23:57:57.237517 - Number of Workers: 1
+2024-10-15T23:57:57.344395 - Selected Step: Data Import
+2024-10-15T23:57:57.348191 - Number of Workers: 1
+2024-10-15T23:58:02.099331 - Selected Step: Data Import
+2024-10-15T23:58:02.103820 - Number of Workers: 1
+2024-10-15T23:58:02.227794 - Selected Step: Data Import
+2024-10-15T23:58:02.230938 - Number of Workers: 1
+2024-10-15T23:58:05.977922 - Selected Step: Data Import
+2024-10-15T23:58:05.980983 - Number of Workers: 1
+2024-10-15T23:58:09.378257 - Selected Step: Data Import
+2024-10-15T23:58:09.381777 - Number of Workers: 1
+2024-10-15T23:58:14.100850 - Selected Step: Data Mapping
+2024-10-15T23:58:14.104327 - Number of Workers: 1
+2024-10-15T23:58:14.109918 - Identified overlapping fields.
+2024-10-15T23:58:14.116321 - User established source hierarchy and weights.
+2024-10-15T23:58:16.691816 - Selected Step: Data Mapping
+2024-10-15T23:58:16.695073 - Number of Workers: 1
+2024-10-15T23:58:16.705875 - Extracted fields and metadata for 'source1.csv'
+2024-10-15T23:58:16.714366 - Extracted fields and metadata for 'source2.csv'
+2024-10-15T23:58:16.731077 - Identified overlapping fields.
+2024-10-15T23:58:16.746620 - User established source hierarchy and weights.
+2024-10-15T23:58:46.203176 - Selected Step: Data Mapping
+2024-10-15T23:58:46.206099 - Number of Workers: 1
+2024-10-15T23:58:46.211499 - Identified overlapping fields.
+2024-10-15T23:58:46.217611 - User established source hierarchy and weights.
+2024-10-15T23:58:53.017728 - Selected Step: Data Mapping
+2024-10-15T23:58:53.020748 - Number of Workers: 1
+2024-10-15T23:58:53.030773 - Extracted fields and metadata for 'source1.csv'
+2024-10-15T23:58:53.038455 - Extracted fields and metadata for 'source2.csv'
+2024-10-15T23:58:53.055476 - Identified overlapping fields.
+2024-10-15T23:58:53.070438 - User established source hierarchy and weights.
+2024-10-15T23:59:16.315763 - Selected Step: Data Mapping
+2024-10-15T23:59:16.319094 - Number of Workers: 1
+2024-10-15T23:59:16.324181 - Identified overlapping fields.
+2024-10-15T23:59:16.329077 - User established source hierarchy and weights.
+2024-10-15T23:59:20.121611 - Selected Step: Data Mapping
+2024-10-15T23:59:20.124769 - Number of Workers: 1
+2024-10-15T23:59:20.134022 - Extracted fields and metadata for 'source1.csv'
+2024-10-15T23:59:20.141960 - Extracted fields and metadata for 'source2.csv'
+2024-10-15T23:59:20.158563 - Identified overlapping fields.
+2024-10-15T23:59:20.173153 - User established source hierarchy and weights.
+2024-10-16T01:37:46.792028 - Selected Step: Data Import
+2024-10-16T01:37:46.795665 - Number of Workers: 1
+2024-10-16T01:37:50.687407 - Selected Step: Data Import
+2024-10-16T01:37:50.691566 - Number of Workers: 1
+2024-10-16T01:37:50.783107 - Selected Step: Data Import
+2024-10-16T01:37:50.785493 - Number of Workers: 1
+2024-10-16T01:37:52.583744 - Selected Step: Data Import
+2024-10-16T01:37:52.587196 - Number of Workers: 1
+2024-10-16T01:37:52.606595 - Data Import - Import - app_data/data_unificator
+2024-10-16T01:37:52.645083 - Detected encoding 'ascii' for file 'app_data/data_unificator/source1.csv'
+2024-10-16T01:37:55.098484 - EDA performed on file 'app_data/data_unificator/source1.csv'
+2024-10-16T01:37:55.137962 - Detected encoding 'ascii' for file 'app_data/data_unificator/source2.csv'
+2024-10-16T01:37:58.126458 - EDA performed on file 'app_data/data_unificator/source2.csv'
+2024-10-16T01:38:02.999907 - Selected Step: Data Import
+2024-10-16T01:38:03.003695 - Number of Workers: 1
+2024-10-16T01:38:03.109726 - Selected Step: Data Import
+2024-10-16T01:38:03.112910 - Number of Workers: 1
+2024-10-16T01:38:06.538661 - Selected Step: Data Import
+2024-10-16T01:38:06.543446 - Number of Workers: 1
+2024-10-16T01:38:06.681775 - Selected Step: Data Import
+2024-10-16T01:38:06.684805 - Number of Workers: 1
+2024-10-16T01:38:13.308860 - Selected Step: Data Mapping
+2024-10-16T01:38:13.311823 - Number of Workers: 1
+2024-10-16T01:38:13.317382 - Identified overlapping fields.
+2024-10-16T01:38:13.321855 - User established source hierarchy and weights.
+2024-10-16T01:38:17.287237 - Selected Step: Data Mapping
+2024-10-16T01:38:17.290696 - Number of Workers: 1
+2024-10-16T01:38:17.301081 - Extracted fields and metadata for 'source1.csv'
+2024-10-16T01:38:17.311773 - Extracted fields and metadata for 'source2.csv'
+2024-10-16T01:38:17.328756 - Identified overlapping fields.
+2024-10-16T01:38:17.345106 - User established source hierarchy and weights.
+2024-10-16T01:38:23.448855 - Selected Step: Data Mapping
+2024-10-16T01:38:23.452366 - Number of Workers: 1
+2024-10-16T01:38:23.458310 - Identified overlapping fields.
+2024-10-16T01:38:23.464217 - User established source hierarchy and weights.
+2024-10-16T01:38:29.621964 - Selected Step: Data Mapping
+2024-10-16T01:38:29.625224 - Number of Workers: 1
+2024-10-16T01:38:29.635234 - Extracted fields and metadata for 'source1.csv'
+2024-10-16T01:38:29.642063 - Extracted fields and metadata for 'source2.csv'
+2024-10-16T01:38:29.657547 - Identified overlapping fields.
+2024-10-16T01:38:29.674101 - User established source hierarchy and weights.
+2024-10-16T03:04:03.976099 - Selected Step: Data Import
+2024-10-16T03:04:03.980240 - Number of Workers: 1
+2024-10-16T03:04:07.722369 - Selected Step: Data Import
+2024-10-16T03:04:07.725218 - Number of Workers: 1
+2024-10-16T03:04:07.805496 - Selected Step: Data Import
+2024-10-16T03:04:07.807666 - Number of Workers: 1
+2024-10-16T03:04:08.859397 - Selected Step: Data Import
+2024-10-16T03:04:08.862576 - Number of Workers: 1
+2024-10-16T03:04:08.881301 - Data Import - Import - app_data/data_unificator
+2024-10-16T03:04:08.907454 - Detected encoding 'ascii' for file 'app_data/data_unificator/source1.csv'
+2024-10-16T03:04:11.362521 - EDA performed on file 'app_data/data_unificator/source1.csv'
+2024-10-16T03:04:11.396693 - Detected encoding 'ascii' for file 'app_data/data_unificator/source2.csv'
+2024-10-16T03:04:14.399674 - EDA performed on file 'app_data/data_unificator/source2.csv'
+2024-10-16T03:04:18.226473 - Selected Step: Data Import
+2024-10-16T03:04:18.229549 - Number of Workers: 1
+2024-10-16T03:04:18.336606 - Selected Step: Data Import
+2024-10-16T03:04:18.340164 - Number of Workers: 1
+2024-10-16T03:04:20.913360 - Selected Step: Data Import
+2024-10-16T03:04:20.917107 - Number of Workers: 1
+2024-10-16T03:04:21.050870 - Selected Step: Data Import
+2024-10-16T03:04:21.053411 - Number of Workers: 1
+2024-10-16T03:04:23.161924 - Selected Step: Data Import
+2024-10-16T03:04:23.165518 - Number of Workers: 1
+2024-10-16T03:04:25.899042 - Selected Step: Data Import
+2024-10-16T03:04:25.903026 - Number of Workers: 1
+2024-10-16T03:04:29.654576 - Selected Step: Data Mapping
+2024-10-16T03:04:29.657569 - Number of Workers: 1
+2024-10-16T03:04:29.663150 - Identified overlapping fields.
+2024-10-16T03:04:29.667032 - User established source hierarchy.
+2024-10-16T03:04:29.684000 - Error verifying data types: 'NoneType' object has no attribute 'columns'
+2024-10-16T03:10:44.950287 - Selected Step: Data Import
+2024-10-16T03:10:44.954073 - Number of Workers: 1
+2024-10-16T03:10:49.154668 - Selected Step: Data Import
+2024-10-16T03:10:49.158089 - Number of Workers: 1
+2024-10-16T03:10:49.176936 - Data Import - Import - app_data/data_unificator
+2024-10-16T03:10:49.198229 - Detected encoding 'ascii' for file 'app_data/data_unificator/source1.csv'
+2024-10-16T03:10:51.920876 - EDA performed on file 'app_data/data_unificator/source1.csv'
+2024-10-16T03:10:51.958452 - Detected encoding 'ascii' for file 'app_data/data_unificator/source2.csv'
+2024-10-16T03:10:54.462000 - EDA performed on file 'app_data/data_unificator/source2.csv'
+2024-10-16T03:10:59.274509 - Selected Step: Data Import
+2024-10-16T03:10:59.277235 - Number of Workers: 1
+2024-10-16T03:10:59.377658 - Selected Step: Data Import
+2024-10-16T03:10:59.380774 - Number of Workers: 1
+2024-10-16T03:11:04.685272 - Selected Step: Data Import
+2024-10-16T03:11:04.688600 - Number of Workers: 1
+2024-10-16T03:11:04.814023 - Selected Step: Data Import
+2024-10-16T03:11:04.817636 - Number of Workers: 1
+2024-10-16T03:11:09.980713 - Selected Step: Data Import
+2024-10-16T03:11:09.983950 - Number of Workers: 1
+2024-10-16T03:11:12.163392 - Selected Step: Data Import
+2024-10-16T03:11:12.167219 - Number of Workers: 1
+2024-10-16T03:11:14.581733 - Selected Step: Data Mapping
+2024-10-16T03:11:14.584468 - Number of Workers: 1
+2024-10-16T03:11:21.019471 - Selected Step: Data Mapping
+2024-10-16T03:11:21.022663 - Number of Workers: 1
+2024-10-16T03:11:21.034427 - Extracted fields and metadata for 'source1.csv'
+2024-10-16T03:11:21.043501 - Extracted fields and metadata for 'source2.csv'
+2024-10-16T03:12:22.319375 - Selected Step: Data Import
+2024-10-16T03:12:22.322759 - Number of Workers: 1
+2024-10-16T03:12:25.163626 - Selected Step: Data Mapping
+2024-10-16T03:12:25.166776 - Number of Workers: 1
+2024-10-16T03:12:29.439961 - Selected Step: Data Import
+2024-10-16T03:12:29.443746 - Number of Workers: 1
+2024-10-16T03:12:31.588864 - Selected Step: Data Import
+2024-10-16T03:12:31.592144 - Number of Workers: 1
+2024-10-16T03:12:31.609297 - Data Import - Import - app_data/data_unificator
+2024-10-16T03:12:31.630132 - Detected encoding 'ascii' for file 'app_data/data_unificator/source1.csv'
+2024-10-16T03:12:34.023307 - EDA performed on file 'app_data/data_unificator/source1.csv'
+2024-10-16T03:12:34.060571 - Detected encoding 'ascii' for file 'app_data/data_unificator/source2.csv'
+2024-10-16T03:12:36.748711 - EDA performed on file 'app_data/data_unificator/source2.csv'
+2024-10-16T03:12:40.242997 - Selected Step: Data Import
+2024-10-16T03:12:40.246302 - Number of Workers: 1
+2024-10-16T03:12:40.350539 - Selected Step: Data Import
+2024-10-16T03:12:40.353068 - Number of Workers: 1
+2024-10-16T03:12:45.628263 - Selected Step: Data Import
+2024-10-16T03:12:45.631674 - Number of Workers: 1
+2024-10-16T03:12:48.660756 - Selected Step: Data Import
+2024-10-16T03:12:48.663881 - Number of Workers: 1
+2024-10-16T03:12:48.784856 - Selected Step: Data Import
+2024-10-16T03:12:48.788939 - Number of Workers: 1
+2024-10-16T03:12:51.083879 - Selected Step: Data Import
+2024-10-16T03:12:51.087332 - Number of Workers: 1
+2024-10-16T03:12:54.679671 - Selected Step: Data Mapping
+2024-10-16T03:12:54.682350 - Number of Workers: 1
+2024-10-16T03:12:56.349799 - Selected Step: Data Mapping
+2024-10-16T03:12:56.353435 - Number of Workers: 1
+2024-10-16T03:12:56.364509 - Extracted fields and metadata for 'source1.csv'
+2024-10-16T03:12:56.374022 - Extracted fields and metadata for 'source2.csv'
+2024-10-16T03:12:56.459858 - Selected Step: Data Mapping
+2024-10-16T03:12:56.463994 - Number of Workers: 1
+2024-10-16T03:12:56.468850 - Identified overlapping fields.
+2024-10-16T03:13:06.252277 - Selected Step: Data Mapping
+2024-10-16T03:13:06.255350 - Number of Workers: 1
+2024-10-16T03:13:06.263802 - Identified overlapping fields.
+2024-10-16T03:13:06.347287 - Selected Step: Data Mapping
+2024-10-16T03:13:06.349971 - Number of Workers: 1
+2024-10-16T03:14:16.277447 - Selected Step: Data Mapping
+2024-10-16T03:14:16.281153 - Number of Workers: 1
+2024-10-16T03:14:16.370579 - Selected Step: Data Mapping
+2024-10-16T03:14:16.373351 - Number of Workers: 1
+2024-10-16T03:16:57.944079 - Selected Step: Data Import
+2024-10-16T03:16:57.947650 - Number of Workers: 1
+2024-10-16T03:17:00.637324 - Selected Step: Data Import
+2024-10-16T03:17:00.640509 - Number of Workers: 1
+2024-10-16T03:17:00.660809 - Data Import - Import - app_data/data_unificator
+2024-10-16T03:17:00.683538 - Detected encoding 'ascii' for file 'app_data/data_unificator/source1.csv'
+2024-10-16T03:17:03.158807 - EDA performed on file 'app_data/data_unificator/source1.csv'
+2024-10-16T03:17:03.194724 - Detected encoding 'ascii' for file 'app_data/data_unificator/source2.csv'
+2024-10-16T03:17:05.650586 - EDA performed on file 'app_data/data_unificator/source2.csv'
+2024-10-16T03:17:09.485956 - Selected Step: Data Import
+2024-10-16T03:17:09.489616 - Number of Workers: 1
+2024-10-16T03:17:09.621140 - Selected Step: Data Import
+2024-10-16T03:17:09.624442 - Number of Workers: 1
+2024-10-16T03:17:13.661315 - Selected Step: Data Import
+2024-10-16T03:17:13.665352 - Number of Workers: 1
+2024-10-16T03:17:13.794664 - Selected Step: Data Import
+2024-10-16T03:17:13.797864 - Number of Workers: 1
+2024-10-16T03:17:17.345073 - Selected Step: Data Mapping
+2024-10-16T03:17:17.347505 - Number of Workers: 1
+2024-10-16T03:17:17.351539 - Identified overlapping fields.
+2024-10-16T03:17:17.357735 - User established source hierarchy and weights.
+2024-10-16T03:17:20.932992 - Selected Step: Data Mapping
+2024-10-16T03:17:20.936529 - Number of Workers: 1
+2024-10-16T03:17:20.947882 - Extracted fields and metadata for 'source1.csv'
+2024-10-16T03:17:20.956710 - Extracted fields and metadata for 'source2.csv'
+2024-10-16T03:17:20.973172 - Identified overlapping fields.
+2024-10-16T03:17:20.988759 - User established source hierarchy and weights.
+2024-10-16T03:17:28.557524 - Selected Step: Data Mapping
+2024-10-16T03:17:28.561099 - Number of Workers: 1
+2024-10-16T03:17:28.566201 - Identified overlapping fields.
+2024-10-16T03:17:28.571736 - User established source hierarchy and weights.
+2024-10-16T03:17:34.429752 - Selected Step: Data Mapping
+2024-10-16T03:17:34.433261 - Number of Workers: 1
+2024-10-16T03:17:34.443765 - Extracted fields and metadata for 'source1.csv'
+2024-10-16T03:17:34.451409 - Extracted fields and metadata for 'source2.csv'
+2024-10-16T03:17:34.468155 - Identified overlapping fields.
+2024-10-16T03:17:34.482786 - User established source hierarchy and weights.
+2024-10-16T11:29:05.378685 - Selected Step: Data Import
+2024-10-16T11:29:05.381557 - Number of Workers: 1
+2024-10-16T11:29:07.955614 - Selected Step: Data Mapping
+2024-10-16T11:29:07.958964 - Number of Workers: 1
+2024-10-16T11:29:11.771654 - Selected Step: Data Import
+2024-10-16T11:29:11.776064 - Number of Workers: 1
+2024-10-16T11:29:14.323255 - Selected Step: Data Import
+2024-10-16T11:29:14.326910 - Number of Workers: 1
+2024-10-16T11:29:14.352476 - Data Import - Import - app_data/data_unificator
+2024-10-16T11:29:14.375036 - Detected encoding 'ascii' for file 'app_data/data_unificator/source1.csv'
+2024-10-16T11:29:16.799809 - EDA performed on file 'app_data/data_unificator/source1.csv'
+2024-10-16T11:29:16.844914 - Detected encoding 'ascii' for file 'app_data/data_unificator/source2.csv'
+2024-10-16T11:29:19.323533 - EDA performed on file 'app_data/data_unificator/source2.csv'
+2024-10-16T11:29:24.708825 - Selected Step: Data Import
+2024-10-16T11:29:24.712296 - Number of Workers: 1
+2024-10-16T11:29:24.824657 - Selected Step: Data Import
+2024-10-16T11:29:24.828294 - Number of Workers: 1
+2024-10-16T11:29:28.279087 - Selected Step: Data Import
+2024-10-16T11:29:28.283151 - Number of Workers: 1
+2024-10-16T11:29:28.422471 - Selected Step: Data Import
+2024-10-16T11:29:28.425107 - Number of Workers: 1
+2024-10-16T11:29:30.142343 - Selected Step: Data Mapping
+2024-10-16T11:29:30.145456 - Number of Workers: 1
+2024-10-16T11:29:30.150502 - Identified overlapping fields.
+2024-10-16T11:29:30.154880 - User established source hierarchy and weights.
+2024-10-16T11:29:31.875897 - Selected Step: Data Mapping
+2024-10-16T11:29:31.879371 - Number of Workers: 1
+2024-10-16T11:29:31.890983 - Extracted fields and metadata for 'source1.csv'
+2024-10-16T11:29:31.901095 - Extracted fields and metadata for 'source2.csv'
+2024-10-16T11:29:31.917488 - Identified overlapping fields.
+2024-10-16T11:29:31.932408 - User established source hierarchy and weights.
+2024-10-16T11:29:45.222092 - Selected Step: Data Mapping
+2024-10-16T11:29:45.225912 - Number of Workers: 1
+2024-10-16T11:29:45.231000 - Identified overlapping fields.
+2024-10-16T11:29:45.236465 - User established source hierarchy and weights.
+2024-10-16T11:29:45.240916 - User created mapping dictionary.
+2024-10-16T11:42:32.292952 - Selected Step: Data Import
+2024-10-16T11:42:32.296850 - Number of Workers: 1
+2024-10-16T11:42:35.246910 - Selected Step: Data Import
+2024-10-16T11:42:35.250685 - Number of Workers: 1
+2024-10-16T11:42:35.275509 - Data Import - Import - app_data/data_unificator
+2024-10-16T11:42:35.296587 - Detected encoding 'ascii' for file 'app_data/data_unificator/source1.csv'
+2024-10-16T11:42:37.717648 - EDA performed on file 'app_data/data_unificator/source1.csv'
+2024-10-16T11:42:37.751548 - Detected encoding 'ascii' for file 'app_data/data_unificator/source2.csv'
+2024-10-16T11:42:40.218935 - EDA performed on file 'app_data/data_unificator/source2.csv'
+2024-10-16T11:42:49.758570 - Selected Step: Data Import
+2024-10-16T11:42:49.763238 - Number of Workers: 1
+2024-10-16T11:42:49.884742 - Selected Step: Data Import
+2024-10-16T11:42:49.887563 - Number of Workers: 1
+2024-10-16T11:42:52.573807 - Selected Step: Data Import
+2024-10-16T11:42:52.577107 - Number of Workers: 1
+2024-10-16T11:42:52.696248 - Selected Step: Data Import
+2024-10-16T11:42:52.700145 - Number of Workers: 1
+2024-10-16T11:42:56.306502 - Selected Step: Data Mapping
+2024-10-16T11:42:56.310423 - Number of Workers: 1
+2024-10-16T11:42:56.315604 - Identified overlapping fields.
+2024-10-16T11:42:56.320382 - User established source hierarchy and weights.
+2024-10-16T11:42:59.543372 - Selected Step: Data Mapping
+2024-10-16T11:42:59.546441 - Number of Workers: 1
+2024-10-16T11:42:59.557518 - Extracted fields and metadata for 'source1.csv'
+2024-10-16T11:42:59.565645 - Extracted fields and metadata for 'source2.csv'
+2024-10-16T11:42:59.581770 - Identified overlapping fields.
+2024-10-16T11:42:59.595651 - User established source hierarchy and weights.
+2024-10-16T11:43:08.246989 - Selected Step: Data Mapping
+2024-10-16T11:43:08.250501 - Number of Workers: 1
+2024-10-16T11:43:08.255605 - Identified overlapping fields.
+2024-10-16T11:43:08.260408 - User established source hierarchy and weights.
+2024-10-16T12:14:58.330550 - Selected Step: Data Import
+2024-10-16T12:14:58.334209 - Number of Workers: 1
+2024-10-16T12:15:01.413716 - Selected Step: Data Mapping
+2024-10-16T12:15:01.416823 - Number of Workers: 1
+2024-10-16T12:15:04.955172 - Selected Step: Data Import
+2024-10-16T12:15:04.958923 - Number of Workers: 1
+2024-10-16T12:15:07.517380 - Selected Step: Data Import
+2024-10-16T12:15:07.520397 - Number of Workers: 1
+2024-10-16T12:15:07.537152 - Data Import - Import - app_data/data_unificator
+2024-10-16T12:15:07.557230 - Detected encoding 'ascii' for file 'app_data/data_unificator/source1.csv'
+2024-10-16T12:15:10.279210 - EDA performed on file 'app_data/data_unificator/source1.csv'
+2024-10-16T12:15:10.319679 - Detected encoding 'ascii' for file 'app_data/data_unificator/source2.csv'
+2024-10-16T12:15:12.950273 - EDA performed on file 'app_data/data_unificator/source2.csv'
+2024-10-16T12:15:20.421869 - Selected Step: Data Import
+2024-10-16T12:15:20.425515 - Number of Workers: 1
+2024-10-16T12:15:20.547922 - Selected Step: Data Import
+2024-10-16T12:15:20.551529 - Number of Workers: 1
+2024-10-16T12:15:22.813603 - Selected Step: Data Import
+2024-10-16T12:15:22.817020 - Number of Workers: 1
+2024-10-16T12:15:22.955914 - Selected Step: Data Import
+2024-10-16T12:15:22.959436 - Number of Workers: 1
+2024-10-16T12:15:26.089230 - Selected Step: Data Mapping
+2024-10-16T12:15:26.092268 - Number of Workers: 1
+2024-10-16T12:15:26.098007 - Identified overlapping fields.
+2024-10-16T12:15:26.102738 - User established source hierarchy and weights.
+2024-10-16T12:15:33.103150 - Selected Step: Data Mapping
+2024-10-16T12:15:33.106141 - Number of Workers: 1
+2024-10-16T12:15:33.116639 - Extracted fields and metadata for 'source1.csv'
+2024-10-16T12:15:33.124677 - Extracted fields and metadata for 'source2.csv'
+2024-10-16T12:15:33.141474 - Identified overlapping fields.
+2024-10-16T12:15:33.155938 - User established source hierarchy and weights.
+2024-10-16T12:15:37.629501 - Selected Step: Data Mapping
+2024-10-16T12:15:37.632266 - Number of Workers: 1
+2024-10-16T12:15:37.636358 - Identified overlapping fields.
+2024-10-16T12:15:37.641715 - User established source hierarchy and weights.
+2024-10-16T12:38:36.160145 - Selected Step: Data Import
+2024-10-16T12:38:36.162773 - Number of Workers: 1
+2024-10-16T12:38:39.676220 - Selected Step: Data Import
+2024-10-16T12:38:39.679804 - Number of Workers: 1
+2024-10-16T12:38:39.701415 - Data Import - Import - app_data/data_unificator
+2024-10-16T12:38:39.725623 - Detected encoding 'ascii' for file 'app_data/data_unificator/source1.csv'
+2024-10-16T12:38:42.514716 - EDA performed on file 'app_data/data_unificator/source1.csv'
+2024-10-16T12:38:42.550410 - Detected encoding 'ascii' for file 'app_data/data_unificator/source2.csv'
+2024-10-16T12:38:45.383363 - EDA performed on file 'app_data/data_unificator/source2.csv'
+2024-10-16T12:38:50.397871 - Selected Step: Data Import
+2024-10-16T12:38:50.401526 - Number of Workers: 1
+2024-10-16T12:38:50.524707 - Selected Step: Data Import
+2024-10-16T12:38:50.528049 - Number of Workers: 1
+2024-10-16T12:38:53.067920 - Selected Step: Data Import
+2024-10-16T12:38:53.071397 - Number of Workers: 1
+2024-10-16T12:38:53.192901 - Selected Step: Data Import
+2024-10-16T12:38:53.196829 - Number of Workers: 1
+2024-10-16T12:38:55.973511 - Selected Step: Data Mapping
+2024-10-16T12:38:55.977885 - Number of Workers: 1
+2024-10-16T12:38:55.984059 - Identified overlapping fields.
+2024-10-16T12:38:55.987449 - User established source hierarchy and weights.
+2024-10-16T12:39:00.236207 - Selected Step: Data Mapping
+2024-10-16T12:39:00.239662 - Number of Workers: 1
+2024-10-16T12:39:00.250373 - Extracted fields and metadata for 'source1.csv'
+2024-10-16T12:39:00.261014 - Extracted fields and metadata for 'source2.csv'
+2024-10-16T12:39:00.276617 - Identified overlapping fields.
+2024-10-16T12:39:00.291887 - User established source hierarchy and weights.
+2024-10-16T12:39:04.923782 - Selected Step: Data Mapping
+2024-10-16T12:39:04.927762 - Number of Workers: 1
+2024-10-16T12:39:04.933161 - Identified overlapping fields.
+2024-10-16T12:39:04.938895 - User established source hierarchy and weights.
+2024-10-16T12:48:17.774765 - Selected Step: Data Import
+2024-10-16T12:48:17.778349 - Number of Workers: 1
+2024-10-16T12:48:20.957945 - Selected Step: Data Import
+2024-10-16T12:48:20.961215 - Number of Workers: 1
+2024-10-16T12:48:20.980072 - Data Import - Import - app_data/data_unificator
+2024-10-16T12:48:21.004773 - Detected encoding 'ascii' for file 'app_data/data_unificator/source1.csv'
+2024-10-16T12:48:23.435036 - EDA performed on file 'app_data/data_unificator/source1.csv'
+2024-10-16T12:48:23.471124 - Detected encoding 'ascii' for file 'app_data/data_unificator/source2.csv'
+2024-10-16T12:48:26.031163 - EDA performed on file 'app_data/data_unificator/source2.csv'
+2024-10-16T12:48:31.392500 - Selected Step: Data Import
+2024-10-16T12:48:31.396277 - Number of Workers: 1
+2024-10-16T12:48:31.505679 - Selected Step: Data Import
+2024-10-16T12:48:31.508763 - Number of Workers: 1
+2024-10-16T12:48:35.845086 - Selected Step: Data Import
+2024-10-16T12:48:35.848322 - Number of Workers: 1
+2024-10-16T12:48:38.485503 - Selected Step: Data Import
+2024-10-16T12:48:38.489413 - Number of Workers: 1
+2024-10-16T12:48:38.613929 - Selected Step: Data Import
+2024-10-16T12:48:38.616926 - Number of Workers: 1
+2024-10-16T12:48:40.942415 - Selected Step: Data Import
+2024-10-16T12:48:40.945448 - Number of Workers: 1
+2024-10-16T12:48:44.221300 - Selected Step: Data Mapping
+2024-10-16T12:48:44.224237 - Number of Workers: 1
+2024-10-16T12:48:44.230195 - Identified overlapping fields.
+2024-10-16T12:48:44.234605 - User established source hierarchy and weights.
+2024-10-16T12:48:51.732974 - Selected Step: Data Mapping
+2024-10-16T12:48:51.735767 - Number of Workers: 1
+2024-10-16T12:48:51.745219 - Extracted fields and metadata for 'source1.csv'
+2024-10-16T12:48:51.752965 - Extracted fields and metadata for 'source2.csv'
+2024-10-16T12:48:51.769609 - Identified overlapping fields.
+2024-10-16T12:48:51.786193 - User established source hierarchy and weights.
+2024-10-16T12:48:55.468883 - Selected Step: Data Mapping
+2024-10-16T12:48:55.472380 - Number of Workers: 1
+2024-10-16T12:48:55.477949 - Identified overlapping fields.
+2024-10-16T12:48:55.483056 - User established source hierarchy and weights.
+>>>>>>> Stashed changes
