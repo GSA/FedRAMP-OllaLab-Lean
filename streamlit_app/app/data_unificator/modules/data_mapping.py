@@ -62,23 +62,24 @@ class DataMapper:
         try:
             for source in self.data_sources:
                 data = source['data']
-                file_name = source['file']  # Use full file path
+                file_name = source['file']
+                file_path = source['file_path']
                 hierarchy = source.get('hierarchy', None)
 
                 # Fix Non-ASCII issues
-                if isinstance(data, pd.DataFrame):
-                    non_ascii_issues = check_non_ascii_characters(data)
-                    if non_ascii_issues:
-                        record_action(f"Non-ASCII characters found in '{file_name}': {non_ascii_issues}")
-                        # Backup original file
-                        backup_path = backup_file(file_name)
-                        record_action(f"Backed up '{file_name}' to '{backup_path}'")
-                        # Fix issues
-                        data = fix_non_ascii_characters(data)
-                        # Save fixed file
-                        data.to_csv(file_name, index=False)
-                        record_action(f"Fixed Non-ASCII issues in '{file_name}' and saved changes.")
-                        source['data'] = data  # Update the data in the data_sources
+            if isinstance(data, pd.DataFrame):
+                non_ascii_issues = check_non_ascii_characters(data)
+                if non_ascii_issues:
+                    record_action(f"Non-ASCII characters found in '{file_name}': {non_ascii_issues}")
+                    # Backup original file
+                    backup_path = backup_file(file_path)
+                    record_action(f"Backed up '{file_path}' to '{backup_path}'")
+                    # Fix issues
+                    data = fix_non_ascii_characters(data)
+                    # Save fixed file
+                    data.to_csv(file_path, index=False)
+                    record_action(f"Fixed Non-ASCII issues in '{file_path}' and saved changes.")
+                    source['data'] = data  # Update the data in the data_sources
                 else:
                     # Handle non-DataFrame data structures
                     pass  # Implement if needed
@@ -123,6 +124,7 @@ class DataMapper:
             for source in self.data_sources:
                 df = source['data']
                 file_name = source['file']
+                #file_path = source['file_path']
 
                 # Build reverse mapping for this source
                 reverse_mapping = {}
@@ -202,30 +204,30 @@ class DataMapper:
             record_action(error_message)
             raise e
 
-    def save_temporary_merged_file(self, file_name):
+    def save_temporary_merged_file(self, file_path):
         """
         Save the merged data to a temporary file.
         """
         try:
-            self.merged_data.to_csv(file_name, index=False)
-            record_action(f"Saved temporary merged file '{file_name}'.")
+            self.merged_data.to_csv(file_path, index=False)
+            record_action(f"Saved temporary merged file '{file_path}'.")
         except Exception as e:
-            error_message = f"Error saving temporary merged file '{file_name}': {str(e)}"
+            error_message = f"Error saving temporary merged file : {str(e)}"
             log_error(error_message)
             traceback_str = traceback.format_exc()
             log_error(traceback_str)
             record_action(error_message)
             raise e
 
-    def load_temporary_merged_file(self, file_name):
+    def load_temporary_merged_file(self, file_path):
         """
         Load the temporary merged file.
         """
         try:
-            self.merged_data = pd.read_csv(file_name)
-            record_action(f"Loaded temporary merged file '{file_name}'.")
+            self.merged_data = pd.read_csv(file_path)
+            record_action(f"Loaded temporary merged file '{file_path}'.")
         except Exception as e:
-            error_message = f"Error loading temporary merged file '{file_name}': {str(e)}"
+            error_message = f"Error loading temporary merged file: {str(e)}"
             log_error(error_message)
             traceback_str = traceback.format_exc()
             log_error(traceback_str)
@@ -287,15 +289,15 @@ class DataMapper:
             self.detect_conflicts(report_row_numbers=False)
             self.resolved_data = resolve_conflicts_in_dataframe(self.merged_data, self.conflicts, strategy, self.source_weights, self.source_hierarchy)
 
-    def save_resolved_data(self, file_name):
+    def save_resolved_data(self, file_path):
         """
         Save the resolved data to a file.
         """
         try:
-            self.resolved_data.to_csv(file_name, index=False)
-            record_action(f"Saved resolved data to '{file_name}'.")
+            self.resolved_data.to_csv(file_path, index=False)
+            record_action(f"Saved resolved data to '{file_path}'.")
         except Exception as e:
-            error_message = f"Error saving resolved data to '{file_name}': {str(e)}"
+            error_message = f"Error saving resolved data to: {str(e)}"
             log_error(error_message)
             traceback_str = traceback.format_exc()
             log_error(traceback_str)

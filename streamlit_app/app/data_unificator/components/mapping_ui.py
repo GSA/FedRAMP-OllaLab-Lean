@@ -51,12 +51,14 @@ def prepare_data_sources():
     for result in previous_results:
         if result['status'] == 'success':
             # Only process successfully imported data
-            file_name = result['file']
+            file_name = os.path.basename(result['file'])
+            file_path = result['file']  # Full file path
             data = result['data']
             file_extension = result['file_extension']
             hierarchy = st.session_state['hierarchy_data'].get(file_name, None)
             data_sources.append({
-                'file': file_name,
+                'file': file_name,         # Base file name for keys and display
+                'file_path': file_path,    # Full path for file operations
                 'data': data,
                 'file_extension': file_extension,
                 'hierarchy': hierarchy
@@ -191,8 +193,8 @@ def save_mapping_dictionary_step(data_mapper):
 def establish_hierarchy_step(data_mapper, data_sources):
     # Step 5: Establish Source Hierarchy
     st.subheader("Source Hierarchy")
-    source_files =  [source['file'] for source in data_sources]
-    max_levels = len(source_files)
+    source_file_paths =  [source['file_path'] for source in data_sources]
+    max_levels = len(source_file_paths)
     num_levels = st.number_input(
         "Specify the number of source hierarchy levels:",
         min_value=1,
@@ -203,7 +205,7 @@ def establish_hierarchy_step(data_mapper, data_sources):
     selected_files = []
     source_hierarchy = []
     for level in range(1, num_levels + 1):
-        remaining_files = [f for f in source_files if f not in selected_files]
+        remaining_files = [f for f in source_file_paths if f not in selected_files]
         selected_file = st.selectbox(
             f"Select source file for level {level} (1 is highest priority):",
             options=remaining_files,
