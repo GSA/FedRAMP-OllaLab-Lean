@@ -16,11 +16,15 @@ from data_unificator.utils.data_utils import (
     extract_hierarchy_from_data_structure,
     visualize_hierarchy
 )
+from pathlib import Path
 import os
 import pandas as pd
 import networkx as nx
 
 logger = get_logger(__name__)
+
+# Define the base directory
+BASE_DIR = Path("app_data/data_unificator").resolve()
 
 def handle_manual_hierarchy(df, file_name):
     st.subheader(f"Specify Data Hierarchy for '{file_name}'")
@@ -108,14 +112,12 @@ def handle_manual_hierarchy(df, file_name):
             st.session_state['hierarchy_data'][file_name] = hierarchy
             # Visualize hierarchy
             file_path = get_file_path_by_name(file_name)
-            hierarchy_graph = extract_hierarchy(manual_hierarchy=hierarchy)
-            hierarchy_image_path = os.path.join(
-                os.path.dirname(file_path),
-                f"{file_name.replace('.', '_')}_hierarchy.png"
-            )
-            visualize_hierarchy(hierarchy_graph, save_path=hierarchy_image_path)
-            if os.path.exists(hierarchy_image_path):
-                st.image(hierarchy_image_path, caption=f"{file_name} Data Hierarchy")
+            if file_path:
+                hierarchy_graph = extract_hierarchy(manual_hierarchy=hierarchy)
+                hierarchy_image_path = file_path.parent / f"{file_name.replace('.', '_')}_hierarchy.png"
+                visualize_hierarchy(hierarchy_graph, save_path=hierarchy_image_path)
+                if hierarchy_image_path.exists():
+                    st.image(str(hierarchy_image_path), caption=f"{file_name} Data Hierarchy")
         else:
             st.error(f"Hierarchy for '{file_name}' is inconsistent. Please revise.")
 
@@ -154,11 +156,10 @@ def check_hierarchy_consistency(hierarchy):
 
     return True  # Hierarchy is consistent
 
-
 def get_file_path_by_name(file_name):
     for fp in st.session_state['file_paths']:
-        if os.path.basename(fp) == file_name:
-            return fp
+        if Path(fp).name == file_name:
+            return Path(fp).resolve()
     return None
 
 def handle_missing_data(df, missing_data_info, file_name):
@@ -231,13 +232,32 @@ def render_import(num_workers):
         if var not in st.session_state:
             st.session_state[var] = default_value
 
-    folder = st.text_input("Folder Path", "app_data/data_unificator")
-    # Create two columns for "Start Import" and "Clear Cache" buttons
+    # Use pathlib to handle paths
+    folder_input = st.text_input("Folder Path", str(BASE_DIR))
+    
+    # Resolve the absolute path
+    try:
+        folder = Path(folder_input).resolve()
+    except Exception as e:
+        st.error(f"Invalid folder path format: {e}")
+        return
+
+    # Check if the folder is within the base directory
+    if not str(folder).startswith(str(BASE_DIR)):
+        st.error("Access to the specified folder is not allowed.")
+        return
+
+    # Check if the folder exists and is a directory
+    if not folder.is_dir():
+        st.error("Invalid folder path. Please enter a valid directory.")
+        return
+
+    # Create three columns for "Start Import" and "Clear Cache" buttons
     col1, col2, col3 = st.columns([2, 2, 6])  # Adjust column widths as needed
     with col1:
         start_import = st.button("Start Import", key="start_import")
     with col2:
-        clear_cache = st.button("Clear Cache",key="clear_cache")
+        clear_cache = st.button("Clear Cache", key="clear_cache")
 
     # Handle "Clear Cache" button click
     if clear_cache:
@@ -250,13 +270,8 @@ def render_import(num_workers):
                 st.session_state[var] = default_value
         st.rerun()  # Optional: Rerun the app to reflect changes immediately
 
-
     if start_import or st.session_state['data_imported']:
-        if not os.path.isdir(folder):
-            st.error("Invalid folder path. Please enter a valid directory.")
-            return
-
-        # Get list of supported files, excluding backup folder
+        # Proceed with importing files from the validated folder
         file_paths = get_supported_files(folder, exclude_backup=True)
         if not file_paths:
             st.warning("No supported data files found in the selected folder.")
@@ -270,7 +285,6 @@ def render_import(num_workers):
         # Record action
         if not st.session_state['data_imported']:
             record_action(f"Data Import - Import - {folder}")
-
             # Progress bar
             progress_bar = st.progress(0)
             status_text = st.empty()
@@ -344,12 +358,9 @@ def render_import(num_workers):
                         st.error(f"Data for '{file_name}' is not a DataFrame.")
                 else:
                     st.session_state['hierarchy_data'][file_name] = result.get('hierarchy_data')
-                    hierarchy_image_path = os.path.join(
-                        os.path.dirname(file_paths[0]),
-                        f"{file_name.replace('.', '_')}_hierarchy.png"
-                    )
-                    if os.path.exists(hierarchy_image_path):
-                        st.image(hierarchy_image_path, caption=f"{file_name} Data Hierarchy")
+                    hierarchy_image_path = BASE_DIR / f"{file_name.replace('.', '_')}_hierarchy.png"
+                    if hierarchy_image_path.exists():
+                        st.image(str(hierarchy_image_path), caption=f"{file_name} Data Hierarchy")
                     else:
                         st.write("Data hierarchy visualization not available.")
 
@@ -370,9 +381,9 @@ def render_import(num_workers):
             if st.button("Fix Data Issues"):
                 for result in st.session_state['results_to_fix']:
                     file_name = result['file']
-                    original_file_path = [
-                        fp for fp in file_paths if os.path.basename(fp) == file_name
-                    ][0]
+                    original_file_path = Path([
+                        fp for fp in file_paths if Path(fp).name == file_name
+                    ][0]).resolve()
                     file_extension = result.get('file_extension')
 
                     # Prepare the strategies and actions
