@@ -18,9 +18,8 @@ if __name__ == "__main__":
 
     environment = Environment.from_env_or_keyvault()
     logger.info("Creating secrets in Keyvault from the environment")
-    logger.info("The following secrets will be created:")
-    for secret in environment.fields():
-        logger.info(f"  - {secret[0]}")
+    secrets = environment.fields()
+    logger.info(f"{len(secrets)} secrets will be created in Keyvault.")
 
     environment.to_keyvault()
     logger.info(
