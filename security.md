@@ -1,4 +1,4 @@
-# SECURITY.md
+# SECURITY NOTES
 
 ## Table of Contents
 
