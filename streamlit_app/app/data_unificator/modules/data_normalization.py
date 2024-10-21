@@ -8,6 +8,7 @@ from data_unificator.utils.normalization_utils import (
     handle_data_types,
     standardize_units,
     detect_outliers,
+    apply_outlier_handling,
     apply_scaling,
     aggregate_fields,
     remove_fields,
@@ -85,13 +86,15 @@ class DataNormalizer:
         """
         try:
             for data in self.resolved_data:
-                df = data['data']
-                outlier_info = detect_outliers(df)
+                # Pass a list containing the single data dictionary
+                outlier_info = detect_outliers([data])
                 if outlier_info:
-                    # User selections are passed from the UI
-                    df = apply_outlier_handling(df, outlier_info, user_selections)
-                data['data'] = df
-                record_action(f"Outliers handled in '{data['file']}'")
+                    df = data['data']
+                    # Extract the outliers for the current data source
+                    current_outliers = outlier_info[0]['outliers']
+                    df = apply_outlier_handling(df, current_outliers, user_selections)
+                    data['data'] = df
+                    record_action(f"Outliers handled in '{data['file']}' using {user_selections}")
             log_event("Outliers detected and handled across all sources.")
         except Exception as e:
             error_message = f"Error handling outliers: {str(e)}"
@@ -150,3 +153,10 @@ class DataNormalizer:
             log_error(error_message)
             record_action(error_message)
             raise e
+
+    def display_normalized_data(self):
+        """
+        Placeholder method to comply with the original interface.
+        Actual display logic should be handled in the UI.
+        """
+        pass

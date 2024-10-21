@@ -8,21 +8,22 @@ transformers
 peft
 accelerate
 duckdb
-autogluon
+#autogluon
 python-dateutil
 lxml
 pypdf2
 python-docx
 openpyxl
 tesseract
-textblob
-gensim
-cryptography
-spacy
+#textblob
+#gensim
+#cryptography
+#spacy
 IPython
 chardet
 unidecode
 ydata_profiling
+rapidfuzz
 
 # Add other necessary packages
 # the packages should be identical to those for jupyter_lab

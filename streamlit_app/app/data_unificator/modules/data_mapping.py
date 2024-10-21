@@ -40,6 +40,7 @@ class DataMapper:
         self.resolution_strategies = {}
         self.source_hierarchy = []
         self.mapping_version = 1
+        self.source_weights = {}  # Assuming weights can be assigned
         self.load_existing_mappings()
 
     def load_existing_mappings(self):
@@ -54,6 +55,10 @@ class DataMapper:
             log_event("No existing mapping dictionary found.")
             self.mapping_dictionary = {}
             self.mapping_version = 1
+        except Exception as e:
+            log_error(f"Unexpected error loading mappings: {str(e)}")
+            self.mapping_dictionary = {}
+            self.mapping_version = 1
 
     def extract_fields(self):
         """
@@ -61,35 +66,43 @@ class DataMapper:
         """
         try:
             for source in self.data_sources:
-                data = source['data']
-                file_name = source['file']
-                file_path = source['file_path']
+                data = source.get('data')
+                file_name = source.get('file')
+                file_path = source.get('file_path')
                 hierarchy = source.get('hierarchy', None)
 
-                # Fix Non-ASCII issues
-            if isinstance(data, pd.DataFrame):
-                non_ascii_issues = check_non_ascii_characters(data)
-                if non_ascii_issues:
-                    record_action(f"Non-ASCII characters found in '{file_name}': {non_ascii_issues}")
-                    # Backup original file
-                    backup_path = backup_file(file_path)
-                    record_action(f"Backed up '{file_path}' to '{backup_path}'")
-                    # Fix issues
-                    data = fix_non_ascii_characters(data)
-                    # Save fixed file
-                    data.to_csv(file_path, index=False)
-                    record_action(f"Fixed Non-ASCII issues in '{file_path}' and saved changes.")
-                    source['data'] = data  # Update the data in the data_sources
-                else:
-                    # Handle non-DataFrame data structures
-                    pass  # Implement if needed
+                if isinstance(data, pd.DataFrame):
+                    non_ascii_issues = check_non_ascii_characters(data)
+                    if non_ascii_issues:
+                        record_action(f"Non-ASCII characters found in '{file_name}': {non_ascii_issues}")
+                        # Backup original file
+                        backup_path = backup_file(file_path)
+                        if backup_path:
+                            record_action(f"Backed up '{file_path}' to '{backup_path}'")
+                        # Fix issues
+                        data = fix_non_ascii_characters(data)
+                        # Save fixed file
+                        data.to_csv(file_path, index=False)
+                        record_action(f"Fixed Non-ASCII issues in '{file_path}' and saved changes.")
+                        source['data'] = data  # Update the data in the data_sources
+                    else:
+                        # Handle non-DataFrame data structures if needed
+                        pass
 
-                metadata = extract_fields_metadata(data)
-                self.field_metadata[file_name] = {
-                    'metadata': metadata,
-                    'hierarchy': hierarchy
-                }
-                record_action(f"Extracted fields and metadata for '{file_name}'")
+                    metadata = extract_fields_metadata(data)
+                    self.field_metadata[file_name] = {
+                        'metadata': metadata,
+                        'hierarchy': hierarchy
+                    }
+                    record_action(f"Extracted fields and metadata for '{file_name}'")
+                else:
+                    # Handle non-DataFrame data structures if needed
+                    metadata = extract_fields_metadata(data)
+                    self.field_metadata[file_name] = {
+                        'metadata': metadata,
+                        'hierarchy': hierarchy
+                    }
+                    record_action(f"Extracted fields and metadata for non-DataFrame source '{file_name}'")
         except Exception as e:
             error_message = f"Error extracting fields: {str(e)}"
             log_error(error_message)
@@ -122,9 +135,8 @@ class DataMapper:
         try:
             aligned_data = []
             for source in self.data_sources:
-                df = source['data']
-                file_name = source['file']
-                #file_path = source['file_path']
+                df = source.get('data')
+                file_name = source.get('file')
 
                 # Build reverse mapping for this source
                 reverse_mapping = {}
@@ -147,7 +159,10 @@ class DataMapper:
                     if isinstance(df, pd.DataFrame):
                         for field, new_type in field_type_mapping.items():
                             try:
-                                df[field] = df[field].astype(new_type)
+                                if new_type == 'datetime':
+                                    df[field] = pd.to_datetime(df[field], errors='coerce')
+                                else:
+                                    df[field] = df[field].astype(new_type)
                             except Exception as e:
                                 log_error(f"Convert field '{field}' to '{new_type}' in '{file_name}': {str(e)}")
                     else:
@@ -159,7 +174,7 @@ class DataMapper:
                 else:
                     df_renamed = rename_fields_in_data_structure(df, reverse_mapping)
 
-                aligned_data.append({'file': source['file'], 'data': df_renamed})
+                aligned_data.append({'file': file_name, 'data': df_renamed})
             self.aligned_data = aligned_data
             record_action("Aligned data structures across sources.")
         except Exception as e:
@@ -212,7 +227,7 @@ class DataMapper:
             self.merged_data.to_csv(file_path, index=False)
             record_action(f"Saved temporary merged file '{file_path}'.")
         except Exception as e:
-            error_message = f"Error saving temporary merged file : {str(e)}"
+            error_message = f"Error saving temporary merged file: {str(e)}"
             log_error(error_message)
             traceback_str = traceback.format_exc()
             log_error(traceback_str)
@@ -239,27 +254,39 @@ class DataMapper:
         Get the conflicting rows for manual resolution.
         """
         keys = conflict_key if isinstance(conflict_key, tuple) else (conflict_key,)
-        query_str = ' & '.join([f"`{col}` == {repr(val)}" for col, val in zip(self.merged_data.columns[:len(keys)], keys)])
-        conflicting_rows = self.merged_data.query(query_str)
-        return conflicting_rows[[field]]
+        try:
+            query_conditions = ' & '.join([f"`{col}` == @val" for col, val in zip(self.merged_data.columns[:len(keys)], keys)])
+            conflicting_rows = self.merged_data.query(query_conditions)
+            return conflicting_rows[[field]]
+        except Exception as e:
+            log_error(f"Error fetching conflicting rows for {conflict_key} and field '{field}': {str(e)}")
+            return pd.DataFrame()
 
     def mark_rows_for_deletion(self, conflict_key, field):
         """
         Mark conflicting rows for deletion.
         """
         keys = conflict_key if isinstance(conflict_key, tuple) else (conflict_key,)
-        query_str = ' & '.join([f"`{col}` == {repr(val)}" for col, val in zip(self.merged_data.columns[:len(keys)], keys)])
-        self.merged_data = self.merged_data.query(f"not ({query_str})")
+        try:
+            query_conditions = ' & '.join([f"`{col}` == @val" for col, val in zip(self.merged_data.columns[:len(keys)], keys)])
+            self.merged_data = self.merged_data.query(f"not ({query_conditions})").reset_index(drop=True)
+            record_action(f"Marked rows for deletion for field '{field}' at keys {conflict_key}.")
+        except Exception as e:
+            log_error(f"Error marking rows for deletion: {str(e)}")
 
     def update_conflict_value(self, conflict_key, field, new_value):
         """
         Update conflicting values with user-provided new value.
         """
         keys = conflict_key if isinstance(conflict_key, tuple) else (conflict_key,)
-        condition = True
-        for col, val in zip(self.merged_data.columns[:len(keys)], keys):
-            condition = condition & (self.merged_data[col] == val)
-        self.merged_data.loc[condition, field] = new_value
+        try:
+            condition = True
+            for col, val in zip(self.merged_data.columns[:len(keys)], keys):
+                condition &= (self.merged_data[col] == val)
+            self.merged_data.loc[condition, field] = new_value
+            record_action(f"Updated field '{field}' at keys {conflict_key} with new value '{new_value}'.")
+        except Exception as e:
+            log_error(f"Error updating conflict value: {str(e)}")
 
     def detect_conflicts(self, report_row_numbers=False):
         """
@@ -281,13 +308,28 @@ class DataMapper:
         """
         Resolve conflicts using the selected strategy.
         """
-        if strategy == "Manual":
-            # Assume that manual edits have been made to self.merged_data
-            self.resolved_data = self.merged_data
-        else:
-            # Use existing conflict resolution methods
-            self.detect_conflicts(report_row_numbers=False)
-            self.resolved_data = resolve_conflicts_in_dataframe(self.merged_data, self.conflicts, strategy, self.source_weights, self.source_hierarchy)
+        try:
+            if strategy == "Manual":
+                # Assume that manual edits have been made to self.merged_data
+                self.resolved_data = self.merged_data
+            else:
+                # Use existing conflict resolution methods
+                self.detect_conflicts(report_row_numbers=False)
+                self.resolved_data = resolve_conflicts_in_dataframe(
+                    self.merged_data,
+                    self.conflicts,
+                    strategy,
+                    self.source_weights,
+                    self.source_hierarchy
+                )
+            record_action(f"Conflicts resolved using '{strategy}' strategy.")
+        except Exception as e:
+            error_message = f"Error resolving conflicts: {str(e)}"
+            log_error(error_message)
+            traceback_str = traceback.format_exc()
+            log_error(traceback_str)
+            record_action(error_message)
+            raise e
 
     def save_resolved_data(self, file_path):
         """
@@ -297,10 +339,11 @@ class DataMapper:
             self.resolved_data.to_csv(file_path, index=False)
             record_action(f"Saved resolved data to '{file_path}'.")
         except Exception as e:
-            error_message = f"Error saving resolved data to: {str(e)}"
+            error_message = f"Error saving resolved data: {str(e)}"
             log_error(error_message)
             traceback_str = traceback.format_exc()
             log_error(traceback_str)
+            record_action(error_message)
             raise e
 
     def verify_and_convert_data_types(self, user_conversions):

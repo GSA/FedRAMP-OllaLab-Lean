@@ -43,7 +43,7 @@ def main():
     error_placeholder = st.empty()
 
     # Sidebar for navigation and settings
-    st.sidebar.title("Navigation")
+    st.sidebar.markdown("## Data Unificator")
     steps = [
         "Data Import",
         "Data Mapping",
@@ -53,7 +53,7 @@ def main():
     ]
     step = st.sidebar.radio("Select Step", steps)
 
-    st.sidebar.title("Settings")
+    st.sidebar.markdown("## Settings")
     num_workers = st.sidebar.number_input(
         "Number of parallel processes",
         min_value=1,

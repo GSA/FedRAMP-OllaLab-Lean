@@ -57,7 +57,7 @@ def identify_overlaps(field_metadata):
     field_info = {}
     # Collect field info for each field name across sources
     for source, meta in field_metadata.items():
-        fields = meta['metadata']
+        fields = meta.get('metadata', {})
         for field_name, field_meta in fields.items():
             if field_name not in field_info:
                 field_info[field_name] = {}
@@ -70,8 +70,8 @@ def identify_overlaps(field_metadata):
             data_types = {}
             sample_values_dict = {}
             for source_name, field_meta in sources.items():
-                dtype = field_meta['dtype']
-                sample_values = field_meta['sample_values']
+                dtype = field_meta.get('dtype', 'N/A')
+                sample_values = field_meta.get('sample_values', [])
                 data_types[source_name] = dtype
                 sample_values_dict[source_name] = sample_values
 
@@ -140,15 +140,19 @@ def backup_file(file_path):
     """
     Backup the file with date and time appended to the filename.
     """
-    directory, filename = os.path.split(file_path)
-    name, ext = os.path.splitext(filename)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    backup_filename = f"{name}_backup_{timestamp}{ext}"
-    backup_path = os.path.join(directory, backup_filename)
-    os.makedirs(directory, exist_ok=True)
-    with open(file_path, 'rb') as original_file, open(backup_path, 'wb') as backup_file:
-        backup_file.write(original_file.read())
-    return backup_path
+    try:
+        directory, filename = os.path.split(file_path)
+        name, ext = os.path.splitext(filename)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_filename = f"{name}_backup_{timestamp}{ext}"
+        backup_path = os.path.join(directory, backup_filename)
+        os.makedirs(directory, exist_ok=True)
+        with open(file_path, 'rb') as original_file, open(backup_path, 'wb') as backup_file:
+            backup_file.write(original_file.read())
+        return backup_path
+    except Exception as e:
+        log_error(f"Error backing up file '{file_path}': {str(e)}")
+        return None
 
 def rename_fields_in_data_structure(data, field_name_mapping):
     """
@@ -186,6 +190,9 @@ def convert_field_types_in_data_structure(data, field_type_mapping, path=""):
         return data
 
 def convert_value_to_type(value, new_type):
+    """
+    Convert a single value to the specified type.
+    """
     try:
         if new_type == 'int':
             return int(value)
@@ -194,12 +201,11 @@ def convert_value_to_type(value, new_type):
         elif new_type == 'str':
             return str(value)
         elif new_type == 'datetime':
-            from datetime import datetime
             return datetime.strptime(value, "%Y-%m-%d")
         else:
             return value
     except Exception as e:
-        log_error(f"Data type convert - {value} to {new_type} - {str(e)}")
+        log_error(f"Data type conversion error: Unable to convert '{value}' to '{new_type}': {str(e)}")
         return value  # Return original value if conversion fails
 
 def detect_conflicts(aligned_data, report_row_numbers=False):
@@ -210,8 +216,8 @@ def detect_conflicts(aligned_data, report_row_numbers=False):
     data_frames = []
     source_names = []
     for data_dict in aligned_data:
-        df = data_dict['data']
-        file_name = data_dict['file']
+        df = data_dict.get('data')
+        file_name = data_dict.get('file')
         if isinstance(df, pd.DataFrame):
             df_copy = df.copy()
             df_copy['_source'] = file_name
@@ -271,6 +277,8 @@ def resolve_conflicts(aligned_data, conflicts, strategy, source_weights, source_
         resolved_data = resolve_conflicts_hierarchy(aligned_data, source_hierarchy)
     elif strategy == 'Time-based':
         resolved_data = resolve_conflicts_time_based(aligned_data)
+    elif strategy == 'Weight-based':
+        resolved_data = resolve_conflicts_weighted(aligned_data, source_weights)
     else:
         resolved_data = aligned_data
     return resolved_data
@@ -283,8 +291,8 @@ def resolve_conflicts_hierarchy(aligned_data, source_hierarchy):
     source_priority = {source: idx for idx, source in enumerate(source_hierarchy)}
     data_frames = []
     for data_dict in aligned_data:
-        df = data_dict['data']
-        file_name = data_dict['file']
+        df = data_dict.get('data')
+        file_name = data_dict.get('file')
         if isinstance(df, pd.DataFrame):
             df_copy = df.copy()
             df_copy['_source'] = file_name
@@ -318,8 +326,8 @@ def resolve_conflicts_weighted(aligned_data, source_weights):
     """
     data_frames = []
     for data_dict in aligned_data:
-        df = data_dict['data']
-        file_name = data_dict['file']
+        df = data_dict.get('data')
+        file_name = data_dict.get('file')
         weight = source_weights.get(file_name, 0)
         if isinstance(df, pd.DataFrame):
             df_copy = df.copy()
@@ -354,8 +362,8 @@ def resolve_conflicts_time_based(aligned_data):
     """
     data_frames = []
     for data_dict in aligned_data:
-        df = data_dict['data']
-        file_name = data_dict['file']
+        df = data_dict.get('data')
+        file_name = data_dict.get('file')
         if isinstance(df, pd.DataFrame) and 'timestamp' in df.columns:
             df_copy = df.copy()
             df_copy['_source'] = file_name
@@ -391,7 +399,7 @@ def verify_data_types(resolved_data):
     incompatibilities = {}
     field_types = {}
     for data in resolved_data:
-        df = data['data']
+        df = data.get('data')
         if isinstance(df, pd.DataFrame):
             for column in df.columns:
                 dtype = str(df[column].dtype)
@@ -429,11 +437,14 @@ def convert_data_types(resolved_data, user_conversions):
     Convert data types of selected fields as per user input.
     """
     for data in resolved_data:
-        df = data['data']
+        df = data.get('data')
         if isinstance(df, pd.DataFrame):
             for field, new_type in user_conversions.items():
                 try:
-                    df[field] = df[field].astype(new_type)
+                    if new_type == 'datetime':
+                        df[field] = pd.to_datetime(df[field], errors='coerce')
+                    else:
+                        df[field] = df[field].astype(new_type)
                 except Exception as e:
                     log_error(f"Error converting field '{field}' to '{new_type}': {str(e)}")
         else:
@@ -445,36 +456,67 @@ def save_mapping_dictionary(mapping_dictionary, version):
     """
     Save mapping dictionary to a YAML file with versioning.
     """
-    file_name = f"mapping_dictionary_v{version}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.yaml"
-    os.makedirs('mappings', exist_ok=True)
-    with open(os.path.join('mappings', file_name), 'w') as f:
-        yaml.dump(mapping_dictionary, f)
+    try:
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        file_name = f"mapping_dictionary_v{version}_{timestamp}.yaml"
+        os.makedirs('mappings', exist_ok=True)
+        with open(os.path.join('mappings', file_name), 'w') as f:
+            yaml.dump(mapping_dictionary, f)
+    except Exception as e:
+        log_error(f"Error saving mapping dictionary: {str(e)}")
 
 def load_mapping_dictionary():
     """
     Load the latest mapping dictionary.
     """
-    mapping_files = [f for f in os.listdir('mappings') if f.startswith('mapping_dictionary_v') and f.endswith('.yaml')]
-    if not mapping_files:
-        raise FileNotFoundError("No mapping dictionary found.")
-    mapping_files.sort(key=lambda x: os.path.getmtime(os.path.join('mappings', x)))
-    latest_file = mapping_files[-1]
-    with open(os.path.join('mappings', latest_file), 'r') as f:
-        mapping_dictionary = yaml.safe_load(f)
-    return mapping_dictionary
+    try:
+        mapping_dir = 'mappings'
+        if not os.path.exists(mapping_dir):
+            raise FileNotFoundError("Mapping directory does not exist.")
+
+        mapping_files = [
+            f for f in os.listdir(mapping_dir)
+            if f.startswith('mapping_dictionary_v') and f.endswith('.yaml')
+        ]
+        if not mapping_files:
+            raise FileNotFoundError("No mapping dictionary found.")
+
+        # Sort files by modification time
+        mapping_files.sort(key=lambda x: os.path.getmtime(os.path.join(mapping_dir, x)))
+        latest_file = mapping_files[-1]
+        with open(os.path.join(mapping_dir, latest_file), 'r') as f:
+            mapping_dictionary = yaml.safe_load(f)
+        return mapping_dictionary
+    except Exception as e:
+        log_error(f"Error loading mapping dictionary: {str(e)}")
+        raise e
 
 def version_mapping_dictionary():
     """
     Get the next version number for the mapping dictionary.
     """
-    mapping_files = [f for f in os.listdir('mappings') if f.startswith('mapping_dictionary_v') and f.endswith('.yaml')]
+    mapping_dir = 'mappings'
+    if not os.path.exists(mapping_dir):
+        return 1
+
+    mapping_files = [
+        f for f in os.listdir(mapping_dir)
+        if f.startswith('mapping_dictionary_v') and f.endswith('.yaml')
+    ]
     if not mapping_files:
         return 1
+
     versions = []
     for file in mapping_files:
         version_part = file[len('mapping_dictionary_v'):]
         version_str = version_part.split('_')[0]
-        versions.append(int(version_str))
+        try:
+            versions.append(int(version_str))
+        except ValueError:
+            continue  # Skip files that don't follow the naming convention
+
+    if not versions:
+        return 1
     return max(versions) + 1
 
 def resolve_conflicts_in_dataframe(df, conflicts, strategy, source_weights, source_hierarchy):
@@ -485,18 +527,57 @@ def resolve_conflicts_in_dataframe(df, conflicts, strategy, source_weights, sour
         resolved_df = resolve_conflicts_hierarchy_in_df(df, source_hierarchy)
     elif strategy == 'Time-based':
         resolved_df = resolve_conflicts_time_based_in_df(df)
+    elif strategy == 'Weight-based':
+        resolved_df = resolve_conflicts_weighted_in_df(df, source_weights)
     else:
         resolved_df = df  # For manual or unsupported strategies
     return resolved_df
 
 def resolve_conflicts_hierarchy_in_df(df, source_hierarchy):
-    # Implement conflict resolution in DataFrame based on hierarchy
-    pass  # Replace with actual implementation
+    """
+    Implement conflict resolution in DataFrame based on hierarchy.
+    The source higher in the hierarchy has precedence.
+    """
+    try:
+        source_priority = {source: idx for idx, source in enumerate(source_hierarchy)}
+        df['_priority'] = df['_source'].map(source_priority)
+        df_sorted = df.sort_values('_priority')
+        key_columns = [col for col in df.columns if col not in ['_source', '_priority']]
+        resolved_df = df_sorted.drop_duplicates(subset=key_columns, keep='first')
+        resolved_df = resolved_df.drop(columns=['_source', '_priority'])
+        return resolved_df
+    except Exception as e:
+        log_error(f"Error in hierarchy-based conflict resolution: {str(e)}")
+        return df
 
 def resolve_conflicts_weighted_in_df(df, source_weights):
-    # Implement conflict resolution in DataFrame based on weights
-    pass  # Replace with actual implementation
+    """
+    Implement conflict resolution in DataFrame based on weights.
+    The source with higher weight has precedence.
+    """
+    try:
+        df['_weight'] = df['_source'].map(source_weights)
+        df_sorted = df.sort_values('_weight', ascending=False)
+        key_columns = [col for col in df.columns if col not in ['_source', '_weight']]
+        resolved_df = df_sorted.drop_duplicates(subset=key_columns, keep='first')
+        resolved_df = resolved_df.drop(columns=['_source', '_weight'])
+        return resolved_df
+    except Exception as e:
+        log_error(f"Error in weighted conflict resolution: {str(e)}")
+        return df
 
 def resolve_conflicts_time_based_in_df(df):
-    # Implement conflict resolution in DataFrame based on time
-    pass  # Replace with actual implementation
+    """
+    Implement conflict resolution in DataFrame based on time.
+    Assumes there is a 'timestamp' field in the data.
+    """
+    try:
+        df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
+        df_sorted = df.sort_values('timestamp', ascending=False)
+        key_columns = [col for col in df.columns if col not in ['_source', 'timestamp']]
+        resolved_df = df_sorted.drop_duplicates(subset=key_columns, keep='first')
+        resolved_df = resolved_df.drop(columns=['_source', 'timestamp'])
+        return resolved_df
+    except Exception as e:
+        log_error(f"Error in time-based conflict resolution: {str(e)}")
+        return df
