@@ -43,6 +43,10 @@ OllaLab-Lean supports most LLM and Data Science R&D activities. A few sample use
 - Use Jupyter Lab and the provided Jupyter Notebooks to learn and experiment with cutting edge topics such as Graph-based Retreival Augmented Generation (RAG), other advanced RAG techniques, knowledge graph algorithms, and so on.
 - Use Jupyter Lab and the installed AutoML, AutoViz packages to efficiently execute Data Science/AI/ML tasks.
 
+> [!IMPORTANT]
+>Please refer to the project's **[Security](https://github.com/GSA/FedRAMP-OllaLab-Lean/blob/main/security.md) Note** for basic threat model and recommended proper uses.
+>
+
 ## Installation
 You should be familiar with the command line interface, have Docker or Podman, Git, and other supporting CLI tools installed. If you are planning to use nVidia GPUs, you should have installed all nVidia supporting software. We will provide a detailed pre-installation instruction focusing on nVidia supporting stack at a later time.
 
