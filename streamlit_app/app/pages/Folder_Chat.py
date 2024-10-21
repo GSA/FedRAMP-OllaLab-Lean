@@ -71,8 +71,10 @@ st.subheader("Folder Management")
 new_folder_name = st.text_input("Create a new folder")
 if st.button("Create Folder"):
     if new_folder_name:
-        folder_path = os.path.join(BASE_DIR, new_folder_name)
-        if not os.path.exists(folder_path):
+        folder_path = os.path.normpath(os.path.join(BASE_DIR, new_folder_name))
+        if not folder_path.startswith(os.path.abspath(BASE_DIR)):
+            st.error("Invalid folder name. Please try again.")
+        elif not os.path.exists(folder_path):
             os.makedirs(folder_path)
             st.success(f"Folder '{new_folder_name}' created.")
         else:
