@@ -24,7 +24,9 @@ if st.button("Summarize"):
         try:
             with st.spinner("Please wait..."):
                 # Load URL data
-                if "youtube.com" in url:
+                from urllib.parse import urlparse
+                parsed_url = urlparse(url)
+                if parsed_url.hostname and (parsed_url.hostname == "youtube.com" or parsed_url.hostname.endswith(".youtube.com")):
                     loader = YoutubeLoader.from_youtube_url(url, add_video_info=True)
                 else:
                     loader = UnstructuredURLLoader(urls=[url], ssl_verify=False, headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_5_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"})
