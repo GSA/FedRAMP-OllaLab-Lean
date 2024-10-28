@@ -4,11 +4,13 @@ import streamlit as st
 from streamlit.logger import get_logger
 from data_unificator.modules.data_import import (
     import_files_parallel,
-    apply_data_fixes
+    apply_data_fixes,
+    convert_json_xml_to_csv  # Added for conversion
 )
 from data_unificator.utils.file_utils import (
     get_supported_files,
-    save_file
+    save_file,
+    backup_file  # Added for backup in conversion
 )
 from data_unificator.audits.audit_trail import record_action
 from data_unificator.utils.data_utils import (
@@ -53,17 +55,29 @@ def handle_manual_hierarchy(df, file_name):
         # Force rerun to update the widget with new defaults
         st.rerun()
 
+    # Initialize level_1_nodes in session state if not present
+    if f"level_1_nodes_{file_name}" not in st.session_state:
+        st.session_state[f"level_1_nodes_{file_name}"] = []
+
     # Level 1 nodes selection
     level_1_nodes = st.multiselect(
         f"Select Level 1 Nodes (Top Level) for '{file_name}'",
         options=columns,
-        default=st.session_state.get(f"level_1_nodes_{file_name}", []),
+        default=st.session_state[f"level_1_nodes_{file_name}"],
         key=f"level_1_nodes_{file_name}"
     )
 
-    # Update assigned nodes after level_1_nodes are determined
-    assigned_nodes.update(level_1_nodes)
-    # Do not assign to st.session_state[f"level_1_nodes_{file_name}"] here
+    # Removed the line that assigns to st.session_state after widget creation to prevent StreamlitAPIException
+
+    # Recompute assigned_nodes based on current manual_hierarchy and level_1_nodes
+    def recompute_assigned_nodes(file_name):
+        manual_hierarchy = st.session_state['manual_hierarchy'][file_name]
+        assigned = set(st.session_state[f"level_1_nodes_{file_name}"])
+        for children in manual_hierarchy.values():
+            assigned.update(children)
+        st.session_state['assigned_nodes'][file_name] = assigned
+
+    recompute_assigned_nodes(file_name)
 
     # Function to recursively get children for a node, up to a maximum of 5 levels
     def recursive_hierarchy(node, current_level):
@@ -78,7 +92,7 @@ def handle_manual_hierarchy(df, file_name):
             st.session_state['manual_hierarchy'][file_name][node] = []
 
         # Get available columns (those not assigned yet)
-        available_columns = [col for col in columns if col not in assigned_nodes]
+        available_columns = [col for col in columns if col not in st.session_state['assigned_nodes'][file_name]]
 
         if available_columns:
             children = st.multiselect(
@@ -91,15 +105,15 @@ def handle_manual_hierarchy(df, file_name):
             # Update the hierarchy with the selected children
             st.session_state['manual_hierarchy'][file_name][node] = children
 
-            # Update assigned nodes
-            assigned_nodes.update(children)
+            # Recompute assigned_nodes after selecting children
+            recompute_assigned_nodes(file_name)
 
             # For each child, allow to specify its children recursively, up to level 5
             for child in children:
                 recursive_hierarchy(child, current_level + 1)
 
     # Start the recursive hierarchy building for each Level 1 node
-    for node in level_1_nodes:
+    for node in st.session_state[f"level_1_nodes_{file_name}"]:
         recursive_hierarchy(node, current_level=1)
 
     # "Validate Hierarchy" button
@@ -109,6 +123,8 @@ def handle_manual_hierarchy(df, file_name):
         if check_hierarchy_consistency(hierarchy):
             st.success(f"Hierarchy for '{file_name}' is consistent.")
             # Store the hierarchy data
+            if 'hierarchy_data' not in st.session_state:
+                st.session_state['hierarchy_data'] = {}
             st.session_state['hierarchy_data'][file_name] = hierarchy
             # Visualize hierarchy
             file_path = get_file_path_by_name(file_name)
@@ -157,7 +173,7 @@ def check_hierarchy_consistency(hierarchy):
     return True  # Hierarchy is consistent
 
 def get_file_path_by_name(file_name):
-    for fp in st.session_state['file_paths']:
+    for fp in st.session_state.get('file_paths', []):
         if Path(fp).name == file_name:
             return Path(fp).resolve()
     return None
@@ -190,10 +206,14 @@ def handle_missing_data(df, missing_data_info, file_name):
             )
 
             # Store strategy for the field
+            if 'missing_data_strategies' not in st.session_state:
+                st.session_state['missing_data_strategies'] = {}
             st.session_state['missing_data_strategies'][f"{file_name}_{field}"] = selected_strategy
 
             # Allow manual input if selected
             if selected_strategy == "Manual Input":
+                if 'manual_inputs' not in st.session_state:
+                    st.session_state['manual_inputs'] = {}
                 manual_value = st.text_input(
                     label=f"Input value for '{field}': ",
                     value="",
@@ -210,6 +230,8 @@ def handle_pii(pii_fields, file_name):
             options=["Remove Field", "Anonymize Field"],
             key=f"pii_action_{file_name}_{pii_field}"
         )
+        if 'pii_actions' not in st.session_state:
+            st.session_state['pii_actions'] = {}
         st.session_state['pii_actions'][f"{file_name}_{pii_field}"] = action
 
 def render_import(num_workers):
@@ -226,6 +248,8 @@ def render_import(num_workers):
         'results_to_fix': [],               # List to store results needing fixes
         'hierarchy_data': {},               # Dictionary for hierarchy data
         'file_paths': [],                   # List to store file paths
+        'manual_hierarchy': {},             # Added for hierarchy
+        'assigned_nodes': {},               # Added for hierarchy
     }
 
     for var, default_value in session_state_defaults.items():
@@ -234,6 +258,9 @@ def render_import(num_workers):
 
     # Use pathlib to handle paths
     folder_input = st.text_input("Folder Path", str(BASE_DIR))
+    
+    # Checkbox for converting JSON/XML to CSV
+    convert_json_xml = st.checkbox("Convert JSON/XML to CSV")
     
     # Resolve the absolute path
     try:
@@ -282,6 +309,26 @@ def render_import(num_workers):
         # Store file paths in session state
         st.session_state['file_paths'] = file_paths
 
+        # Handle JSON/XML conversion if checkbox is checked
+        if convert_json_xml:
+            json_xml_files = [
+                fp for fp in file_paths
+                if Path(fp).suffix.lower() in ['.json', '.xml']
+            ]
+            if json_xml_files:
+                st.write("Converting JSON/XML files to CSV...")
+                # Backup and convert files
+                converted_files = convert_json_xml_to_csv(json_xml_files)
+                # Update file_paths: remove original JSON/XML and add converted CSV
+                file_paths = [
+                    fp for fp in file_paths
+                    if fp not in json_xml_files
+                ]
+                file_paths.extend(converted_files)
+                st.write(f"Converted {len(converted_files)} files to CSV.")
+            else:
+                st.write("No JSON/XML files to convert.")
+
         # Record action
         if not st.session_state['data_imported']:
             record_action(f"Data Import - Import - {folder}")
@@ -323,6 +370,8 @@ def render_import(num_workers):
             if result['status'] == 'issues_found':
                 st.warning(f"Issues found in '{file_name}'")
                 data = result['data']
+                if 'results_to_fix' not in st.session_state:
+                    st.session_state['results_to_fix'] = []
                 st.session_state['results_to_fix'].append(result)
 
                 # Handle missing data
@@ -426,7 +475,8 @@ def render_import(num_workers):
                 if st.button("Re-import Data"):
                     # Clear session state variables related to data import
                     for var in ['results', 'missing_data_strategies', 'manual_inputs',
-                                'pii_actions', 'results_to_fix']:
+                                'pii_actions', 'results_to_fix', 'manual_hierarchy',
+                                'assigned_nodes']:
                         if isinstance(st.session_state[var], dict):
                             st.session_state[var] = {}
                         elif isinstance(st.session_state[var], list):
@@ -435,3 +485,4 @@ def render_import(num_workers):
                             st.session_state[var] = False
                     # Re-run the data import process
                     render_import(num_workers)
+

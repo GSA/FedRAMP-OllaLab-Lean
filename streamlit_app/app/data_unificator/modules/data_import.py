@@ -356,6 +356,102 @@ def apply_data_fixes(file_path, missing_data_strategies=None, manual_inputs=None
         record_action(f"Error applying data fixes to '{file_path}': {str(e)}")
         return False, None
 
+def convert_json_xml_to_csv(file_paths):
+    """
+    Convert JSON and XML files to CSV format.
+    """
+    converted_files = []
+    for file_path in file_paths:
+        ext = os.path.splitext(file_path)[1].lower()
+        if ext not in ['.json', '.xml']:
+            continue
+        try:
+            # Backup the original file
+            base_path = os.path.dirname(file_path)
+            backup_folder = os.path.join(base_path, "backup")
+            os.makedirs(backup_folder, exist_ok=True)
+            backup_file(file_path, backup_folder)
+
+            # Read the file
+            data_or_df, skipped = read_file(file_path, return_as_df=True)
+            if isinstance(data_or_df, pd.DataFrame):
+                # Save as CSV
+                csv_path = os.path.splitext(file_path)[0] + '.csv'
+                save_file(data_or_df, csv_path, as_csv=True)
+                converted_files.append(csv_path)
+                # Remove original file
+                os.remove(file_path)
+                record_action(f"Converted '{file_path}' to '{csv_path}' and removed original file.")
+            else:
+                log_error(f"Cannot convert non-tabular file '{file_path}' to CSV.")
+        except Exception as e:
+            log_error(f"Error converting file '{file_path}' to CSV: {str(e)}")
+            record_action(f"Error converting file '{file_path}' to CSV: {str(e)}")
+    return converted_files
+
+def find_discrepancies(df):
+    """
+    Identify discrepancies in the DataFrame.
+    """
+    discrepancies = []
+    non_negative_columns = ['age', 'quantity', 'price']  # Update as needed
+
+    for column in df.columns:
+        try:
+            # Check for non-ASCII characters
+            if df[column].dtype == object and df[column].str.contains(r'[^\x00-\x7F]', na=False).any():
+                discrepancies.append(f"Non-ASCII characters in column '{column}'")
+
+            # Check for inconsistent date formats
+            if df[column].dtype == object:
+                non_null_values = df[column].dropna()
+                if not non_null_values.empty:
+                    date_formats = non_null_values.apply(infer_date_format)
+                    unique_formats = date_formats.dropna().unique()
+                    #if len(unique_formats) > 1: # pending test of infer_date_format
+                        #discrepancies.append(f"Inconsistent date formats in column '{column}'")
+
+            # Check for negative values in numeric columns
+            if pd.api.types.is_numeric_dtype(df[column]) and column in non_negative_columns:
+                if (df[column] < 0).any():
+                    discrepancies.append(f"Negative values in column '{column}'")
+
+        except Exception as e:
+            log_error(f"Error processing column '{column}': {str(e)}")
+            df[column] = df[column].apply(lambda x: str(x) if isinstance(x, (list, dict)) else x)
+
+    return discrepancies if discrepancies else None
+
+def infer_date_format(date_str):
+    """
+    Infer the date format from a date string.
+    Returns the format string if successful, else returns None.
+    """
+    from datetime import datetime
+
+    known_formats = [
+        "%Y-%m-%d",
+        "%d-%m-%Y",
+        "%m/%d/%Y",
+        "%Y/%m/%d",
+        "%d.%m.%Y",
+        "%Y.%m.%d",
+        "%d/%m/%Y",
+        "%m-%d-%Y",
+        "%b %d, %Y",
+        "%B %d, %Y",
+        "%d %b %Y",
+        "%d %B %Y",
+        # Add more formats as needed
+    ]
+    for fmt in known_formats:
+        try:
+            dt = datetime.strptime(date_str, fmt)
+            return fmt
+        except ValueError:
+            continue
+    return None
+
 def apply_fixes_to_data_structure(data, missing_data_strategies=None, manual_inputs=None, pii_actions=None, discrepancies=None):
     # Fix missing data
     if missing_data_strategies:
@@ -588,3 +684,237 @@ def infer_date_format(date_str):
         except ValueError:
             continue
     return None
+
+def apply_fixes_to_data_structure(data, missing_data_strategies=None, manual_inputs=None, pii_actions=None, discrepancies=None):
+    # Fix missing data
+    if missing_data_strategies:
+        data = fix_missing_data_in_structure(data, missing_data_strategies, manual_inputs)
+
+    # Fix PII data
+    if pii_actions:
+        data = fix_pii_in_structure(data, pii_actions)
+
+    # Fix discrepancies
+    if discrepancies:
+        data = fix_discrepancies_in_structure(data, discrepancies)
+
+    return data
+
+def fix_missing_data_in_structure(data, missing_data_strategies, manual_inputs):
+    def traverse_and_fix(data, path=""):
+        if isinstance(data, dict):
+            for key in list(data.keys()):
+                current_path = f"{path}.{key}" if path else key
+                value = data[key]
+                strategy = missing_data_strategies.get(current_path)
+                if strategy:
+                    if value is None or (isinstance(value, str) and value.strip() == ""):
+                        if strategy == "Deletion":
+                            del data[key]
+                        elif strategy == "Manual Input":
+                            manual_value = manual_inputs.get(current_path)
+                            if manual_value is not None:
+                                data[key] = manual_value
+                    else:
+                        traverse_and_fix(value, current_path)
+                else:
+                    traverse_and_fix(value, current_path)
+        elif isinstance(data, list):
+            for index, item in enumerate(data):
+                current_path = f"{path}[{index}]"
+                traverse_and_fix(item, current_path)
+        else:
+            pass  # Leaf node
+
+    traverse_and_fix(data)
+    return data
+
+def fix_pii_in_structure(data, pii_actions):
+    def traverse_and_fix(data, path=""):
+        if isinstance(data, dict):
+            for key in list(data.keys()):
+                current_path = f"{path}.{key}" if path else key
+                action = pii_actions.get(current_path)
+                if action:
+                    if action == "Remove Field":
+                        del data[key]
+                    elif action == "Anonymize Field":
+                        data[key] = hash(str(data[key]))
+                else:
+                    traverse_and_fix(data[key], current_path)
+        elif isinstance(data, list):
+            for index, item in enumerate(data):
+                current_path = f"{path}[{index}]"
+                traverse_and_fix(item, current_path)
+        else:
+            pass  # Leaf node
+
+    traverse_and_fix(data)
+    return data
+
+def fix_discrepancies_in_structure(data, discrepancies):
+    def traverse_and_fix(data, path=""):
+        if isinstance(data, dict):
+            for key in list(data.keys()):
+                current_path = f"{path}.{key}" if path else key
+                value = data[key]
+                # Check for discrepancies
+                if f"Non-ASCII characters at '{current_path}'" in discrepancies:
+                    from unidecode import unidecode
+                    if isinstance(value, str):
+                        data[key] = unidecode(value)
+                if f"Inconsistent date format at '{current_path}'" in discrepancies:
+                    if isinstance(value, str):
+                        standardized_date = standardize_date(value)
+                        if standardized_date:
+                            data[key] = standardized_date
+                if f"Negative value at '{current_path}'" in discrepancies:
+                    if isinstance(value, (int, float)):
+                        data[key] = abs(value)
+                # Recurse
+                traverse_and_fix(value, current_path)
+        elif isinstance(data, list):
+            for index, item in enumerate(data):
+                current_path = f"{path}[{index}]"
+                traverse_and_fix(item, current_path)
+        else:
+            pass  # Leaf node
+
+    def standardize_date(date_str):
+        from datetime import datetime
+        target_format = "%Y-%m-%d"
+        known_formats = [
+            "%Y-%m-%d",
+            "%d-%m-%Y",
+            "%m/%d/%Y",
+            "%Y/%m/%d",
+            "%d.%m.%Y",
+            "%Y.%m.%d",
+            "%d/%m/%Y",
+            "%m-%d-%Y",
+            "%b %d, %Y",
+            "%B %d, %Y",
+            "%d %b %Y",
+            "%d %B %Y",
+        ]
+        for fmt in known_formats:
+            try:
+                dt = datetime.strptime(date_str, fmt)
+                return dt.strftime(target_format)
+            except ValueError:
+                continue
+        return date_str
+
+    traverse_and_fix(data)
+    return data
+
+def fix_non_ascii_characters(df, column):
+    from unidecode import unidecode
+    df[column] = df[column].astype(str).apply(unidecode)
+    return df
+
+def fix_inconsistent_dates(df, column):
+    """
+    Standardize the date formats in the column.
+    """
+    from datetime import datetime
+
+    # Define the target date format
+    target_format = "%Y-%m-%d"
+
+    # Function to parse and reformat dates
+    def parse_and_format(date_str):
+        for fmt in known_formats:
+            try:
+                dt = datetime.strptime(date_str, fmt)
+                return dt.strftime(target_format)
+            except ValueError:
+                continue
+        return date_str  # Return original if no format matches
+
+    known_formats = [
+        "%Y-%m-%d",
+        "%d-%m-%Y",
+        "%m/%d/%Y",
+        "%Y/%m/%d",
+        "%d.%m.%Y",
+        "%Y.%m.%d",
+        "%d/%m/%Y",
+        "%m-%d-%Y",
+        "%b %d, %Y",
+        "%B %d, %Y",
+        "%d %b %Y",
+        "%d %B %Y",
+        # Add more formats as needed
+    ]
+
+    df[column] = df[column].dropna().apply(parse_and_format)
+    return df
+
+def fix_negative_values(df, column):
+    df = df[df[column] >= 0]
+    return df
+
+def find_discrepancies(df):
+    """
+    Identify discrepancies in the DataFrame.
+    """
+    discrepancies = []
+    non_negative_columns = ['age', 'quantity', 'price']  # Update as needed
+
+    for column in df.columns:
+        try:
+            # Check for non-ASCII characters
+            if df[column].dtype == object and df[column].str.contains(r'[^\x00-\x7F]', na=False).any():
+                discrepancies.append(f"Non-ASCII characters in column '{column}'")
+
+            # Check for inconsistent date formats
+            if df[column].dtype == object:
+                non_null_values = df[column].dropna()
+                if not non_null_values.empty:
+                    date_formats = df[column].apply(infer_date_format)
+                    unique_formats = date_formats.dropna().unique()
+                    #if len(unique_formats) > 1: # pending test of infer_date_format
+                        #discrepancies.append(f"Inconsistent date formats in column '{column}'")
+
+            # Check for negative values in numeric columns
+            if pd.api.types.is_numeric_dtype(df[column]) and column in non_negative_columns:
+                if (df[column] < 0).any():
+                    discrepancies.append(f"Negative values in column '{column}'")
+
+        except Exception as e:
+            log_error(f"Error processing column '{column}': {str(e)}")
+            df[column] = df[column].apply(lambda x: str(x) if isinstance(x, (list, dict)) else x)
+
+    return discrepancies if discrepancies else None
+
+def infer_date_format(date_str):
+    """
+    Infer the date format from a date string.
+    Returns the format string if successful, else returns None.
+    """
+    from datetime import datetime
+
+    known_formats = [
+        "%Y-%m-%d",
+        "%d-%m-%Y",
+        "%m/%d/%Y",
+        "%Y/%m/%d",
+        "%d.%m.%Y",
+        "%Y.%m.%d",
+        "%d/%m/%Y",
+        "%m-%d-%Y",
+        "%b %d, %Y",
+        "%B %d, %Y",
+        "%d %b %Y",
+        "%d %B %Y",
+        # Add more formats as needed
+    ]
+    for fmt in known_formats:
+        try:
+            dt = datetime.strptime(date_str, fmt)
+            return fmt
+        except ValueError:
+            continue
+    return None
+
