@@ -163,6 +163,11 @@ def identify_overlapping_fields_step(data_mapper):
 
             if overlaps:
                 st.write("### Overlapping Fields Identified:")
+                overlapping_field_names = set()
+                for overlap in overlaps:
+                    overlapping_field_names.add(overlap.get('field_name', 'Unknown'))
+
+                # Display overlaps
                 for overlap in overlaps:
                     field_name = overlap.get('field_name', 'Unknown')
                     sources = overlap.get('sources', [])
@@ -235,7 +240,7 @@ def establish_hierarchy_step(data_mapper):
             break
 
         selectbox_key = f"hierarchy_level_{level}"
-        
+
         # Initialize selected file from session_state if available
         if selectbox_key not in st.session_state:
             if level <= len(selected_files):
@@ -286,9 +291,14 @@ def create_mapping_dictionary_step(data_mapper):
 
             anchor_fields = []
 
+            # Collect overlapping field names
+            overlapping_field_names = set()
+            for overlap in data_mapper.confirmed_overlaps:
+                overlapping_field_names.add(overlap.get('field_name', ''))
+
             # Start mapping from the highest priority source
             for idx, source in enumerate(data_mapper.source_hierarchy):
-                data_mapper = mapping_fields_for_source(data_mapper, source, idx)
+                data_mapper = mapping_fields_for_source(data_mapper, source, idx, overlapping_field_names)
 
             st.session_state['data_mapper'] = data_mapper
             st.success("Mapping dictionary created.")
@@ -300,7 +310,7 @@ def create_mapping_dictionary_step(data_mapper):
             st.exception(e)
 
 @st.fragment
-def mapping_fields_for_source(data_mapper, source, idx):
+def mapping_fields_for_source(data_mapper, source, idx, overlapping_field_names):
     """
     Map fields for a given source based on hierarchy level.
     """
@@ -326,20 +336,27 @@ def mapping_fields_for_source(data_mapper, source, idx):
         # For lower priority sources, map their fields
         for field in source_fields:
             st.write(f"#### Field '{field}' from source '{source_file}'")
-            # Options: map to anchor field, map to new field, leave as is
-            mapping_options = ['Map to anchor field', 'Map to new field', 'Leave as is']
+            # Determine if the field is overlapping
+            is_overlapping = field in overlapping_field_names
+
+            # Define mapping options based on overlap
+            if is_overlapping:
+                mapping_options = ['Map to anchor field', 'Map to new field', 'Leave as is']
+                default_option = 'Map to anchor field'
+            else:
+                mapping_options = ['Map to new field', 'Leave as is']
+                default_option = 'Leave as is'
+
             mapping_option_key = f"mapping_option_{source_file}_{field}"
             
             if mapping_option_key not in st.session_state:
-                st.session_state[mapping_option_key] = 'Map to anchor field'  # Default option
+                st.session_state[mapping_option_key] = default_option  # Set default based on overlap
 
             selected_option = st.selectbox(
                 f"Select mapping option for field '{field}' from '{source_file}'",
                 mapping_options,
                 key=mapping_option_key
             )
-
-            # No need to assign st.session_state[mapping_option_key] = selected_option
 
             if selected_option == 'Map to anchor field':
                 # User selects which anchor field to map to
@@ -353,8 +370,6 @@ def mapping_fields_for_source(data_mapper, source, idx):
                     key=anchor_field_key
                 )
 
-                # No need to assign st.session_state[anchor_field_key] = selected_anchor_field
-
                 if selected_anchor_field:
                     data_mapper.mapping_dictionary[selected_anchor_field].append((source_file, field))
             elif selected_option == 'Map to new field':
@@ -366,8 +381,6 @@ def mapping_fields_for_source(data_mapper, source, idx):
                     f"Specify new field name for '{field}'",
                     key=new_field_key
                 )
-
-                # No need to assign st.session_state[new_field_key] = new_field_name
 
                 if new_field_name:
                     if new_field_name not in data_mapper.mapping_dictionary:
@@ -642,4 +655,3 @@ def verify_and_convert_data_types_step(data_mapper):
             st.info("No data type incompatibilities found.")
     else:
         st.info("Please resolve conflicts before verifying data types.")
-

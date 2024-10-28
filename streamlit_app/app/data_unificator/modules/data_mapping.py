@@ -113,7 +113,7 @@ class DataMapper:
 
     def identify_overlapping_fields(self):
         """
-        Identify overlapping fields based on shared field names across sources.
+        Identify overlapping fields based on shared field names and shared tokens across sources.
         """
         try:
             overlaps = identify_overlaps(self.field_metadata)

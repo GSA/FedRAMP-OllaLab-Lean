@@ -1,0 +1,145 @@
+bytes_in:
+- !!python/tuple
+  - source1.csv
+  - bytes_in
+- !!python/tuple
+  - source2.csv
+  - creation_time
+- !!python/tuple
+  - source2.csv
+  - end_time
+- !!python/tuple
+  - source2.csv
+  - src_ip
+- !!python/tuple
+  - source2.csv
+  - creation_time
+- !!python/tuple
+  - source2.csv
+  - end_time
+- !!python/tuple
+  - source2.csv
+  - src_ip
+- !!python/tuple
+  - source2.csv
+  - end_time
+- !!python/tuple
+  - source2.csv
+  - src_ip
+- !!python/tuple
+  - source2.csv
+  - src_ip
+bytes_out:
+- !!python/tuple
+  - source1.csv
+  - bytes_out
+creation_time:
+- !!python/tuple
+  - source1.csv
+  - creation_time
+- !!python/tuple
+  - source2.csv
+  - creation_time
+- !!python/tuple
+  - source2.csv
+  - creation_time
+- !!python/tuple
+  - source2.csv
+  - creation_time
+dst_ip:
+- !!python/tuple
+  - source2.csv
+  - dst_ip
+- !!python/tuple
+  - source2.csv
+  - dst_ip
+- !!python/tuple
+  - source2.csv
+  - dst_ip
+- !!python/tuple
+  - source2.csv
+  - dst_ip
+- !!python/tuple
+  - source2.csv
+  - dst_ip
+dst_port:
+- !!python/tuple
+  - source2.csv
+  - dst_port
+- !!python/tuple
+  - source2.csv
+  - dst_port
+- !!python/tuple
+  - source2.csv
+  - dst_port
+- !!python/tuple
+  - source2.csv
+  - dst_port
+- !!python/tuple
+  - source2.csv
+  - dst_port
+end_time:
+- !!python/tuple
+  - source1.csv
+  - end_time
+- !!python/tuple
+  - source2.csv
+  - end_time
+- !!python/tuple
+  - source2.csv
+  - end_time
+protocol:
+- !!python/tuple
+  - source2.csv
+  - protocol
+- !!python/tuple
+  - source2.csv
+  - protocol
+- !!python/tuple
+  - source2.csv
+  - protocol
+- !!python/tuple
+  - source2.csv
+  - protocol
+- !!python/tuple
+  - source2.csv
+  - protocol
+response.code:
+- !!python/tuple
+  - source2.csv
+  - response.code
+- !!python/tuple
+  - source2.csv
+  - response.code
+- !!python/tuple
+  - source2.csv
+  - response.code
+- !!python/tuple
+  - source2.csv
+  - response.code
+- !!python/tuple
+  - source2.csv
+  - response.code
+src_ip:
+- !!python/tuple
+  - source1.csv
+  - src_ip
+- !!python/tuple
+  - source2.csv
+  - src_ip
+src_ip_country_code:
+- !!python/tuple
+  - source2.csv
+  - src_ip_country_code
+- !!python/tuple
+  - source2.csv
+  - src_ip_country_code
+- !!python/tuple
+  - source2.csv
+  - src_ip_country_code
+- !!python/tuple
+  - source2.csv
+  - src_ip_country_code
+- !!python/tuple
+  - source2.csv
+  - src_ip_country_code

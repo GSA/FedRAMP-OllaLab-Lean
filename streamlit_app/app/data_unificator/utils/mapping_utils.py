@@ -50,11 +50,14 @@ def extract_fields_metadata(data):
 
 def identify_overlaps(field_metadata):
     """
-    Identify overlapping fields based on shared field names across sources.
-    For each shared field name, verify whether the data types and data value patterns are similar.
+    Identify overlapping fields based on shared field names and shared tokens across sources.
+    For each shared field name or shared tokens, verify whether the data types and data value patterns are similar.
     """
     overlaps = []
     field_info = {}
+    token_to_fields = {}
+    separators = r"[_\-.]"  # Include "_", "-", "."
+
     # Collect field info for each field name across sources
     for source, meta in field_metadata.items():
         fields = meta.get('metadata', {})
@@ -63,7 +66,14 @@ def identify_overlaps(field_metadata):
                 field_info[field_name] = {}
             field_info[field_name][source] = field_meta
 
-    # Now, for each field name that exists in more than one source
+            # Split field_name into tokens based on separators
+            tokens = re.split(separators, field_name)
+            for token in tokens:
+                if token not in token_to_fields:
+                    token_to_fields[token] = set()
+                token_to_fields[token].add(field_name)
+
+    # Identify overlaps based on exact field name matches
     for field_name, sources in field_info.items():
         if len(sources) > 1:
             # Collect data types and sample values from all sources
@@ -98,6 +108,55 @@ def identify_overlaps(field_metadata):
                 'same_dtype': same_dtype,
                 'sample_similarity': sample_similarity
             })
+
+    # Identify overlaps based on shared tokens
+    processed_fields = set(field_info.keys())
+    for token, fields in token_to_fields.items():
+        if len(fields) > 1:
+            # Group these fields together
+            overlapping_fields = list(fields)
+            # Avoid duplicate overlaps
+            existing_overlap_fields = set()
+            for overlap in overlaps:
+                existing_overlap_fields.update(overlap['sources'])
+            if not any(set(overlapping_fields).issubset(existing_overlap_fields) for overlap in overlaps):
+                # Collect data types and sample values from all sources for these fields
+                combined_sources = {}
+                data_types = {}
+                sample_values_dict = {}
+                for field in overlapping_fields:
+                    sources = field_info.get(field, {})
+                    for source_name, field_meta in sources.items():
+                        combined_sources[field] = source_name
+                        dtype = field_meta.get('dtype', 'N/A')
+                        sample_values = field_meta.get('sample_values', [])
+                        data_types[source_name] = dtype
+                        sample_values_dict[source_name] = sample_values
+
+                # Check if data types are the same across these fields
+                same_dtype = len(set(data_types.values())) == 1
+
+                # Compute sample value similarities
+                sample_similarity = {}
+                source_names = list(sample_values_dict.keys())
+                for i in range(len(source_names)):
+                    for j in range(i+1, len(source_names)):
+                        source_a = source_names[i]
+                        source_b = source_names[j]
+                        values_a = sample_values_dict[source_a]
+                        values_b = sample_values_dict[source_b]
+                        similarity = compute_sample_similarity(values_a, values_b)
+                        sample_similarity[(source_a, source_b)] = similarity
+
+                overlaps.append({
+                    'field_name': ', '.join(overlapping_fields),
+                    'sources': list(data_types.keys()),
+                    'data_types': data_types,
+                    'sample_values': sample_values_dict,
+                    'same_dtype': same_dtype,
+                    'sample_similarity': sample_similarity
+                })
+
     return overlaps
 
 def compute_sample_similarity(values_a, values_b):
