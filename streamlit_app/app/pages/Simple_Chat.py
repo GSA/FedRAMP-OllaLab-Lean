@@ -5,6 +5,7 @@ app_icon = ":robot_face:"
 
 import os
 import streamlit as st
+import requests
 import ollama
 from ollama import Client
 
@@ -44,17 +45,21 @@ else:
 
 # Initialize Ollama client based on selected endpoint
 if selected_endpoint:
-    try:
-        ollama_client = Client(host=selected_endpoint)
-        # Fetch available models
-        available_models = ollama_client.list_models()
-        model_names = [model.name for model in available_models]
+    #try:
+    ollama_client = Client(host=selected_endpoint)
+    # Fetch available models
+    models_response = requests.get(f"{selected_endpoint}/v1/models")
+    if models_response.status_code == 200:
+        available_models_data = models_response.json()
+        # assume the response contains a  list of models under 'data' key
+        model_names = [model['id'] for model in available_models_data.get('data',[])]
         if not model_names:
-            st.error("No models available at the selected endpoint.")
-            st.stop()
-    except Exception as e:
-        st.error(f"Failed to connect to Ollama endpoint: {e}")
-        st.stop()
+            st.error("No model available for the selected endpoint.")
+            st.stop
+    else:
+        st.error(f"Failed to retrieve model - status code {models_response.status_code}")
+        st.stop
+
 else:
     st.error("Please select or enter a valid Ollama endpoint.")
     st.stop()
