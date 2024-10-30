@@ -1,6 +1,6 @@
 app_version = "0.1"
 app_title = "OllaLab - Simple Chat"
-app_description = "A simple chat application with Llama3.1:8b"
+app_description = "A simple chat application with your selected LLM."
 app_icon = ":robot_face:"
 
 import os

@@ -54,6 +54,11 @@ For installing Docker, please check out [Installing Docker Desktop on Windows](h
 
 For installing Podman, please check out [Podman Desktop Download](https://podman-desktop.io/downloads) and follow the Podman's installation instructions to properly set up both Podman and [Podman Compose](https://podman-desktop.io/docs/compose/setting-up-compose).
 
+
+> [!NOTE]
+> If you just want to install the Streamlit Apps without installing the whole OllaLab stack,
+> you can go to [OllaLab - Streamlit Apps](https://github.com/GSA/FedRAMP-OllaLab-Lean/blob/main/streamlit_app/) for more guidance.
+
 The below installation steps passed the test for AMD64 architecture, 12GB nVidia GPU, and Docker Compose for Windows on WSL2.
 
 1. Test for installed Container management
