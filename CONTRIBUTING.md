@@ -1,10 +1,10 @@
-# Contributing to OllaDeck
+# Contributing to OllaLab
 
-First off, thank you for considering contributing to OllaDeck! It's people like you that make OllaDeck such a great tool for the AI security community.
+First off, thank you for considering contributing to OllaLab! It's people like you that make OllaLab such a great tool for the AI security community.
 
 ## Why Contribute?
 
-OllaDeck is in dire need of contributions, especially in the areas of:
+OllaLab is in dire need of contributions, especially in the areas of:
 
 1. Red team tools for text-based generative AI
 2. Blue team tools for text-based generative AI
@@ -16,8 +16,8 @@ Your contributions will help build a comprehensive repository that the AI securi
 
 ### Reporting Bugs
 
-- Ensure the bug was not already reported by searching on GitHub under [Issues](https://github.com/Cybonto/OllaDeck/issues).
-- If you're unable to find an open issue addressing the problem, [open a new one](https://github.com/Cybonto/OllaDeck/issues/new). Be sure to include a title and clear description, as much relevant information as possible, and a code sample or an executable test case demonstrating the expected behavior that is not occurring.
+- Ensure the bug was not already reported by searching on GitHub under [Issues](https://github.com/Cybonto/OllaLab/issues).
+- If you're unable to find an open issue addressing the problem, [open a new one](https://github.com/Cybonto/OllaLab/issues/new). Be sure to include a title and clear description, as much relevant information as possible, and a code sample or an executable test case demonstrating the expected behavior that is not occurring.
 
 ### Suggesting Enhancements
 
@@ -76,4 +76,4 @@ Please note that this project is released with a [Contributor Code of Conduct](C
 
 If you have any questions, please feel free to contact the project maintainers or open an issue for discussion.
 
-Thank you for your interest in improving OllaDeck! Your contributions will help make AI systems more secure and robust.
+Thank you for your interest in improving OllaLab! Your contributions will help make AI systems more secure and robust.
