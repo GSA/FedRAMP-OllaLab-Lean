@@ -123,6 +123,7 @@ To restart Streamlit, press "CTRL+C" in the terminal to exit out of Streamlit an
 
 ## Video Tutorials
 [Simple Chat with Prompt Variables](https://www.youtube.com/watch?v=RVXsOwVNsxU)
+
 [Data Unificator](https://www.youtube.com/watch?v=5YRb31qDGXw)
 
 ## Planned Features and Applications
