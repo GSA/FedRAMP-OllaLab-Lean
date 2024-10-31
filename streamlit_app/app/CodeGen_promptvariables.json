@@ -1,0 +1,80 @@
+{
+    "Propose_RefinedProblemStatement": {
+        "value": "Please propose a refined, comprehensive problem statement considering the following questions:\n\"What are the key components and aspects of the problem statement?\"\n\"What potential ambiguities or unclear elements exist in the current problem statement?\"\n\"Who are the main stakeholders affected by or involved in the problem? How might each stakeholder perceive the problem differently?\"\n\"What historical context or background information is crucial for understanding the problem?\"\n\"Are there any recent developments or trends that have significantly impacted the problem?\"\n\"What should be included in the scope of the problem, and what elements should be explicitly excluded?\"\n\"What are the key constraints or limitations that need to be considered when defining the problem?\"\n\"How can we frame the problem in a way that allows for clear measurement of progress or resolution?\"\n\"How might the problem be viewed differently from various disciplinary perspectives (e.g., economic, social, technological, environmental)?\"\n\"What contrasting viewpoints exist regarding the nature or importance of the problem?\"\n\"What assumptions are we making about the problem that might need to be challenged or verified?\"\n\"Are there any hidden biases in how we're currently thinking about the problem?\"\n\"How can we reframe the problem in a way that focuses on [an objective] rather than just challenges?\"\n\"What other problems or challenges are closely related to or influenced by the problem?\"\n\"How does the problem fit into larger systemic issues or trends?\"\n\"How can we make the problem statement more specific and actionable?\"\n\"What aspects of the problem are most critical or urgent to address?\"",
+        "num_tokens": 253,
+        "timestamp": "2024-10-31T07:30:42.826983",
+        "origin": "prompt"
+    },
+    "Explore_Problem": {
+        "value": "Please further explore the problem considering the following:\n1. What are the key factors contributing to the problem? For each factor, provide a brief explanation and, if possible, cite relevant research or data.\n2. Provide a detailed overview of the problem, including its history, current state, and future projections. Structure your response with clear headings and subheadings.\n3. Identify and describe the main stakeholders involved in the problem. For each stakeholder, explain their role, interests, and potential impact on the situation.\n4. Describe how recent technological advancements have impacted or are likely to impact the problem in the near future. Consider both positive and negative potential effects.",
+        "num_tokens": 107,
+        "timestamp": "2024-10-31T07:40:47.974312",
+        "origin": "prompt"
+    },
+    "Analyze_RootCauses": {
+        "value": "Please analyze the problem considering the following:\n1. What are the potential root causes of the problem? Please provide a detailed analysis for each.\n2. How might these root causes be interconnected or influence each other?\n3. Identify and analyze the key constraints (e.g., resources, regulations, technology) affecting [problem/issue]. For each constraint, explain its impact and potential ways to work within or overcome it.",
+        "num_tokens": 64,
+        "timestamp": "2024-10-31T07:44:53.127085",
+        "origin": "prompt"
+    },
+    "Get_ImplementationPlan": {
+        "value": "Outline a step-by-step implementation plan for the chosen solution to the problem. Include timelines and resource requirements for each step. Identify potential obstacles that might arise during the implementation of each solution. Suggest strategies to overcome each obstacle.",
+        "num_tokens": 38,
+        "timestamp": "2024-10-31T08:33:31.574812",
+        "origin": "prompt"
+    },
+    "Get_Tasks": {
+        "value": "For each objective, list the specific tasks required to achieve it. Ensure each task is concrete and actionable. Organize the tasks for each objective in a logical sequence. Identify any dependencies between tasks. Assign responsibilities for each task. Identify who will be accountable, responsible, consulted, and informed (RACI matrix).",
+        "num_tokens": 49,
+        "timestamp": "2024-10-31T08:35:34.876635",
+        "origin": "prompt"
+    },
+    "Get_EvaluationPlan": {
+        "value": "Please help me construct an evaluation plan considering the following:\n1. What are the purpose and objectives of the evaluation?\n2. What specific questions should this evaluation answer?\n3. What are the stakeholders for this evaluation. For each stakeholder group, describe their interest in and potential contribution to the evaluation process.\n4. What is an appropriate evaluation framework or model? Explain why this framework is suitable.\n5. What are the key criteria for evaluating? For each criterion, provide a brief description and its importance.",
+        "num_tokens": 84,
+        "timestamp": "2024-10-31T08:40:20.479078",
+        "origin": "prompt"
+    },
+    "Get_DataAcquisitionPlan": {
+        "value": "Please help me construct a data acquisition plan considering the following:\n1. Identify potential data sources. Include both existing data and new data that needs to be collected.\n2. List and describe appropriate data collection methods. Consider both quantitative and qualitative approaches.\n3. If applicable, outline a sampling strategy for data collection. Consider sample size, selection criteria, and representativeness.\n4. Describe the data analysis methods to be used. Include both quantitative and qualitative analysis techniques as appropriate.\n5. If relevant, describe how baseline data will be established or utilized.\n6. Specify any technology or tools required for data collection, analysis, or reporting",
+        "num_tokens": 102,
+        "timestamp": "2024-10-31T08:47:43.089042",
+        "origin": "prompt"
+    },
+    "Get_codesOnly": {
+        "value": "Give me only the added or modified code lines. Explanation is only needed when you remove codes from my current file(s).",
+        "num_tokens": 21,
+        "timestamp": "2024-10-31T12:56:32.375770",
+        "origin": "prompt"
+    },
+    "Explain_codes": {
+        "value": "Please explain the above codes considering the following questions:\n1. What is the purpose of the codes?\n2. How do they work step-by-step?\n3. Are there any potential issues or limitations with these codes?",
+        "num_tokens": 34,
+        "timestamp": "2024-10-31T13:05:24.468836",
+        "origin": "prompt"
+    },
+    "Get_codeReviews": {
+        "value": "Please help be review the above codes considering the following:\n1. Code quality and adherence to best practices\n2. Potential bugs or edge cases\n3. Performance optimizations\n4. Readability and maintainability\n5. Any security concerns",
+        "num_tokens": 35,
+        "timestamp": "2024-10-31T13:08:07.567119",
+        "origin": "prompt"
+    },
+    "Get_codeFromAlgorithm": {
+        "value": "Please implement the above algorithm in codes and include:\n1. The main function with clear parameter and return types\n2. Helper functions if necessary\n3. Time and space complexity analysis\n4. Example usage",
+        "num_tokens": 33,
+        "timestamp": "2024-10-31T13:12:16.782715",
+        "origin": "prompt"
+    },
+    "Get_classFromFunctionality": {
+        "value": "Please create a class for the above functionality and include:\n1. Constructor/initialization\n2. Main methods with clear docstrings\n3. Any necessary private helper methods\n4. Proper encapsulation and adherence to OOP principles",
+        "num_tokens": 32,
+        "timestamp": "2024-10-31T13:32:16.429920",
+        "origin": "prompt"
+    },
+    "Get_moduleFromFunctionality": {
+        "value": "Please create a module for the above functionality and include:\n1. Constructor/initialization\n2. Main methods with clear docstrings\n3. Any necessary private helper methods\n4. Proper encapsulation and adherence to OOP principles",
+        "num_tokens": 32,
+        "timestamp": "2024-10-31T13:32:51.179832",
+        "origin": "prompt"
+    }
+}
