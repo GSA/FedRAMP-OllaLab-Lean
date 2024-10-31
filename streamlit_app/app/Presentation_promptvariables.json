@@ -70,5 +70,23 @@
         "num_tokens": 102,
         "timestamp": "2024-10-31T08:47:43.089042",
         "origin": "prompt"
+    },
+    "Get_Presentation": {
+        "value": "Please help me build a presentation considering the following:\n1. Suggest 3-5 engaging ways to open the presentation that will capture the audience's attention.\n2. List the key pieces of background information that should be included in the presentation. Organize these in a logical order.\n3. Based on the analysis results, what should be the main points covered in the body of the presentation? Provide a structured outline.\n4. Summarize the main findings from the analysis in 3-5 bullet points, suitable for a presentation slide.\n5. Based on the analysis results, what are the top 3-5 recommendations? Format these as concise, action-oriented statements.\n6. What are 5-7 potential questions the audience might ask about this presentation? How should each be addressed?\n7. Craft a strong concluding statement for the presentation that reinforces the main message and motivates the audience to action.",
+        "num_tokens": 141,
+        "timestamp": "2024-10-31T09:28:45.540088",
+        "origin": "prompt"
+    },
+    "Get_ExecutiveSummary": {
+        "value": "Create a one-paragraph executive summary of the entire presentation, highlighting the problem, key findings, and main recommendations.",
+        "num_tokens": 17,
+        "timestamp": "2024-10-31T09:29:16.905688",
+        "origin": "prompt"
+    },
+    "Get_Engagement": {
+        "value": "Provide transition sentences or phrases to smoothly connect the sections of the presentation.\nPropose 3-5 ways to actively engage the audience during this presentation.",
+        "num_tokens": 24,
+        "timestamp": "2024-10-31T09:31:45.703299",
+        "origin": "prompt"
     }
 }

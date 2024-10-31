@@ -70,5 +70,35 @@
         "num_tokens": 102,
         "timestamp": "2024-10-31T08:47:43.089042",
         "origin": "prompt"
+    },
+    "Get_ReportOutline": {
+        "value": "Create a detailed outline for a business report based on the problem statement. Include main sections and subsections.",
+        "num_tokens": 18,
+        "timestamp": "2024-10-31T08:51:59.618308",
+        "origin": "prompt"
+    },
+    "Get_Methodology": {
+        "value": "Outline a methodology section that explains the approach used to gather and analyze data for this report.",
+        "num_tokens": 17,
+        "timestamp": "2024-10-31T08:53:50.948672",
+        "origin": "prompt"
+    },
+    "Get_ReportMainFindings": {
+        "value": "Based on the analysis results, structure the main findings section of the report. Include subsections and key points to be covered.",
+        "num_tokens": 21,
+        "timestamp": "2024-10-31T08:54:48.397810",
+        "origin": "prompt"
+    },
+    "Get_Report": {
+        "value": "Given the above problem statement, related context, and performed analysis, please help me write a report considering the following:\n1. Outline an introduction section for a business report that sets the context, states the purpose, and provides a brief overview of the report's structure.\n2. Rewrite the following problem statement in a clear, concise manner suitable for a formal business report.\n3. List the essential background information that should be included in the report. Organize these points in a logical sequence.\n4. Outline a methodology section that explains the approach used to gather and analyze data for this report.\n5. Provide an outline for the analysis section that interprets the findings, identifies trends, and draws insights\n6. Based on the analysis results, structure the main findings section of the report. Include subsections and key points to be covered.\n7. Based on the analysis, outline a recommendations section with 3-5 main suggestions. Include subsections for implementation steps and potential impacts.\n8. Outline a section that addresses the financial implications of the findings and recommendations, including potential costs, savings, or revenue impacts.\n9. Structure a risk assessment section that identifies potential risks associated with the findings or recommendations, and suggests mitigation strategies.",
+        "num_tokens": 200,
+        "timestamp": "2024-10-31T09:10:12.060894",
+        "origin": "prompt"
+    },
+    "Get_ExecutiveSummary": {
+        "value": "Provide a structure for an executive summary that concisely captures the key points of the report, including the problem, main findings, and recommendations.",
+        "num_tokens": 23,
+        "timestamp": "2024-10-31T09:10:47.162061",
+        "origin": "prompt"
     }
 }
