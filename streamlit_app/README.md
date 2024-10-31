@@ -105,11 +105,31 @@ Once Neo4J was installed and started, you should be able to view http://127.0.0.
 
 You may then follow [Neo4J Create, Start, and Stop Databases](https://neo4j.com/docs/operations-manual/current/database-administration/standard-databases/create-databases/) to create your first database. 
 
+### Run the APPs
+To run the app, you need to CD into the streamlit_app folder (this folder), assuming you are already in a terminal.
+
+Make sure the previous steps were completed successfully
+
+Launch the welcome page by this command:
+```
+streamlit run main.py
+```
+
+A browser window will open and you will see the welcome page. You need to keep the terminal window open.
+
+To stop the app, close the terminal window.
+
+To restart Streamlit, press "CTRL+C" in the terminal to exit out of Streamlit and launch the welcome page again.
+
 ## Video Tutorials
-tba
+[Simple Chat with Prompt Variables](https://www.youtube.com/watch?v=RVXsOwVNsxU)
+[Data Unificator](https://www.youtube.com/watch?v=5YRb31qDGXw)
 
 ## Planned Features and Applications
-tba
+- Allow Folder Chat app to run independently from the stack
+- Add more prompt variable files for more use cases
+- Develop advanced prompt engineering and prompt operation features
+- Develop advanced RAG features
 
 ## Contributing
 
