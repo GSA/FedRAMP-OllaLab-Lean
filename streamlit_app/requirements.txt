@@ -24,6 +24,10 @@ chardet
 unidecode
 ydata_profiling
 rapidfuzz
+openai
+anthropic
+google-cloud-aiplatform
+boto3 #for AMZ Bedrock
 
 # Add other necessary packages
 # the packages should be identical to those for jupyter_lab
