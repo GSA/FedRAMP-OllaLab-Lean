@@ -7,16 +7,16 @@ transformers
 peft
 accelerate
 duckdb
-autogluon
+#autogluon
 autoviz
 python-dateutil
 lxml
 pypdf2
 python-docx
 openpyxl
-tesseract
-textblob
-gensim
-cryptography
-spacy
+#tesseract
+#textblob
+#gensim
+#cryptography
+#spacy
 # Add other necessary packages

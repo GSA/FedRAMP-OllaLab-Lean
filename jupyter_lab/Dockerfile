@@ -14,11 +14,12 @@ WORKDIR /home/notebooks
 COPY ./requirements.txt .
 
 # Install dependencies
+RUN pip install -U pip
 RUN pip install --upgrade --no-cache-dir -r ./requirements.txt
 
 # Add a JupyterLab extension for version control if needed
-RUN jupyter labextension install @jupyterlab/git
-RUN python -m spacy download en_core_web_sm
+# RUN jupyter labextension install @jupyterlab/git
+# RUN python -m spacy download en_core_web_sm
 
 # Switch back to the notebook user
 USER ${NB_UID}

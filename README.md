@@ -54,6 +54,9 @@ For installing Docker, please check out [Installing Docker Desktop on Windows](h
 
 For installing Podman, please check out [Podman Desktop Download](https://podman-desktop.io/downloads) and follow the Podman's installation instructions to properly set up both Podman and [Podman Compose](https://podman-desktop.io/docs/compose/setting-up-compose).
 
+> [!IMPORTANT]
+> You need to copy env.sample file to .env and set the default passwords for the services listed in that file.
+> On Mac, you may have to open a terminal, run command "cp env.sample .env" and then "nano .env" to be able to edit the file.
 
 > [!NOTE]
 > If you just want to install the Streamlit Apps without installing the whole OllaLab stack,
