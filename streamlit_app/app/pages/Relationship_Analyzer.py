@@ -2,7 +2,7 @@
 
 app_version = "0.1"
 app_title = "OllaLab - Relationship Analyzer"
-app_description = "Construct a graph and perform graph analysis on provided data."
+app_description = "Construct & perform graph analysis on provided data."
 app_icon = ":chart:"
 
 import streamlit as st
