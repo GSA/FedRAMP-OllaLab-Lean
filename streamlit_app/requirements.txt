@@ -29,6 +29,9 @@ anthropic
 google-cloud-aiplatform
 boto3 #for AMZ Bedrock
 plotly
+semopy
+scipy
+
 
 # Add other necessary packages
 # the packages should be identical to those for jupyter_lab
