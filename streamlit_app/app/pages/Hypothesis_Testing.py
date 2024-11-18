@@ -153,7 +153,7 @@ def calculate_vif(data):
     vif_data["VIF"] = [variance_inflation_factor(data.values, i) for i in range(len(data.columns))]
     return vif_data
 
-@st.fragment()
+#@st.fragment()
 def build_measurement_model_step(data):
     st.header("6. Build Measurement Model")
     st.write("Define latent variables and their indicators.")
