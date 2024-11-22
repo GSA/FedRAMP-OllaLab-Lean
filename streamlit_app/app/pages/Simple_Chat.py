@@ -347,7 +347,7 @@ with st.sidebar:
                 anthropic_client = anthropic.Client(api_key=anthropic_api_key)
                 # Fetch available models (assuming API provides a way)
                 # For now, we'll hardcode some model names
-                model_names = ['claude-1', 'claude-instant-1']
+                model_names = ['claude-3-5-sonnet-latest', 'claude-3-5-haiku-latest', 'claude-3-opus-latest', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307']
             except Exception as e:
                 st.warning(f"Error initializing Anthropic client: {e}")
                 # Allow manual input
@@ -364,12 +364,15 @@ with st.sidebar:
                 if selected_model:
                     # Test the model by making a small query
                     try:
-                        client = anthropic.Client(api_key=anthropic_api_key)
-                        response = client.completions.create(
+                        response = client.messages.create(
                             model=selected_model,
-                            prompt=f"{anthropic.HUMAN_PROMPT}Hello{anthropic.AI_PROMPT}",
-                            max_tokens_to_sample=5,
+                            system="You are a helpful assistant.",
+                            messages=[
+                                {"role": "user", "content": "Hello"}
+                            ],
+                            max_tokens=5
                         )
+
                         st.success("Model is accessible and ready.")
                     except Exception as e:
                         st.error(f"Failed to access the model: {e}")
@@ -549,16 +552,19 @@ if generate_response:
                 st.write("**Response:**")
                 st.markdown(st.session_state['full_response'])
             elif selected_provider == "Anthropic":
-                # Use Anthropic API
+                # Use Anthropic API with the latest Message API
                 client = anthropic.Client(api_key=anthropic_api_key)
                 with st.spinner("Generating response..."):
-                    response = client.completions.create(
+                    response = client.messages.create(
                         model=selected_model,
-                        prompt=f"{anthropic.HUMAN_PROMPT}{user_input_resolved}{anthropic.AI_PROMPT}",
-                        max_tokens_to_sample=1000,
-                        stop_sequences=[anthropic.HUMAN_PROMPT],
+                        system="You are a helpful assistant.",
+                        messages=[
+                            {"role": "user", "content": user_input_resolved}
+                        ],
+                        max_tokens=1000,
+                        stop_sequences=["\n\nHuman:"],
                     )
-                st.session_state['full_response'] = response.completion
+                st.session_state['full_response'] = response.content[0].text
                 st.write("**Response:**")
                 st.markdown(st.session_state['full_response'])
             elif selected_provider == "Google Vertex AI":
