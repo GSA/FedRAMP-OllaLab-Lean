@@ -26,17 +26,23 @@ OllaLab-Lean - Interactive Web Apps will be automatically installed following th
 
 If you have issues with the main installation or simply want to install just the OllaLab-Lean - Interactive Web Apps, you can follow the steps below.
 
+### Download this folder.
+- Use git clone or http download to download OllaLab Lean
+- Get into FedRAMP-OllaLab-Lean/streamlit_app/app
+
 ### Install Python
 There are several ways to install Python. You may find the official guide in [Official Python Downloads](https://www.python.org/downloads/).
 
 If you have Visual Studio Code installed, you may also follow [Getting Started with Python in VS Code](https://code.visualstudio.com/docs/python/python-tutorial)
+
+On windows, you may also [Install Python from Microsoft App Store](https://learn.microsoft.com/en-us/windows/python/beginners)
 
 ### Install Python Virtual Environment
 A virtual environment is created on top of an existing Python installation, known as the virtual environment’s “base” Python, and may optionally be isolated from the packages in the base environment, so only those explicitly installed in the virtual environment are available. More details are in [Creation of virtual environment](https://docs.python.org/3/library/venv.html)
 
 Virtual environments are created by executing the venv module:
 ```
-python -m venv /path/to/new/virtual/environment
+python -m venv ./.venv
 ```
 If successfuly, a folder ".venv" will be created in /path/to/new/virtual/environment. You will then need to invoke the virtual environment. Assuming you are at the folder containing the ".venv" folder for the virtual environment you've just set up. You can launch the virtual environment by:
 - On windows
@@ -74,7 +80,11 @@ Feel free to check out [Additional info on installing packages within Python Vir
 Ollama is an AI tool that allows users to run large language models (LLMs) locally on their computer.
 Installation files of Ollama for Mac, Linux, and Windows can be found at [Official Ollama Installation Files](https://ollama.com/download)
 
-On Mac, you can also use "brew install ollama" to install Ollama on Homebrew.
+Command to install Ollama on Linux:
+```
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
 
 To verify your Ollama installation, you may go to localhost:11434 or 127.0.0.1:11434. If the installation went well, you should see "Ollama is running".
 

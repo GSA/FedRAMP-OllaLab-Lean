@@ -197,7 +197,7 @@ with st.sidebar:
             try:
                 models_response = openai_client.models.list()
                 # Filter models to only include chat models
-                allowed_models = ['gpt-3.5-turbo', 'gpt-4', 'gpt-4o', 'gpt-4o-mini', 'o1-mini']
+                allowed_models = ['gpt-3.5-turbo', 'gpt-4', 'gpt-4o', 'gpt-4o-mini', 'o1-mini', 'o1-preview']
                 model_names = [model.id for model in models_response.data if model.id in allowed_models]
                 if not model_names:
                     st.warning("No permitted models available for your OpenAI API key.")
