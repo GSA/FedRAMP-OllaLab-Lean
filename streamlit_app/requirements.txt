@@ -31,7 +31,12 @@ boto3 #for AMZ Bedrock
 plotly
 semopy
 scipy
-
+openpyxl # for Entity Bridge
+xlrd # for Entity Bridge
+python-Levenshtein # for Entity Bridge
+fuzzywuzzy # for Entity Bridge
+seaborn 
+matplotlib
 
 # Add other necessary packages
 # the packages should be identical to those for jupyter_lab
