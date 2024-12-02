@@ -8,7 +8,7 @@ This module includes functions to normalize IDs and entity names to ensure consi
 
 import pandas as pd
 import streamlit as st
-from utils import (
+from entity_bridge.utils import (
     generate_unique_identifier,
     normalize_text,
     log_normalization_actions

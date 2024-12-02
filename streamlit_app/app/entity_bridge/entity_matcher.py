@@ -9,7 +9,7 @@ similarity metrics and user input for ambiguous cases.
 
 import pandas as pd
 import streamlit as st
-from utils import calculate_similarity, generate_unique_identifier
+from entity_bridge.utils import calculate_similarity, generate_unique_identifier
 from collections import defaultdict
 
 

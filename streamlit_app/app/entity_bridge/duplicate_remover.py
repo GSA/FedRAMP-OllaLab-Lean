@@ -8,7 +8,7 @@ This module provides functions to identify and remove duplicate rows from DataFr
 
 import pandas as pd
 import streamlit as st
-from utils import log_normalization_actions
+from entity_bridge.utils import log_normalization_actions
 
 def identify_duplicates(df, selected_fields):
     """

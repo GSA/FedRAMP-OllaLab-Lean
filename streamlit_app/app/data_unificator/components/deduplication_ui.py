@@ -1,4 +1,4 @@
-# components/deduplication_ui.py
+# data_unificator/components/deduplication_ui.py
 
 import streamlit as st
 from streamlit.logger import get_logger

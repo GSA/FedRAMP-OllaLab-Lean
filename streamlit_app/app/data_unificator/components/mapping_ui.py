@@ -1,4 +1,4 @@
-# components/mapping_ui.py
+# data_unificator/components/mapping_ui.py
 
 import os
 import streamlit as st

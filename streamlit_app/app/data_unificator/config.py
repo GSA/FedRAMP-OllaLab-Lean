@@ -1,4 +1,4 @@
-# config.py
+# data_unificator/config.py
 
 import os
 import yaml

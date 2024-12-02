@@ -29,6 +29,8 @@ def display_file_upload():
 
     if not uploaded_files:
         st.warning("Please upload at least two files to proceed.")
+    else:
+        st.info(f"{len(uploaded_files)} files were uploaded.")
     return uploaded_files
 
 def display_missing_data_options(idx, file_name):
