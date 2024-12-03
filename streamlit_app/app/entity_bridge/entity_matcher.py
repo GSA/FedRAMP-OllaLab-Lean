@@ -276,7 +276,7 @@ def construct_unique_parent_list(data_frames):
     entity_groups = automated_entity_matching(similarity_df, similarity_threshold)
 
     # Construct the unique parent entity DataFrame
-    unique_parents_df = pd.DataFrame(columns=['ParentName', 'UniqueParentID'])
+    unique_parents = []
     group_to_entities = defaultdict(list)
 
     for entity, group in entity_groups.items():
@@ -285,10 +285,13 @@ def construct_unique_parent_list(data_frames):
     for group, entities in group_to_entities.items():
         unique_id = generate_unique_identifier()
         for entity in entities:
-            unique_parents_df = unique_parents_df.append({
+            unique_parents.append({
                 'ParentName': entity,
                 'UniqueParentID': unique_id
-            }, ignore_index=True)
+            })
+
+    # Create DataFrame from the list of unique parents
+    unique_parents_df = pd.DataFrame(unique_parents)
 
     return unique_parents_df
 
@@ -328,7 +331,7 @@ def construct_unique_child_list(data_frames):
     entity_groups = automated_entity_matching(similarity_df, similarity_threshold)
 
     # Construct the unique child entity DataFrame
-    unique_children_df = pd.DataFrame(columns=['ChildName', 'UniqueChildID'])
+    unique_children = []
     group_to_entities = defaultdict(list)
 
     for entity, group in entity_groups.items():
@@ -337,10 +340,13 @@ def construct_unique_child_list(data_frames):
     for group, entities in group_to_entities.items():
         unique_id = generate_unique_identifier()
         for entity in entities:
-            unique_children_df = unique_children_df.append({
+            unique_children.append({
                 'ChildName': entity,
                 'UniqueChildID': unique_id
-            }, ignore_index=True)
+            })
+
+    # Create DataFrame from the list of unique children
+    unique_children_df = pd.DataFrame(unique_children)
 
     return unique_children_df
 
