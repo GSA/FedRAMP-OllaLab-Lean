@@ -90,14 +90,15 @@ else:
     st.warning("Please upload at least two files to proceed.")
 
 if data_frames:
-    st.header("Normalizing Data and Removing Duplicates")
-    # Step 3: Normalize IDs and Names
+    st.header("Normalizing Data and Checking for Similar Names")
+    # Step 3: Normalize IDs and Names, check and merge similar names within data frames
     normalized_data_frames = data_normalizer.normalize_data_frames(data_frames)
 
-    # Step 4: Remove Duplicates
+    st.header("Removing Duplicates from Data Frames")
+    # Step 4: Remove Duplicates (now includes displaying duplicates and removed rows)
     deduplicated_data_frames = duplicate_remover.remove_duplicates_from_data_frames(normalized_data_frames)
 
-    st.header("Matching Entities and Assigning Unique Identifiers")
+    st.header("Matching Entities Across Data Frames and Assigning Unique Identifiers")
     # Step 5: Construct Unique Parent List
     unique_parents_df = entity_matcher.construct_unique_parent_list(deduplicated_data_frames)
 
@@ -114,6 +115,5 @@ if data_frames:
 
     # Step 9: Download Enriched DataFrames
     ui_helper.download_enriched_data(enriched_data_frames)
-
 else:
     st.warning("Please upload at least two files to proceed.")

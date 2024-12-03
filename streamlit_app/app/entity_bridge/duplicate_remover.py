@@ -26,7 +26,7 @@ def identify_duplicates(df, selected_fields):
         DataFrame: A DataFrame containing duplicate rows.
 
     Side Effects:
-        Logs the number of duplicates found.
+        Logs the number of duplicates found and displays them.
     """
     # Prepare list of columns to consider
     columns_to_check = []
@@ -44,7 +44,8 @@ def identify_duplicates(df, selected_fields):
 
     num_duplicates = len(duplicated_rows)
     if num_duplicates > 0:
-        st.write(f"Found {num_duplicates} duplicate rows based on fields {columns_to_check}")
+        st.write(f"Found {num_duplicates} duplicate rows based on fields {columns_to_check}:")
+        st.dataframe(duplicated_rows)
     else:
         st.write("No duplicate rows found.")
 
@@ -56,17 +57,13 @@ def remove_duplicates(df, selected_fields):
 
     Args:
         df (DataFrame): The DataFrame to process.
-        selected_fields (dict): Dictionary containing field names:
-            - 'parent_id': Parent ID field name.
-            - 'parent_name': Parent Name field name.
-            - 'child_id': Child ID field name (optional).
-            - 'child_name': Child Name field name (optional).
+        selected_fields (dict): Dictionary containing field names.
 
     Returns:
         DataFrame: The DataFrame after removing duplicates.
 
     Side Effects:
-        Logs the action of removing duplicates.
+        Logs the action of removing duplicates and displays removed rows.
     """
     actions_log = []
     # Prepare list of columns to consider
@@ -80,11 +77,17 @@ def remove_duplicates(df, selected_fields):
     if selected_fields.get('child_name'):
         columns_to_check.append(selected_fields['child_name'])
 
-    initial_row_count = len(df)
-    df_no_duplicates = df.drop_duplicates(subset=columns_to_check, keep='first')
-    final_row_count = len(df_no_duplicates)
+    # Identify duplicates
+    duplicates = df[df.duplicated(subset=columns_to_check, keep=False)]
 
-    num_duplicates_removed = initial_row_count - final_row_count
+    if not duplicates.empty:
+        st.write(f"Removing the following duplicate rows:")
+        st.dataframe(duplicates)
+
+    # Remove duplicates
+    df_no_duplicates = df.drop_duplicates(subset=columns_to_check, keep='first')
+
+    num_duplicates_removed = len(duplicates) // 2  # Since keep='first', half of the duplicates are removed
     if num_duplicates_removed > 0:
         log_normalization_actions(actions_log, f"Removed {num_duplicates_removed} duplicate rows based on fields {columns_to_check}")
         st.write(f"Removed {num_duplicates_removed} duplicate rows.")

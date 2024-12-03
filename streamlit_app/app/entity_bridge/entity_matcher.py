@@ -15,56 +15,69 @@ from collections import defaultdict
 
 def compute_similarity_scores(df_list, column_name):
     """
-    Compute similarity scores between entities across multiple DataFrames.
+    Compute similarity scores between entities across multiple DataFrames and display matches.
 
     Args:
         df_list (list): List of tuples (DataFrame, selected_fields).
-        column_name (str): The name of the column containing the entities to compare.
+        column_name (str): The key in selected_fields dict for the column containing the entities.
 
     Returns:
         DataFrame: A DataFrame containing pairs of entities and their similarity scores.
 
     Side Effects:
-        Displays progress in the Streamlit UI.
+        Displays progress and matched results in the Streamlit UI.
     """
-    # Extract the set of unique entity names from each DataFrame
-    all_entities = []
-    for idx, (df, selected_fields) in enumerate(df_list):
-        entities = df[selected_fields[column_name]].unique()
-        all_entities.append(entities)
-
-    # Flatten the list and get unique entities
-    unique_entities = set()
-    for entities in all_entities:
-        unique_entities.update(entities)
-
-    unique_entities = list(unique_entities)
-
-    # Initialize a DataFrame to store similarity scores
+    from itertools import product
     similarity_scores = []
+    total_comparisons = 0
 
-    # Compute similarity scores between all pairs of entities
-    st.write("Computing similarity scores between entities...")
+    # Prepare data
+    entities_per_df = []
+    for df, selected_fields in df_list:
+        entity_field_name = selected_fields.get(column_name)
+        if entity_field_name:
+            entities = df[entity_field_name].dropna().unique()
+            entities_per_df.append(entities)
+        else:
+            entities_per_df.append([])
+
+    # Compute total number of comparisons
+    for i in range(len(entities_per_df)):
+        for j in range(i+1, len(entities_per_df)):
+            total_comparisons += len(entities_per_df[i]) * len(entities_per_df[j])
+
+    progress = 0
     progress_bar = st.progress(0)
-    total_comparisons = len(unique_entities) * (len(unique_entities) - 1) / 2
-    comparisons_done = 0
 
-    for i in range(len(unique_entities)):
-        for j in range(i + 1, len(unique_entities)):
-            entity_a = unique_entities[i]
-            entity_b = unique_entities[j]
-            score = calculate_similarity(entity_a, entity_b)
-            similarity_scores.append({
-                'EntityA': entity_a,
-                'EntityB': entity_b,
-                'SimilarityScore': score
-            })
-            comparisons_done += 1
-            progress_bar.progress(comparisons_done / total_comparisons)
+    # Compute similarity scores and collect matches
+    for i in range(len(entities_per_df)):
+        for j in range(i+1, len(entities_per_df)):
+            for entity_a, entity_b in product(entities_per_df[i], entities_per_df[j]):
+                score = calculate_similarity(entity_a, entity_b)
+                similarity_scores.append({
+                    'EntityA': entity_a,
+                    'EntityB': entity_b,
+                    'DataFrameA': i,
+                    'DataFrameB': j,
+                    'SimilarityScore': score
+                })
+                progress += 1
+                if progress % 100 == 0 or progress == total_comparisons:
+                    progress_bar.progress(progress / total_comparisons)
 
     similarity_df = pd.DataFrame(similarity_scores)
-    return similarity_df
 
+    # Display matched results above a certain threshold
+    threshold = st.slider(
+        "Set similarity score threshold for displaying matched results:",
+        min_value=0.0, max_value=1.0, value=0.9, step=0.01,
+        key=f'similarity_threshold_{column_name}'
+    )
+    matched_results = similarity_df[similarity_df['SimilarityScore'] >= threshold]
+    st.write(f"Entities matched with similarity score >= {threshold}:")
+    st.dataframe(matched_results.reset_index(drop=True))
+
+    return similarity_df
 
 def automated_entity_matching(similarity_df, threshold):
     """

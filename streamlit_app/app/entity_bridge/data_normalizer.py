@@ -14,6 +14,79 @@ from entity_bridge.utils import (
     log_normalization_actions
 )
 
+def check_and_merge_similar_names(df, selected_fields, entity_type='parent', similarity_threshold=0.9):
+    """
+    Check for similar entity names within the DataFrame and allow the user to merge them.
+
+    Args:
+        df (DataFrame): The DataFrame to process.
+        selected_fields (dict): Selected fields containing entity names.
+        entity_type (str): The type of entity ('parent' or 'child').
+        similarity_threshold (float): Threshold for considering names as similar.
+
+    Returns:
+        DataFrame: The DataFrame with entity names possibly merged.
+        dict: A mapping of original names to merged names.
+
+    Side Effects:
+        Displays similar entity names and prompts user for action.
+    """
+    import itertools
+    from entity_bridge.utils import calculate_similarity
+
+    entity_name_field = selected_fields.get(f'{entity_type}_name')
+    if not entity_name_field:
+        return df, {}  # No entity names to compare
+
+    st.subheader(f"Similar {entity_type.capitalize()} Names within the DataFrame")
+    names = df[entity_name_field].dropna().unique()
+    similar_pairs = []
+
+    # Compute pairwise similarity
+    for name_a, name_b in itertools.combinations(names, 2):
+        similarity = calculate_similarity(name_a, name_b)
+        if similarity >= similarity_threshold and name_a != name_b:
+            similar_pairs.append({'NameA': name_a, 'NameB': name_b, 'Similarity': similarity})
+
+    if not similar_pairs:
+        st.write(f"No similar {entity_type} names found.")
+        return df, {}
+
+    similar_df = pd.DataFrame(similar_pairs)
+    st.write("Found similar names:")
+    st.dataframe(similar_df)
+
+    # Create mappings based on user input
+    name_mapping = {}
+    for idx, row in similar_df.iterrows():
+        name_a = row['NameA']
+        name_b = row['NameB']
+        similarity = row['Similarity']
+
+        st.write(f"Do you want to merge '{name_a}' and '{name_b}'? (Similarity: {similarity:.2f})")
+        action = st.radio(
+            f"Action for '{name_a}' and '{name_b}':",
+            options=['Merge', 'Keep Separate'],
+            key=f'merge_{name_a}_{name_b}_{idx}'
+        )
+        if action == 'Merge':
+            merged_name = st.text_input(
+                f"Enter the merged name for '{name_a}' and '{name_b}':",
+                value=name_a,
+                key=f'merged_name__{name_a}_{name_b}_{idx}'
+            )
+            name_mapping[name_a] = merged_name
+            name_mapping[name_b] = merged_name
+
+    # Apply the mapping to the DataFrame
+    if name_mapping:
+        df[entity_name_field] = df[entity_name_field].replace(name_mapping)
+        st.success(f"Merged names have been applied to the DataFrame.")
+    else:
+        st.info("No names were merged.")
+
+    return df, name_mapping
+
 def normalize_ids(df, selected_fields):
     """
     Normalize IDs in the DataFrame, generating new IDs if they are missing.
@@ -143,6 +216,18 @@ def normalize_data_frames(data_frames, custom_stopwords=None):
 
         # Normalize Entity Names
         df = normalize_entity_names(df, selected_fields, custom_stopwords)
+
+        # Check and merge similar parent names
+        df, parent_name_mapping = check_and_merge_similar_names(
+            df, selected_fields, entity_type='parent'
+        )
+        # Optionally save parent_name_mapping if needed
+
+        # Check and merge similar child names
+        df, child_name_mapping = check_and_merge_similar_names(
+            df, selected_fields, entity_type='child'
+        )
+        # Optionally save child_name_mapping if needed
 
         normalized_data_frames.append((df, selected_fields))
 
