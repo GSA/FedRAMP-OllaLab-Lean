@@ -1,8 +1,6 @@
-Certainly! Developing a project like the Entity Bridge requires careful planning to ensure that each component works seamlessly with the others. Here's a recommended development strategy to guide you through building the application effectively:
-
----
-
 ## **Development Strategy**
+
+This initial development strategy does not reflect minor updates made after 12/03/2024
 
 ### **1. Set Up the Project Structure**
 

@@ -211,10 +211,13 @@ def display_field_selection(df, file_name, idx):
     # Mandatory fields: Parent ID and Parent Name
     parent_id_field = st.selectbox(
         f"Select Parent ID Field for {file_name}:",
-        options=columns,
+        options=['None'] + columns,
         key=f'parent_id_{idx}'
     )
 
+    if parent_id_field == 'None':
+        parent_id_field = None
+        
     parent_name_field = st.selectbox(
         f"Select Parent Name Field for {file_name}:",
         options=columns,

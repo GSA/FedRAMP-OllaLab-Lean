@@ -55,9 +55,9 @@ def process_file(file, idx):
         # Field selection
         selected_fields = ui_helper.display_field_selection(df, file.name, idx)
 
-        if not selected_fields.get('parent_name'):
-            st.error("Parent Name Field is mandatory. Cannot proceed without it.")
-            return None, None
+        #if not selected_fields.get('parent_name'):
+            #st.error("Parent Name Field is mandatory. Cannot proceed without it.")
+            #return None, None
 
         # Ensure required columns are in the DataFrame
         required_columns = [field for field in selected_fields.values() if field]
