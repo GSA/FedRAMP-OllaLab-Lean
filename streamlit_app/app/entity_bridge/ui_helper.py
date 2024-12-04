@@ -33,6 +33,37 @@ def display_file_upload():
         st.info(f"{len(uploaded_files)} files were uploaded.")
     return uploaded_files
 
+def get_custom_stopwords():
+    """
+    Display input boxes for custom stop words for parent and child names.
+
+    Returns:
+        tuple: Two lists containing custom stop words for parent names and child names.
+
+    Side Effects:
+        Displays input boxes in the Streamlit UI
+    """
+    st.subheader("Custom Stop Words for Name Normalization")
+
+    parent_stopwords_input = st.text_input(
+        "Enter stop words for Parent Names (comma-separated):",
+        value='',
+        key='parent_custom_stopwords'
+    )
+
+    child_stopwords_input = st.text_input(
+        "Enter stop words for Child Names (comma-separated):",
+        value='',
+        key='child_custom_stopwords'
+    )
+
+    # Parse inputs to lists of stop words
+    parent_custom_stopwords = [word.strip() for word in parent_stopwords_input.split(',') if word.strip()]
+    child_custom_stopwords = [word.strip() for word in child_stopwords_input.split(',') if word.strip()]
+
+    return parent_custom_stopwords, child_custom_stopwords
+
+
 def display_missing_data_options(idx, file_name):
     """
     Display options for handling missing data and return the user's choice.

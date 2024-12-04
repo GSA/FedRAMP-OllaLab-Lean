@@ -146,7 +146,7 @@ def normalize_ids(df, selected_fields):
     return df, selected_fields
 
 
-def normalize_entity_names(df, selected_fields, custom_stopwords=None):
+def normalize_entity_names(df, selected_fields, parent_custom_stopwords=None, child_custom_stopwords=None):
     """
     Normalize entity names in the DataFrame by applying various text preprocessing steps.
 
@@ -171,7 +171,9 @@ def normalize_entity_names(df, selected_fields, custom_stopwords=None):
     log_normalization_actions(actions_log, f"Copied '{parent_name_field}' to '{parent_name_field}_original'.")
 
     # Normalize Parent Names
-    df[parent_name_field] = df[parent_name_field].apply(lambda x: normalize_text(x, custom_stopwords))
+    df[parent_name_field] = df[parent_name_field].apply(
+        lambda x: normalize_text(x, custom_stopwords=parent_custom_stopwords)
+        )
     log_normalization_actions(actions_log, f"Normalized Parent Names in '{parent_name_field}'.")
 
     # If Child Names are present, normalize them
@@ -180,7 +182,9 @@ def normalize_entity_names(df, selected_fields, custom_stopwords=None):
         df[f'{child_name_field}_original'] = df[child_name_field]
         log_normalization_actions(actions_log, f"Copied '{child_name_field}' to '{child_name_field}_original'.")
 
-        df[child_name_field] = df[child_name_field].apply(lambda x: normalize_text(x, custom_stopwords))
+        df[child_name_field] = df[child_name_field].apply(
+            lambda x: normalize_text(x, custom_stopwords=child_custom_stopwords)
+            )
         log_normalization_actions(actions_log, f"Normalized Child Names in '{child_name_field}'.")
 
     # Display the normalization actions log
@@ -191,8 +195,7 @@ def normalize_entity_names(df, selected_fields, custom_stopwords=None):
 
     return df
 
-
-def normalize_data_frames(data_frames, custom_stopwords=None):
+def normalize_data_frames(data_frames, parent_custom_stopwords=None, child_custom_stopwords=None):
     """
     Apply normalization to a list of DataFrames.
 
@@ -215,7 +218,11 @@ def normalize_data_frames(data_frames, custom_stopwords=None):
         df, selected_fields = normalize_ids(df, selected_fields)
 
         # Normalize Entity Names
-        df = normalize_entity_names(df, selected_fields, custom_stopwords)
+        df = normalize_entity_names(
+            df,
+            selected_fields,
+            parent_custom_stopwords=parent_custom_stopwords,
+            child_custom_stopwords=child_custom_stopwords)
 
         # Check and merge similar parent names
         df, parent_name_mapping = check_and_merge_similar_names(

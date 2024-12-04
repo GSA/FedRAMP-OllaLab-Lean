@@ -12,6 +12,11 @@ from entity_bridge import duplicate_remover
 from entity_bridge import entity_matcher
 from entity_bridge import ui_helper
 
+if 'proceed1' not in st.session_state:
+    st.session_state['proceed1'] = None
+if 'proceed2' not in st.session_state:
+    st.session_state['proceed2'] = None
+
 def process_file(file, idx):
     """
     Process a single uploaded file, including loading, handling missing data,
@@ -86,34 +91,53 @@ if uploaded_files and len(uploaded_files) >= 2:
             data_frames.append((df_selected, selected_fields))
         else:
             st.error(f"Failed to process file {file.name}.")
+    # Ask user to input custom stopwords (optional) for further processing
+    parent_custom_stopwords, child_custom_stopwords = ui_helper.get_custom_stopwords()
+    st.session_state['proceed1'] = st.button("Proceed with Normalizing Names")
 else:
     st.warning("Please upload at least two files to proceed.")
 
-if data_frames:
+if st.button("Reset",key="reset1"):
+    st.session_state['proceed1']=False
+    st.session_state['proceed2']=False
+
+if data_frames or st.session_state['proceed1']:
     st.header("Normalizing Data and Checking for Similar Names")
     # Step 3: Normalize IDs and Names, check and merge similar names within data frames
-    normalized_data_frames = data_normalizer.normalize_data_frames(data_frames)
+    normalized_data_frames = data_normalizer.normalize_data_frames(
+        data_frames,
+        parent_custom_stopwords=parent_custom_stopwords,
+        child_custom_stopwords=child_custom_stopwords
+        )
 
-    st.header("Removing Duplicates from Data Frames")
-    # Step 4: Remove Duplicates (now includes displaying duplicates and removed rows)
-    deduplicated_data_frames = duplicate_remover.remove_duplicates_from_data_frames(normalized_data_frames)
+    st.session_state['proceed2'] = st.button("Proceed with later steps")
+    if st.button("Reset",key="reset2"):
+        st.session_state['proceed1']=False
+        st.session_state['proceed2']=False
 
-    st.header("Matching Entities Across Data Frames and Assigning Unique Identifiers")
-    # Step 5: Construct Unique Parent List
-    unique_parents_df = entity_matcher.construct_unique_parent_list(deduplicated_data_frames)
+    if st.session_state['proceed2']:
+        st.header("Removing Duplicates from Data Frames")
+        # Step 4: Remove Duplicates (now includes displaying duplicates and removed rows)
+        deduplicated_data_frames = duplicate_remover.remove_duplicates_from_data_frames(normalized_data_frames)
 
-    # Step 6: Construct Unique Child List
-    unique_children_df = entity_matcher.construct_unique_child_list(deduplicated_data_frames)
+        st.header("Matching Entities Across Data Frames and Assigning Unique Identifiers")
+        # Step 5: Construct Unique Parent List
+        unique_parents_df = entity_matcher.construct_unique_parent_list(deduplicated_data_frames)
 
-    # Step 7: Enrich DataFrames with Unique IDs
-    enriched_data_frames = entity_matcher.enrich_data_frames_with_unique_ids(
-        deduplicated_data_frames, unique_parents_df, unique_children_df
-    )
+        # Step 6: Construct Unique Child List
+        unique_children_df = entity_matcher.construct_unique_child_list(deduplicated_data_frames)
 
-    # Step 8: Display Enriched DataFrames
-    ui_helper.display_enriched_data(enriched_data_frames)
+        # Step 7: Enrich DataFrames with Unique IDs
+        enriched_data_frames = entity_matcher.enrich_data_frames_with_unique_ids(
+            deduplicated_data_frames, unique_parents_df, unique_children_df
+        )
 
-    # Step 9: Download Enriched DataFrames
-    ui_helper.download_enriched_data(enriched_data_frames)
+        # Step 8: Display Enriched DataFrames
+        ui_helper.display_enriched_data(enriched_data_frames)
+
+        # Step 9: Download Enriched DataFrames
+        ui_helper.download_enriched_data(enriched_data_frames)
+    else:
+        st.info("Click 'Proceed' to continue.")
 else:
     st.warning("Please upload at least two files to proceed.")
