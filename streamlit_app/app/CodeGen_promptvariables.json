@@ -76,5 +76,35 @@
         "num_tokens": 32,
         "timestamp": "2024-10-31T13:32:51.179832",
         "origin": "prompt"
+    },
+    "Get_ProgramDescriptionImprovement": {
+        "value": "Please help me spot any potential issues and recommend some improvements. Please be specific and as robust as possible.",
+        "num_tokens": 19,
+        "timestamp": "2024-12-09T07:34:10.971713",
+        "origin": "prompt"
+    },
+    "1_ProgDescImprovRec": {
+        "value": "Please help me spot any potential issues and recommend some improvements. Please be specific and as robust as possible.",
+        "num_tokens": 19,
+        "timestamp": "2024-12-09T07:37:07.558191",
+        "origin": "prompt"
+    },
+    "2_ProgDescImprovement": {
+        "value": "I have the following program description:\n{{description_v1}}\nI have the following recommendations for improvements:\n{{recommendedImprovements}}\nPlease give me an improved program description.",
+        "num_tokens": 22,
+        "timestamp": "2024-12-09T07:37:55.160292",
+        "origin": "prompt"
+    },
+    "3_ProjectSummary": {
+        "value": "I have the following program description:\n{{description_v1}}\nSome additional recommendations are:\n{{recommendedImprovements}}\nSome additional requirements are:\n{{myRequirements}}\n\nPlease show me your proposed:\n- Folder structure and files with brief descriptions per folder or file.\n- The content of each proposed file without specific function/method implementation detail.\n- Detailed doc-string for the function/method/class",
+        "num_tokens": 52,
+        "timestamp": "2024-12-09T07:40:47.721924",
+        "origin": "prompt"
+    },
+    "4_ProgramFiles": {
+        "value": "I have the following program description:\n{{description_v1}}\nThe program basic implementation details are:\n{{projectSummary}}\n\nPlease help me generate ____ with robust implementation, comments, test file, etc.",
+        "num_tokens": 26,
+        "timestamp": "2024-12-09T07:44:10.921085",
+        "origin": "prompt"
     }
 }

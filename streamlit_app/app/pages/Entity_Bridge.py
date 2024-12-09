@@ -91,11 +91,6 @@ if uploaded_files and len(uploaded_files) >= 2:
             data_frames.append((df_selected, selected_fields))
         else:
             st.error(f"Failed to process file {file.name}.")
-    # Ask user to input custom stopwords (optional) for further processing
-    parent_custom_stopwords, child_custom_stopwords = ui_helper.get_custom_stopwords()
-    st.session_state['proceed1'] = st.button("Proceed with Normalizing Names")
-else:
-    st.warning("Please upload at least two files to proceed.")
 
 if st.button("Reset",key="reset1"):
     st.session_state['proceed1']=False
@@ -135,9 +130,5 @@ if data_frames or st.session_state['proceed1']:
         # Step 8: Display Enriched DataFrames
         ui_helper.display_enriched_data(enriched_data_frames)
 
-        # Step 9: Download Enriched DataFrames
-        ui_helper.download_enriched_data(enriched_data_frames)
-    else:
-        st.info("Click 'Proceed' to continue.")
-else:
-    st.warning("Please upload at least two files to proceed.")
+    # Step 9: Download Enriched DataFrames
+    ui_helper.download_enriched_data(enriched_data_frames)
