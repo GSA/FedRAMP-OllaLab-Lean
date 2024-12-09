@@ -36,8 +36,14 @@ User upload files of the following types:
 - Ask user to input a list of stopwords and remove stopwords from the data
 - Detect harmful or unwanted content and report to the user for removal
 - Save sanitized data for downstream processing
+- Ask the user to select one of the following paths:
+  - Process Serialized data
+  - Process Tabular data
+  - Process Unstructured data
+- Per user selection, proceed accordingly with the following sections.
 
 ## 2\. Process Serialized Data Files
+The following steps will be executed when user uploaded and selected "Process Serialized data"
 ### Exploratory Data Analysis (EDA)
 - Parse the serialized data
 - Iterate through the data, identify key-value pairs, nested objects, arrays, and attributes
@@ -64,6 +70,7 @@ Use tools for automated schema extraction.
 
 
 ## 3\. Process Tabular Data Files
+The following steps will be executed when user uploaded and selected "Process Tabular data"
 ### Exploratory Data Analysis
 - Perform automated Exploratory Data Analysis
 ### Data Schema Extraction
@@ -80,6 +87,7 @@ Use tools for automated schema extraction.
 The schema is valid when it can be used to successfully transform the tabular data to a serialized data file.
 
 ## 4\. Process Unstructured Data Files
+The following steps will be executed when user uploaded and selected "Process Unstructured data"
 ### Exploratory Data Analysis
 - Load the data
 - Ask the user for a list of stopwords
@@ -172,6 +180,13 @@ Recommendations:
     Data Chunking: Process data in chunks to manage memory usage efficiently.
     Asynchronous Processing: Use asynchronous programming to prevent the UI from freezing during long operations.
     Resource Limits: Set limits on the size of files that can be uploaded or provide warnings for large files.
+
+### Streamlit Execution Flow Optimization
+Reruns are a central part of every Streamlit app. When users interact with widgets, our script reruns from top to bottom, and our app's frontend is updated. Streamlit provides several features to help us develop our app within this execution model. Streamlit version 1.37.0 introduced fragments to allow rerunning a portion of our code instead of our full script. As our app grows larger and more complex, these fragment reruns help our app be efficient and performant. Fragments give us finer, easy-to-understand control over our app's execution flow.
+
+Streamlit provides a decorator (st.fragment) to turn any function into a fragment function. When we call a fragment function that contains a widget function, a user triggers a fragment rerun instead of a full rerun when they interact with that fragment's widget. During a fragment rerun, only our fragment function is re-executed. Anything within the main body of our fragment is updated on the frontend, while the rest of our app remains the same. 
+
+Please use the decorator "@st.fragment", st.session_state variables, "Refresh" and "Reset" buttons properly on and within UI component functions to optimize the application's execution flow.
 
 ### Security Concerns
 Handling user-uploaded files introduces security risks such as malicious files, code injections, and exposure of sensitive data.
