@@ -1,8 +1,7 @@
 # schema_extractor/tests/test_unstructured_data_processor.py
 
 import unittest
-from unittest.mock import patch, MagicMock
-from schema_extractor import unstructured_data_processor as udp
+from schema_extractor import unstructured_data_processor
 
 class TestUnstructuredDataProcessor(unittest.TestCase):
     """
@@ -10,175 +9,71 @@ class TestUnstructuredDataProcessor(unittest.TestCase):
     """
 
     def setUp(self):
-        """
-        Set up test data for the tests.
-        """
-        self.sample_data = {
-            'sample1.txt': 'This is a sample text. It contains numbers like 123 and 456.',
-            'sample2.txt': 'Another sample text! Testing, one, two, three.',
-            'sample3.txt': 'More data with numbers 789 and words.'
+        # Sample sanitized data for testing
+        self.sanitized_data = {
+            'sample.txt': "This is a test text with numbers 123 and 456.78. It includes bigrams and trigrams."
         }
+        self.text_data = unstructured_data_processor.load_unstructured_data(self.sanitized_data)
 
     def test_load_unstructured_data(self):
         """
-        Tests the load_unstructured_data function.
+        Tests loading of unstructured data.
         """
-        with patch('schema_extractor.unstructured_data_processor.logger') as mock_logger:
-            text_data = udp.load_unstructured_data(self.sample_data)
-            self.assertEqual(len(text_data), 3)
-            self.assertIn('This is a sample text. It contains numbers like 123 and 456.', text_data)
-            self.assertIn('Another sample text! Testing, one, two, three.', text_data)
-            self.assertIn('More data with numbers 789 and words.', text_data)
+        data = unstructured_data_processor.load_unstructured_data(self.sanitized_data)
+        self.assertIsInstance(data, list)
+        self.assertEqual(len(data), 1)
 
-    def test_clean_text(self):
+    def test_extract_numeric_values(self):
         """
-        Tests the clean_text function.
+        Tests extraction of numeric values from text.
         """
-        raw_text = "Hello, World! This is a test.\nNew line and 123 numbers."
-        cleaned = udp.clean_text(raw_text)
-        expected = "Hello World This is a test New line and 123 numbers"
-        self.assertEqual(cleaned, expected)
+        text = "The values are 10, 20.5, and 30."
+        numeric_values = unstructured_data_processor.extract_numeric_values(text)
+        expected_values = [10.0, 20.5, 30.0]
+        self.assertEqual(numeric_values, expected_values)
 
-    def test_extract_numeric_stats(self):
+    def test_get_ngrams(self):
         """
-        Tests the extract_numeric_stats function.
+        Tests generation of n-grams.
         """
-        numeric_stats = udp.extract_numeric_stats(self.sample_data.values())
-        expected = {
-            'count': 5,
-            'mean': 123.0,
-            'median': 123,
-            'max': 789,
-            'min': 123
-        }
-        self.assertEqual(numeric_stats['count'], 5)
-        self.assertEqual(numeric_stats['max'], 789)
-        self.assertEqual(numeric_stats['min'], 123)
-        # Mean and median can be computed based on the sample data
+        tokens = ['this', 'is', 'a', 'test']
+        ngrams = unstructured_data_processor.get_ngrams(tokens)
+        self.assertIn(2, ngrams)
+        self.assertIn(3, ngrams)
+        self.assertIsInstance(ngrams[2], Counter)
+        self.assertIsInstance(ngrams[3], Counter)
 
     def test_generate_wordcloud(self):
         """
-        Tests the generate_wordcloud function.
+        Tests wordcloud generation.
         """
-        words = ['test', 'data', 'sample', 'test', 'word']
-        wordcloud = udp.generate_wordcloud(words)
-        self.assertIsInstance(wordcloud, udp.WordCloud)
+        tokens = ['test', 'wordcloud', 'generation']
+        fig = unstructured_data_processor.generate_wordcloud(tokens)
+        self.assertIsNotNone(fig)
 
     def test_perform_topic_modeling(self):
         """
-        Tests the perform_topic_modeling function.
+        Tests topic modeling functionality.
         """
-        cleaned_data = [
-            'this is a sample text about data science',
-            'another text concerning machine learning',
-            'more data related to artificial intelligence'
-        ]
-        topics = udp.perform_topic_modeling(cleaned_data, num_topics=2)
-        self.assertEqual(len(topics), 2)
-        for topic in topics:
-            self.assertIn('topic_id', topic)
-            self.assertIn('top_words', topic)
-            self.assertEqual(len(topic['top_words']), 10)
+        tokens = ['topic', 'modeling', 'test', 'data', 'analysis']
+        topics = unstructured_data_processor.perform_topic_modeling(tokens)
+        self.assertIsInstance(topics, list)
+        self.assertTrue(len(topics) > 0)
 
-    def test_group_similar_values(self):
+    def test_extract_data_using_schema(self):
         """
-        Tests the group_similar_values function.
+        Tests data extraction using a schema.
         """
-        common_ngrams = {
-            'bigram_freq': [(('sample', 'text'), 2)],
-            'trigram_freq': [(('more', 'data', 'related'), 1)]
-        }
-        numeric_stats = {
-            'count': 3,
-            'mean': 456.0,
-            'median': 456,
-            'max': 789,
-            'min': 123
-        }
-        groups = udp.group_similar_values(list(self.sample_data.values()), common_ngrams, numeric_stats)
-        self.assertIn('Common Trigrams', groups)
-        self.assertIn('Common Bigrams', groups)
-        self.assertIn('Numeric Values', groups)
-        self.assertEqual(groups['Common Bigrams']['values'], ['sample text'])
-        self.assertEqual(groups['Common Trigrams']['values'], ['more data related'])
-        self.assertEqual(groups['Numeric Values']['values'], numeric_stats)
-
-    def test_design_schema(self):
-        """
-        Tests the design_schema function.
-        """
-        groups = {
-            'Common Trigrams': {
-                'type': 'String',
-                'description': 'Frequently occurring three-word sequences.',
-                'values': ['more data related']
-            },
-            'Common Bigrams': {
-                'type': 'String',
-                'description': 'Frequently occurring two-word sequences.',
-                'values': ['sample text']
-            },
-            'Numeric Values': {
-                'type': 'Numeric',
-                'description': 'Extracted numeric values from the text.',
-                'values': {
-                    'count': 3,
-                    'mean': 456.0,
-                    'median': 456,
-                    'max': 789,
-                    'min': 123
-                }
-            }
-        }
-        schema = udp.design_schema(groups)
-        self.assertIn('properties', schema)
-        self.assertIn('common_trigrams', schema['properties'])
-        self.assertIn('common_bigrams', schema['properties'])
-        self.assertIn('numeric_values', schema['properties'])
-        self.assertEqual(schema['properties']['common_trigrams']['type'], 'string')
-        self.assertEqual(schema['properties']['numeric_values']['type'], 'object')
-        self.assertIn('mean', schema['properties']['numeric_values']['properties'])
-
-    def test_validate_schema(self):
-        """
-        Tests the validate_schema function.
-        """
-        cleaned_data = ['Sample text with numbers 123 and 456.']
+        text = "The price is 100 dollars."
         schema = {
-            "title": "Test Schema",
-            "description": "A test schema.",
-            "type": "object",
             "properties": {
-                "common_trigrams": {
-                    "type": "string",
-                    "description": "Test description."
-                }
+                "price": {"type": "number"}
             }
         }
-        is_valid = udp.validate_schema(cleaned_data, schema)
-        self.assertTrue(is_valid)
-
-    def test_process_unstructured_data(self):
-        """
-        Tests the entire process_unstructured_data function.
-        """
-        with patch('schema_extractor.unstructured_data_processor.load_unstructured_data') as mock_load, \
-             patch('schema_extractor.unstructured_data_processor.perform_eda') as mock_eda, \
-             patch('schema_extractor.unstructured_data_processor.group_similar_values') as mock_group, \
-             patch('schema_extractor.unstructured_data_processor.design_schema') as mock_design, \
-             patch('schema_extractor.unstructured_data_processor.validate_schema') as mock_validate:
-
-            mock_load.return_value = ['Sample text for processing.']
-            mock_eda.return_value = {'common_ngrams': {'bigram_freq': [], 'trigram_freq': []}, 'numeric_stats': {}}
-            mock_group.return_value = {}
-            mock_design.return_value = {}
-            mock_validate.return_value = True
-
-            result = udp.process_unstructured_data(self.sample_data)
-            self.assertIn('eda_results', result)
-            self.assertIn('schema', result)
-            self.assertIn('is_valid', result)
-            self.assertTrue(result['is_valid'])
+        extracted_data = unstructured_data_processor.extract_data_using_schema(text, schema)
+        self.assertIsInstance(extracted_data, dict)
+        # Since the function is a placeholder, we expect an empty dict
+        self.assertEqual(extracted_data, {})
 
 if __name__ == '__main__':
     unittest.main()

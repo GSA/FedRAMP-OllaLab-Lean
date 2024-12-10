@@ -2,7 +2,7 @@
 
 import streamlit as st
 import os
-from schema_extractor.utils import detect_file_type
+from schema_extractor.utils import detect_file_category
 
 def upload_files():
     """
@@ -44,7 +44,7 @@ def upload_files():
         for uploaded_file in uploaded_files:
             try:
                 # Detect the file type category using the utility function
-                file_type_category = detect_file_type(uploaded_file)
+                file_type_category = detect_file_category(uploaded_file)
                 if file_type_category == 'unknown':
                     st.warning(f"File '{uploaded_file.name}' has an unsupported file type or cannot be processed.")
                     return None, None

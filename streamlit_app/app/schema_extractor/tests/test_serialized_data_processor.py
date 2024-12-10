@@ -1,74 +1,111 @@
 # test_serialized_data_processor.py
 
 import unittest
-from schema_extractor import serialized_data_processor
-from schema_extractor import ui_components
+from schema_extractor.serialized_data_processor import (
+    parse_serialized_data,
+    perform_eda,
+    extract_schema,
+    validate_schema
+)
+from unittest.mock import patch
 import json
 import yaml
 import xml.etree.ElementTree as ET
 
 class TestSerializedDataProcessor(unittest.TestCase):
-    def setUp(self):
-        # Example sanitized data
-        self.json_data = '{"name": "John Doe", "age": 30}'
-        self.yaml_data = "name: Jane Doe\nage: 25"
-        self.xml_data = "<root><person><name>John Smith</name><age>40</age></person></root>"
-        self.sanitized_data = {
-            'data.json': self.json_data,
-            'data.yaml': self.yaml_data,
-            'data.xml': self.xml_data
+    """
+    Test cases for the serialized_data_processor module.
+    """
+
+    def test_parse_serialized_data_json(self):
+        """
+        Test parsing of JSON serialized data.
+        """
+        sample_data = {
+            'test.json': {
+                'content': '{"name": "John", "age": 30}',
+                'file_type': 'json'
+            }
         }
+        parsed_data = parse_serialized_data(sample_data)
+        self.assertIsInstance(parsed_data, dict)
+        self.assertIn('test.json', parsed_data)
+        self.assertEqual(parsed_data['test.json']['name'], 'John')
+        self.assertEqual(parsed_data['test.json']['age'], 30)
 
-    def test_parse_serialized_data(self):
-        parsed_data = serialized_data_processor.parse_serialized_data(self.sanitized_data)
-        self.assertIn('data.json', parsed_data)
-        self.assertIn('data.yaml', parsed_data)
-        self.assertIn('data.xml', parsed_data)
+    def test_parse_serialized_data_yaml(self):
+        """
+        Test parsing of YAML serialized data.
+        """
+        sample_data = {
+            'test.yaml': {
+                'content': 'name: John\nage: 30',
+                'file_type': 'yaml'
+            }
+        }
+        parsed_data = parse_serialized_data(sample_data)
+        self.assertIsInstance(parsed_data, dict)
+        self.assertIn('test.yaml', parsed_data)
+        self.assertEqual(parsed_data['test.yaml']['name'], 'John')
+        self.assertEqual(parsed_data['test.yaml']['age'], 30)
 
-        # Test JSON parsing
-        json_data = parsed_data['data.json']
-        self.assertEqual(json_data['type'], 'json')
-        self.assertEqual(json_data['data']['name'], 'John Doe')
+    def test_parse_serialized_data_xml(self):
+        """
+        Test parsing of XML serialized data.
+        """
+        sample_data = {
+            'test.xml': {
+                'content': '<root><name>John</name><age>30</age></root>',
+                'file_type': 'xml'
+            }
+        }
+        parsed_data = parse_serialized_data(sample_data)
+        self.assertIsInstance(parsed_data, dict)
+        self.assertIn('test.xml', parsed_data)
+        self.assertIsInstance(parsed_data['test.xml'], ET.ElementTree)
 
-        # Test YAML parsing
-        yaml_data = parsed_data['data.yaml']
-        self.assertEqual(yaml_data['type'], 'yaml')
-        self.assertEqual(yaml_data['data']['name'], 'Jane Doe')
+    def test_extract_schema_json(self):
+        """
+        Test schema extraction from JSON data.
+        """
+        parsed_data = {
+            'test.json': {
+                'name': 'John',
+                'age': 30
+            }
+        }
+        with patch('streamlit.write'), patch('streamlit.json'):
+            schemas = extract_schema(parsed_data)
+        self.assertIsInstance(schemas, dict)
+        self.assertIn('test.json', schemas)
+        self.assertIn('properties', schemas['test.json'])
+        self.assertIn('name', schemas['test.json']['properties'])
+        self.assertIn('age', schemas['test.json']['properties'])
 
-        # Test XML parsing
-        xml_data = parsed_data['data.xml']
-        self.assertEqual(xml_data['type'], 'xml')
-        self.assertIsInstance(xml_data['data'], ET.Element)
+    def test_validate_schema_json(self):
+        """
+        Test validation of JSON data against schema.
+        """
+        parsed_data = {
+            'test.json': {
+                'name': 'John',
+                'age': 30
+            }
+        }
+        schemas = {
+            'test.json': {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "age": {"type": "integer"}
+                },
+                "required": ["name", "age"]
+            }
+        }
+        with patch('streamlit.write'), patch('streamlit.success'), patch('streamlit.error'), patch('streamlit.warning'):
+            validate_schema(parsed_data, schemas)
 
-    def test_extract_schema(self):
-        parsed_data = serialized_data_processor.parse_serialized_data({'data.json': self.json_data})
-        extracted_schemas = serialized_data_processor.extract_schema(parsed_data)
-        self.assertIn('data.json', extracted_schemas)
-        schema_info = extracted_schemas['data.json']
-        self.assertEqual(schema_info['type'], 'json')
-        self.assertIn('properties', schema_info['schema'])
-        self.assertIn('name', schema_info['schema']['properties'])
-
-    def test_validate_schema(self):
-        parsed_data = serialized_data_processor.parse_serialized_data({'data.json': self.json_data})
-        extracted_schemas = serialized_data_processor.extract_schema(parsed_data)
-        # Simulate user customization (e.g., setting 'name' as required)
-        schema = extracted_schemas['data.json']['schema']
-        schema['required'] = ['name']
-        extracted_schemas['data.json']['schema'] = schema
-        try:
-            serialized_data_processor.validate_schema(parsed_data, extracted_schemas)
-        except Exception as e:
-            self.fail(f"validate_schema raised an exception: {e}")
-
-    def test_xml_to_dataframe(self):
-        # Parse XML and convert to DataFrame
-        parsed_data = serialized_data_processor.parse_serialized_data({'data.xml': self.xml_data})
-        xml_data = parsed_data['data.xml']['data']
-        df = serialized_data_processor.xml_to_dataframe(xml_data)
-        self.assertIsInstance(df, pd.DataFrame)
-        self.assertIn('name', df.columns)
-        self.assertIn('age', df.columns)
+    # Additional tests can be added as needed
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,6 +1,7 @@
 # schema_extractor/sanitizer.py
 
 import os
+import io
 import pandas as pd
 import numpy as np
 import streamlit as st

@@ -14,9 +14,9 @@ import os
 import re
 import pandas as pd
 
-def detect_file_type(file):
+def detect_file_category(file):
     """
-    Detects the file type of the uploaded file.
+    Detects the file category of the uploaded file.
 
     Args:
         file (UploadedFile): The uploaded file object.
@@ -40,7 +40,38 @@ def detect_file_type(file):
     else:
         return 'unknown'
 
-def backup_file(file, backup_dir='backups'):
+def detect_file_type(file):
+    """
+    Detects the file type of the uploaded file based on its MIME type or extension.
+
+    Args:
+        file (UploadedFile): The uploaded file object.
+
+    Returns:
+        str: The detected file type.
+    """
+    # Try to detect MIME type
+    mime_type, _ = mimetypes.guess_type(file.name)
+    if mime_type:
+        # Map MIME types to file types
+        if 'csv' in mime_type:
+            return 'csv'
+        elif 'excel' in mime_type:
+            return 'xlsx'
+        elif 'parquet' in mime_type:
+            return 'parquet'
+        elif 'json' in mime_type:
+            return 'json'
+        elif 'text' in mime_type:
+            return 'txt'
+        elif 'pdf' in mime_type:
+            return 'pdf'
+        # Add more mappings as needed
+    # Fallback to file extension
+    extension = os.path.splitext(file.name)[1].lower()
+    return extension.strip('.')
+
+def backup_file(file, backup_dir='schema_extractor/backups'):
     """
     Creates a backup of the uploaded file.
 
@@ -64,6 +95,19 @@ def backup_file(file, backup_dir='backups'):
     with open(backup_path, 'wb') as f:
         f.write(file.getbuffer())
     return backup_path
+
+def backup_data(data: Any) -> Any:
+    """
+    Creates a backup of the data.
+
+    Args:
+        data (any): The data to backup.
+
+    Returns:
+        any: A copy of the data.
+    """
+    import copy
+    return copy.deepcopy(data)
 
 def handle_duplicates(data, user_choice='keep'):
     """
@@ -155,3 +199,115 @@ def detect_sensitive_data(data):
         # Cannot handle other data types
         raise TypeError("Unsupported data type for sensitive data detection.")
     return sensitive_data
+
+def st_profile_report(profile_report):
+    """
+    Displays a Pandas Profiling report in Streamlit.
+
+    Args:
+        profile_report (ProfileReport): The profiling report object.
+    """
+    st.components.v1.html(profile_report.to_html(), scrolling=True, height=1000)
+
+def customize_json_schema(schema):
+    """
+    Allows the user to customize the JSON schema by setting constraints.
+
+    Args:
+        schema (dict): The initial JSON schema.
+
+    Returns:
+        dict: The customized JSON schema.
+    """
+    st.header("Customize JSON Schema")
+    properties = schema.get('properties', {})
+    required_fields = schema.get('required', [])
+
+    for field_name, field_props in properties.items():
+        st.subheader(f"Field: {field_name}")
+        field_type = field_props.get('type', 'unknown')
+        st.write(f"Type: {field_type}")
+
+        # Required Field Checkbox
+        is_required = st.checkbox(f"Is '{field_name}' required?", field_name in required_fields)
+        if is_required and field_name not in required_fields:
+            required_fields.append(field_name)
+        elif not is_required and field_name in required_fields:
+            required_fields.remove(field_name)
+
+        # Constraints for String Fields
+        if field_type == 'string':
+            # Max Length
+            max_length = field_props.get('maxLength', None)
+            new_max_length = st.number_input(f"Max length for '{field_name}':", value=max_length or 0, min_value=0)
+            if new_max_length > 0:
+                field_props['maxLength'] = new_max_length
+            else:
+                field_props.pop('maxLength', None)
+            # Enumerated Values
+            enum_values = field_props.get('enum', [])
+            enum_input = st.text_input(f"Enumerated values for '{field_name}' (comma-separated):", value=', '.join(enum_values))
+            if enum_input:
+                field_props['enum'] = [v.strip() for v in enum_input.split(',')]
+            else:
+                field_props.pop('enum', None)
+
+        # Constraints for Numeric Fields
+        elif field_type in ['number', 'integer']:
+            # Minimum Value
+            min_value = field_props.get('minimum', None)
+            new_min_value = st.number_input(f"Minimum value for '{field_name}':", value=min_value or 0)
+            field_props['minimum'] = new_min_value
+            # Maximum Value
+            max_value = field_props.get('maximum', None)
+            new_max_value = st.number_input(f"Maximum value for '{field_name}':", value=max_value or 0)
+            field_props['maximum'] = new_max_value
+
+        properties[field_name] = field_props
+
+    schema['properties'] = properties
+    schema['required'] = required_fields if required_fields else None
+    return schema
+
+def load_tabular_file(content: Any, file_name: str) -> pd.DataFrame:
+    """
+    Loads a tabular file into a pandas DataFrame.
+
+    Args:
+        content (Any): The uploaded file content.
+        file_name (str): The name of the file.
+
+    Returns:
+        pd.DataFrame: The loaded DataFrame.
+    """
+    extension = file_name.split('.')[-1].lower()
+    if extension == 'csv':
+        return pd.read_csv(content)
+    elif extension == 'tsv':
+        return pd.read_csv(content, sep='\t')
+    elif extension == 'xlsx':
+        return pd.read_excel(content)
+    elif extension == 'parquet':
+        return pd.read_parquet(content)
+    elif extension == 'feather':
+        return pd.read_feather(content)
+    elif extension == 'hdf5':
+        return pd.read_hdf(content)
+    else:
+        raise ValueError(f"Unsupported tabular file type: .{extension}")
+
+def remove_unusual_characters(text):
+    """
+    Removes unusual or harmful characters from the text.
+
+    Args:
+        text (str): The text to sanitize.
+
+    Returns:
+        str: The sanitized text.
+    """
+    # Remove non-ASCII characters
+    sanitized_text = re.sub(r'[^\x00-\x7F]+', ' ', text)
+    # Remove control characters and other non-printable characters
+    sanitized_text = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', sanitized_text)
+    return sanitized_text

@@ -367,3 +367,22 @@ def extract_data_from_text(text_data, schema):
                 return None
 
     return extracted_data
+
+def get_pandera_dtype(dtype_str: str):
+    """
+    Maps string representation of data types to Pandera types.
+
+    Args:
+        dtype_str (str): The data type as a string.
+
+    Returns:
+        pandera.Column: The corresponding Pandera data type.
+    """
+    mapping = {
+        "Int": pa.Int,
+        "Float": pa.Float,
+        "String": pa.String,
+        "Bool": pa.Bool,
+        "DateTime": pa.DateTime
+    }
+    return mapping.get(dtype_str, pa.String)
