@@ -6,6 +6,7 @@ import streamlit as st
 import pandera as pa
 from pandera import DataFrameSchema
 from ydata_profiling import ProfileReport
+from streamlit_pandas_profiling import st_profile_report
 
 def process_tabular_data(sanitized_data):
     """
@@ -17,8 +18,15 @@ def process_tabular_data(sanitized_data):
         sanitized_data (dict): Dictionary containing sanitized data.
                                Keys are filenames, values are file-like objects.
     """
+    data_frames = {}
     # Load data into DataFrames
-    data_frames = load_tabular_data(sanitized_data)
+    #data_frames = load_tabular_data(sanitized_data)
+    for filename, data_info in sanitized_data.items():
+        df = data_info['content']
+        if isinstance(df, pd.DataFrame):
+            data_frames[filename] = df
+        else:
+            st.warning(f"Data for file {filename} is not a DataFrame.")
 
     # Check if data_frames is empty
     if not data_frames:

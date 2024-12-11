@@ -19,7 +19,7 @@ def run_schema_extractor():
     Handles user interactions, file uploads, processing options, and displays results.
     """
     st.title("Data Schema Extractor")
-    st.write("Extract data schemas from your datasets easily.")
+    st.write("Schema and Structured Data Extractor from any data source.")
 
     # Step 1: File Upload and Type Detection
     # Use the file_uploader module to handle file uploads and detect file type categories

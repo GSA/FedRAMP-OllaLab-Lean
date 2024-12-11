@@ -79,12 +79,13 @@ def sanitize_file_content(file):
         # Step 11: Save sanitized data
         save_sanitized_data(df, file.name)
 
-        return df
+        return {'content':df, 'file_type': file_type}
 
     elif file_type in ['json', 'xml', 'yaml', 'pickle', 'msgpack', 'bson', 'proto', 'avro']:
         # Process serialized data files
-        st.error(f"Processing for {file_type} files is not yet implemented.")
-        return None
+        st.write(f"Processing serialized data file: {file.name}")
+        data_content = sanitize_serialized_data(file, file_type)
+        return {'content':data_content, 'file_type': file_type}
 
     elif file_type in ['txt', 'doc', 'docx', 'pdf', 'md', 'log', 'rtf']:
         # Process unstructured text files
@@ -108,7 +109,7 @@ def sanitize_file_content(file):
         # Step 9: Save sanitized data
         save_sanitized_text_data(text, file.name)
 
-        return text
+        return {'content':text, 'file_type': file_type}
 
     else:
         st.error(f"Unsupported file type for file {file.name}.")
@@ -513,3 +514,28 @@ def save_sanitized_text_data(text, filename):
         f.write(text)
     st.success(f"Sanitized text saved as {sanitized_filepath}")
     return sanitized_filepath
+
+def sanitize_serialized_data (file, file_type):
+    """
+    Sanitize serialized data files.
+
+    Args:
+        file (UploadedFile): The uploaded file object
+        file_type (str): The detected file type
+
+    Returns:
+        str or dict: The sanitized content of the serialized data.
+    """
+    encoding = 'utf-8'
+    content_bytes = file.read()
+    try:
+        content_str = content_bytes.decode(encoding)
+        #content_str = remove_harmful_characters_text(content_str) # to be reviewed later to make sure it's not breaking serialized data
+        content_str = detect_and_redact_sensitive_data_text(content_str)
+        content_str = normalize_text(content_str)
+        save_sanitized_text_data(content_str, file.name)
+        st.success(f"Sanizied serialized data in file {file.name}")
+        return content_str
+    except Exception as e:
+        st.error(f"Error processing file {file.name}: {e}")
+        return None
