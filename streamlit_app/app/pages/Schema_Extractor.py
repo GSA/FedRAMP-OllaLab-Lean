@@ -26,7 +26,7 @@ def run_schema_extractor():
     uploaded_files, file_type_category = file_uploader.upload_files()
 
     # Check if files are uploaded and a file type category is detected
-    if uploaded_files and file_type_category:
+    if uploaded_files is not None and file_type_category is not None:
         # Step 2: Sanitize Files
         # Use the sanitizer module to sanitize uploaded files
         sanitized_data = sanitizer.sanitize_files(uploaded_files)

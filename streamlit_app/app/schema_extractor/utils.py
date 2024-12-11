@@ -13,6 +13,9 @@ Functions:
 import os
 import re
 import pandas as pd
+import mimetypes
+import copy
+import streamlit as st
 
 def detect_file_category(file):
     """
@@ -62,14 +65,24 @@ def detect_file_type(file):
             return 'parquet'
         elif 'json' in mime_type:
             return 'json'
+        elif 'xml' in mime_type:
+            return 'xml'
         elif 'text' in mime_type:
             return 'txt'
         elif 'pdf' in mime_type:
             return 'pdf'
         # Add more mappings as needed
     # Fallback to file extension
-    extension = os.path.splitext(file.name)[1].lower()
-    return extension.strip('.')
+    extension = os.path.splitext(file.name)[1].lower().strip('.')
+    if extension in [
+        'csv','tsv','xslx','parquet',
+        'json','xml','yaml',
+        'txt','pdf','md','log','rtf','doc','docx'
+        'pickle','msgpack','bson','proto','avro','feather','hdf5'
+    ]:
+        return extension
+    else:
+        return 'unknown'
 
 def backup_file(file, backup_dir='schema_extractor/backups'):
     """
@@ -209,66 +222,6 @@ def st_profile_report(profile_report):
     """
     st.components.v1.html(profile_report.to_html(), scrolling=True, height=1000)
 
-def customize_json_schema(schema):
-    """
-    Allows the user to customize the JSON schema by setting constraints.
-
-    Args:
-        schema (dict): The initial JSON schema.
-
-    Returns:
-        dict: The customized JSON schema.
-    """
-    st.header("Customize JSON Schema")
-    properties = schema.get('properties', {})
-    required_fields = schema.get('required', [])
-
-    for field_name, field_props in properties.items():
-        st.subheader(f"Field: {field_name}")
-        field_type = field_props.get('type', 'unknown')
-        st.write(f"Type: {field_type}")
-
-        # Required Field Checkbox
-        is_required = st.checkbox(f"Is '{field_name}' required?", field_name in required_fields)
-        if is_required and field_name not in required_fields:
-            required_fields.append(field_name)
-        elif not is_required and field_name in required_fields:
-            required_fields.remove(field_name)
-
-        # Constraints for String Fields
-        if field_type == 'string':
-            # Max Length
-            max_length = field_props.get('maxLength', None)
-            new_max_length = st.number_input(f"Max length for '{field_name}':", value=max_length or 0, min_value=0)
-            if new_max_length > 0:
-                field_props['maxLength'] = new_max_length
-            else:
-                field_props.pop('maxLength', None)
-            # Enumerated Values
-            enum_values = field_props.get('enum', [])
-            enum_input = st.text_input(f"Enumerated values for '{field_name}' (comma-separated):", value=', '.join(enum_values))
-            if enum_input:
-                field_props['enum'] = [v.strip() for v in enum_input.split(',')]
-            else:
-                field_props.pop('enum', None)
-
-        # Constraints for Numeric Fields
-        elif field_type in ['number', 'integer']:
-            # Minimum Value
-            min_value = field_props.get('minimum', None)
-            new_min_value = st.number_input(f"Minimum value for '{field_name}':", value=min_value or 0)
-            field_props['minimum'] = new_min_value
-            # Maximum Value
-            max_value = field_props.get('maximum', None)
-            new_max_value = st.number_input(f"Maximum value for '{field_name}':", value=max_value or 0)
-            field_props['maximum'] = new_max_value
-
-        properties[field_name] = field_props
-
-    schema['properties'] = properties
-    schema['required'] = required_fields if required_fields else None
-    return schema
-
 def load_tabular_file(content, file_name: str) -> pd.DataFrame:
     """
     Loads a tabular file into a pandas DataFrame.
@@ -288,13 +241,19 @@ def load_tabular_file(content, file_name: str) -> pd.DataFrame:
     elif extension == 'xlsx':
         return pd.read_excel(content)
     elif extension == 'parquet':
-        return pd.read_parquet(content)
+        return pd.read_parquet(content) # do I need to use io.BytesIO(content.getvalue())?
     elif extension == 'feather':
-        return pd.read_feather(content)
-    elif extension == 'hdf5':
+        return pd.read_feather(content) # do I need to use io.BytesIO(content.getvalue())?
+    elif extension in ['hdf5','h5']:
+        # Will save HDF5 to a temporary file first
+        #with tempfile.NamedTemporaryFile(suffix='.h5') as tmp:
+            #tmp.write(content.getbuffer())
+            #tmp.flush()
+            #return pd.read_hdf(tmp.name)       
         return pd.read_hdf(content)
     else:
-        raise ValueError(f"Unsupported tabular file type: .{extension}")
+        st.error(f"Unsupported tabular file type: .{extension}")
+        return None
 
 def remove_unusual_characters(text):
     """

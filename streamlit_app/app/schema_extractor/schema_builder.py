@@ -177,6 +177,9 @@ def apply_user_constraints_to_pandera_schema(schema, user_inputs):
             # Update nullable
             if 'nullable' in col_constraints:
                 column.nullable = col_constraints['nullable']
+            # make sure column.checks is a list
+            if not isinstance (column.checks, list):
+                column.checks = list(column.checks) if column.checks else []
             # Add checks
             if 'checks' in col_constraints:
                 for check_name, check_value in col_constraints['checks'].items():

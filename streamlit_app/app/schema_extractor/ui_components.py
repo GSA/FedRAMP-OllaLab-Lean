@@ -106,7 +106,10 @@ def customize_json_schema(schema):
         properties[field_name] = field_props
 
     schema['properties'] = properties
-    schema['required'] = required_fields if required_fields else None
+    if required_fields:
+        schema['required'] = required_fields
+    else:
+        schema.pop('required',None) # Remove 'required' key if empty
     return schema
 
 def schema_builder_interface():
@@ -116,6 +119,20 @@ def schema_builder_interface():
     Returns:
         dict: The user-defined schema.
     """
+
+    # Initialize session state variables
+    if 'schema' not in st.session_state:
+        st.session_state['schema'] = {
+            'title': '',
+            'description': '',
+            'type': 'object',
+            'properties': {}
+        }
+    if 'current_object' not in st.session_state:
+        st.session_state['current_object'] = st.session_state['schema']
+    if 'object_stack' not in st.session_state:
+        st.session_state['object_stack'] = []
+
     st.header("Schema Builder")
 
     # Initialize schema in session state if not already present
