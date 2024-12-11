@@ -96,15 +96,15 @@ def backup_file(file, backup_dir='schema_extractor/backups'):
         f.write(file.getbuffer())
     return backup_path
 
-def backup_data(data: Any) -> Any:
+def backup_data(data):
     """
     Creates a backup of the data.
 
     Args:
-        data (any): The data to backup.
+        data: The data to backup.
 
     Returns:
-        any: A copy of the data.
+        A copy of the data.
     """
     import copy
     return copy.deepcopy(data)
@@ -269,7 +269,7 @@ def customize_json_schema(schema):
     schema['required'] = required_fields if required_fields else None
     return schema
 
-def load_tabular_file(content: Any, file_name: str) -> pd.DataFrame:
+def load_tabular_file(content, file_name: str) -> pd.DataFrame:
     """
     Loads a tabular file into a pandas DataFrame.
 

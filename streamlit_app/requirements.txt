@@ -37,6 +37,10 @@ python-Levenshtein # for Entity Bridge
 fuzzywuzzy # for Entity Bridge
 seaborn 
 matplotlib
+pandera
+genson
+streamlit_pandas_profiling
+nltk
 
 # Add other necessary packages
 # the packages should be identical to those for jupyter_lab
