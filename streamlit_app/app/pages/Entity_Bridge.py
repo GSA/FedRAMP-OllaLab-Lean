@@ -13,9 +13,9 @@ from entity_bridge import entity_matcher
 from entity_bridge import ui_helper
 
 if 'proceed1' not in st.session_state:
-    st.session_state['proceed1'] = None
+    st.session_state['proceed1'] = False
 if 'proceed2' not in st.session_state:
-    st.session_state['proceed2'] = None
+    st.session_state['proceed2'] = False
 
 def process_file(file, idx):
     """
@@ -92,12 +92,19 @@ if uploaded_files and len(uploaded_files) >= 2:
         else:
             st.error(f"Failed to process file {file.name}.")
 
+if data_frames:
+    st.session_state['proceed1']=True
+
 if st.button("Reset",key="reset1"):
     st.session_state['proceed1']=False
     st.session_state['proceed2']=False
 
-if data_frames or st.session_state['proceed1']:
+if st.session_state['proceed1']:
     st.header("Normalizing Data and Checking for Similar Names")
+
+    # Get custom stopwords from the user
+    parent_custom_stopwords, child_custom_stopwords = ui_helper.get_custom_stopwords()
+
     # Step 3: Normalize IDs and Names, check and merge similar names within data frames
     normalized_data_frames = data_normalizer.normalize_data_frames(
         data_frames,
@@ -105,7 +112,8 @@ if data_frames or st.session_state['proceed1']:
         child_custom_stopwords=child_custom_stopwords
         )
 
-    st.session_state['proceed2'] = st.button("Proceed with later steps")
+    if st.button("Proceed with later steps"):
+        st.session_state['proceed2'] = True
     if st.button("Reset",key="reset2"):
         st.session_state['proceed1']=False
         st.session_state['proceed2']=False
@@ -130,5 +138,5 @@ if data_frames or st.session_state['proceed1']:
         # Step 8: Display Enriched DataFrames
         ui_helper.display_enriched_data(enriched_data_frames)
 
-    # Step 9: Download Enriched DataFrames
-    ui_helper.download_enriched_data(enriched_data_frames)
+        # Step 9: Download Enriched DataFrames
+        ui_helper.download_enriched_data(enriched_data_frames)

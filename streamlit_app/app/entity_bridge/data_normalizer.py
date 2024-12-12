@@ -116,6 +116,8 @@ def normalize_ids(df, selected_fields):
     else:
         # Generate unique Parent IDs based on Parent Names
         parent_name_field = selected_fields['parent_name']
+        if df[parent_name_field].isnull().any():
+            st.error(f"Missing values in '{parent_name_field}'. Cannot generate IDs for these entries.")
         df['generated_parent_id'] = df[parent_name_field].apply(lambda x: generate_unique_identifier())
         selected_fields['parent_id'] = 'generated_parent_id'
         log_normalization_actions(actions_log, "Generated unique Parent IDs based on Parent Names.")
@@ -123,6 +125,8 @@ def normalize_ids(df, selected_fields):
     # Normalize Child IDs, if present
     if selected_fields.get('child_name'):
         child_name_field = selected_fields['child_name']
+        if df[child_name_field].isnull().any():
+            st.error(f"Missing values in '{child_name_field}'. Cannot generate IDs for these entries.")
         if selected_fields.get('child_id'):
             child_id_field = selected_fields['child_id']
             if df[child_id_field].isnull().any():
@@ -155,7 +159,8 @@ def normalize_entity_names(df, selected_fields, parent_custom_stopwords=None, ch
         selected_fields (dict): Dictionary containing field names:
             - 'parent_name': Parent Name field name.
             - 'child_name': Child Name field name (optional).
-        custom_stopwords (list, optional): List of custom stopwords to remove from names.
+        parent_custom_stopwords (list,optional): List of custom stopwords for parent names.
+        child_custom_stopwords (list,optional): List of custom stopwords for child names.
 
     Returns:
         DataFrame: The DataFrame with normalized names.
@@ -172,7 +177,7 @@ def normalize_entity_names(df, selected_fields, parent_custom_stopwords=None, ch
 
     # Normalize Parent Names
     df[parent_name_field] = df[parent_name_field].apply(
-        lambda x: normalize_text(x, custom_stopwords=parent_custom_stopwords)
+        lambda x: normalize_text(x, custom_stopwords=parent_custom_stopwords) if pd.notnull(x) else x
         )
     log_normalization_actions(actions_log, f"Normalized Parent Names in '{parent_name_field}'.")
 
@@ -183,7 +188,7 @@ def normalize_entity_names(df, selected_fields, parent_custom_stopwords=None, ch
         log_normalization_actions(actions_log, f"Copied '{child_name_field}' to '{child_name_field}_original'.")
 
         df[child_name_field] = df[child_name_field].apply(
-            lambda x: normalize_text(x, custom_stopwords=child_custom_stopwords)
+            lambda x: normalize_text(x, custom_stopwords=child_custom_stopwords) if pd.notnull(x) else x
             )
         log_normalization_actions(actions_log, f"Normalized Child Names in '{child_name_field}'.")
 
@@ -201,7 +206,8 @@ def normalize_data_frames(data_frames, parent_custom_stopwords=None, child_custo
 
     Args:
         data_frames (list): List of tuples (DataFrame, selected_fields).
-        custom_stopwords (list, optional): List of custom stopwords to remove from names.
+        parent_custom_stopwords (list,optional): List of custom stopwords for parent names.
+        child_custom_stopwords (list,optional): List of custom stopwords for child names.
 
     Returns:
         list: List of normalized DataFrames with updated selected_fields.

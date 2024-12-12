@@ -87,7 +87,7 @@ def remove_duplicates(df, selected_fields):
     # Remove duplicates
     df_no_duplicates = df.drop_duplicates(subset=columns_to_check, keep='first')
 
-    num_duplicates_removed = len(duplicates) // 2  # Since keep='first', half of the duplicates are removed
+    num_duplicates_removed = len(df) - len(df_no_duplicates) // 2  # Since keep='first', half of the duplicates are removed
     if num_duplicates_removed > 0:
         log_normalization_actions(actions_log, f"Removed {num_duplicates_removed} duplicate rows based on fields {columns_to_check}")
         st.write(f"Removed {num_duplicates_removed} duplicate rows.")
