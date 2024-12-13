@@ -42,6 +42,7 @@ genson
 streamlit_pandas_profiling
 nltk
 msgpack
+xmlschema
 
 # Add other necessary packages
 # the packages should be identical to those for jupyter_lab

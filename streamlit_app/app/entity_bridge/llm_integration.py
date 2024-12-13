@@ -240,16 +240,49 @@ def parse_llm_output(output_text: str) -> Dict[str, Any]:
 
     Implementation Notes:
         The parsing logic will depend on the expected format of the LLM output.
-        For example, if the LLM outputs JSON-formatted text, we can use json.loads().
-        If the output is plain text, we may need to use regular expressions or other parsing techniques.
+        We attempt to extract JSON from the text output.
     """
     import json
+    import re
     try:
-        # Try parsing as JSON
-        parsed_output = json.loads(output_text)
+        # Attempt to extract JSON from the output_text
+        json_text = re.search(r'\{.*\}', output_text, re.DOTALL).group()
+        parsed_output = json.loads(json_text)
         return parsed_output
-    except json.JSONDecodeError:
-        # Fallback parsing for plain text
-        lines = output_text.strip().split('\n')
-        decision = ' '.join(lines).lower()
-        return {'decision': decision}
+    except (json.JSONDecodeError, AttributeError) as e:
+        raise ValueError(f"Failed to parse LLM output as JSON: {e}")
+
+def infer_true_parents(parent_names_list, parent_entity_type, client, provider, model_name):
+    """
+    Use the LLM to infer true parents of related entities.
+
+    Args:
+        parent_names_list (list): List of unique parent names.
+        parent_entity_type (str): Type of parent entity.
+        client (object): The LLM client instance.
+        provider (str): The name of the LLM provider.
+        model_name (str): The LLM model to use.
+
+    Returns:
+        dict: A dictionary containing groups of parent names and their inferred true parent.
+    """
+    # Construct the prompt
+    prompt_template = (
+        "Given the following list of entities: {parent_names_list},\n"
+        "Based on your knowledge of real-world relationships, determine if it is plausible to group some of these entities that share a common parent entity of type {parent_entity_type}.\n"
+        "For each identified group, identify the name of the potential parent entity that could encompass all of the group's members.\n"
+        "Respond only with valid JSON. Do not write an introduction or summary.\n"
+    )
+
+    # Replace placeholders
+    parent_names_str = ', '.join([f'"{name}"' for name in parent_names_list])
+    prompt = prompt_template.format(
+        parent_names_list=parent_names_str,
+        parent_entity_type=parent_entity_type
+    )
+
+    # Call the LLM
+    result = generate_entity_mappings_with_llm(prompt, client, provider, model_name)
+
+    # Return the result
+    return result

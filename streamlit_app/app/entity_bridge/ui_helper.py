@@ -8,6 +8,8 @@ This module contains helper functions to build and manage the Streamlit UI compo
 
 import streamlit as st
 import pandas as pd
+import os
+import requests
 
 def display_file_upload():
     """
@@ -303,3 +305,136 @@ def display_progress(message, progress_value):
     """
     st.write(message)
     st.progress(progress_value)
+
+@st.fragment
+def display_llm_configuration():
+    st.header("Chat Endpoint Configuration")
+
+    # Provider selection
+    providers = ["Ollama", "OpenAI", "Google Vertex AI", "Amazon Bedrock", "Anthropic"]
+    selected_provider = st.selectbox("Select Provider", options=providers)
+
+    credentials = {}
+    selected_model = None
+
+    if selected_provider == "Ollama":
+        # Ollama Configuration
+        st.subheader("Ollama Configuration")
+        # Predefined endpoints
+        default_endpoints = {
+            "Docker Internal": "http://host.docker.internal:8000",
+            "Localhost": "http://127.0.0.1:11434",
+            "Other": ""
+        }
+
+        endpoint_option = st.selectbox(
+            "Select Ollama Endpoint",
+            options=list(default_endpoints.keys()),
+            index=1,  # Default selection is "Localhost"
+            key="ollama_endpoint_option"
+        )
+
+        if endpoint_option == "Other":
+            custom_endpoint = st.text_input("Enter Ollama Endpoint URL", value="http://", key="ollama_custom_endpoint")
+            selected_endpoint = custom_endpoint
+        else:
+            selected_endpoint = default_endpoints[endpoint_option]
+
+        # Set OLLAMA_HOST environment variable
+        if selected_endpoint:
+            os.environ['OLLAMA_HOST'] = selected_endpoint
+
+            # Fetch available models
+            try:
+                models_response = requests.get(f"{selected_endpoint}/v1/models")
+                if models_response.status_code == 200:
+                    available_models_data = models_response.json()
+                    # Assume the response contains a list of models under 'data' key
+                    model_names = [model['id'] for model in available_models_data.get('data', [])]
+                    if not model_names:
+                        st.error("No model available for the selected endpoint.")
+                        # Allow manual input
+                        model_names = []
+                else:
+                    st.warning(f"Failed to retrieve models - status code {models_response.status_code}")
+                    # Allow manual input
+                    model_names = []
+            except Exception as e:
+                st.warning(f"Error connecting to Ollama endpoint: {e}")
+                # Allow manual input
+                model_names = []
+        else:
+            st.error("Please select or enter a valid Ollama endpoint.")
+            st.stop()
+
+        if model_names:
+            selected_model = st.selectbox(
+                "Choose a Model",
+                options=model_names,
+                index=0,
+                key="ollama_model_select"
+            )
+        else:
+            st.info("Enter model name manually:")
+            selected_model = st.text_input("Model Name", key="ollama_model_input")
+            if selected_model:
+                # Test the model by making a small query
+                try:
+                    ollama_client = OllamaClient(base_url=selected_endpoint)
+                    ollama_client.generate(prompt="Hello")
+                    st.success("Model is accessible and ready.")
+                except Exception as e:
+                    st.error(f"Failed to access the model: {e}")
+                    st.stop()
+            else:
+                st.warning("Please enter a model name.")
+                st.stop()
+
+        credentials['base_url'] = selected_endpoint
+
+    elif selected_provider == "OpenAI":
+        # OpenAI Configuration
+        st.subheader("OpenAI Configuration")
+        openai_api_key = st.text_input("Enter OpenAI API Key", type="password", key="openai_api_key")
+        if not openai_api_key:
+            st.warning("Please enter your OpenAI API Key.")
+            st.stop()
+        else:
+            os.environ['OPENAI_API_KEY'] = openai_api_key
+            try:
+                openai.api_key = openai_api_key
+                models_response = openai.Model.list()
+                # Filter models to include desired models
+                allowed_models = ['gpt-3.5-turbo', 'gpt-4']
+                model_names = [model.id for model in models_response['data'] if model.id in allowed_models]
+                if not model_names:
+                    st.warning("No permitted models available for your OpenAI API key.")
+                    model_names = []
+            except Exception as e:
+                st.warning(f"Error retrieving models from OpenAI: {e}")
+                model_names = []
+
+            if model_names:
+                selected_model = st.selectbox(
+                    "Choose a Model",
+                    options=model_names,
+                    index=0,
+                    key="openai_model_select"
+                )
+            else:
+                st.info("Enter model name manually:")
+                selected_model = st.text_input("Model Name", key="openai_model_input")
+                if not selected_model:
+                    st.warning("Please enter a model name.")
+                    st.stop()
+
+            credentials['api_key'] = openai_api_key
+
+    # Similar configurations for other providers...
+
+    # Return the settings
+    return {
+        'provider': selected_provider,
+        'model_name': selected_model,
+        'credentials': credentials
+    }
