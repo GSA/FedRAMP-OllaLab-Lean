@@ -6,11 +6,26 @@ UI Helper Module
 This module contains helper functions to build and manage the Streamlit UI components.
 """
 
+import os
+import json
 import streamlit as st
 import pandas as pd
-import os
 import requests
 from entity_bridge.llm_integration import OllamaClient
+from io import BytesIO
+
+# Import OpenAI and Anthropic libraries
+import openai
+from openai import OpenAI
+import anthropic
+
+# Import Google Vertex AI libraries
+from google.cloud import aiplatform
+from google.oauth2 import service_account
+from vertexai.preview.language_models import ChatModel
+
+# Import boto3 for Amazon Bedrock
+import boto3
 
 def display_file_upload():
     """
@@ -160,11 +175,11 @@ def download_enriched_data(enriched_data_frames):
                 key=f'download_csv_{idx}'
             )
         elif file_format == 'Excel':
-            excel_buffer = pd.ExcelWriter('output.xlsx', engine='xlsxwriter')
-            df.to_excel(excel_buffer, index=False)
-            excel_buffer.save()
+            excel_buffer = BytesIO()
+            with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
+                df.to_excel(writer, index=False)
             excel_buffer.seek(0)
-            excel_data = excel_buffer.read()
+            excel_data = excel_buffer.getvalue()
             st.download_button(
                 label="Download Excel",
                 data=excel_data,
@@ -431,7 +446,156 @@ def display_llm_configuration():
 
             credentials['api_key'] = openai_api_key
 
-    # Similar configurations for other providers...
+    elif selected_provider == "Google Vertex AI":
+        st.subheader("Google Vertex AI Configuration")
+        # Get project ID and location
+        project_id = st.text_input("Enter Google Cloud Project ID")
+        location = st.text_input("Enter Location", value="us-central1")
+        # Upload service account JSON key file
+        service_account_info = st.file_uploader("Upload Service Account JSON Key File", type="json")
+        if not project_id or not location or not service_account_info:
+            st.warning("Please enter Project ID, Location, and upload Service Account JSON Key File.")
+            st.stop()
+        else:
+            # Initialize the AI Platform
+            try:
+                credentials_info = json.load(service_account_info)
+                credentials = service_account.Credentials.from_service_account_info(credentials_info)
+                aiplatform.init(project=project_id, location=location, credentials=credentials)
+                # Get available models
+                # For simplicity, we can use predefined model names
+                model_names = ["chat-bison@001"]
+            except Exception as e:
+                st.warning(f"Error initializing Vertex AI: {e}")
+                # Allow manual input
+                model_names = []
+            if model_names:
+                selected_model = st.selectbox(
+                    "Choose a Model",
+                    options=model_names,
+                    index=0
+                )
+            else:
+                st.info("Enter model name manually:")
+                selected_model = st.text_input("Model Name")
+                if selected_model:
+                    # Test the model by making a small query
+                    try:
+                        vertexai.init(project=project_id, location=location, credentials=credentials)
+                        chat_model = ChatModel.from_pretrained(selected_model)
+                        chat = chat_model.start_chat()
+                        response = chat.send_message("Hello")
+                        st.success("Model is accessible and ready.")
+                    except Exception as e:
+                        st.error(f"Failed to access the model: {e}")
+                        st.stop()
+                else:
+                    st.warning("Please enter a model name.")
+                    st.stop()
+    elif selected_provider == "Amazon Bedrock":
+        st.subheader("Amazon Bedrock Configuration")
+        # Get AWS credentials
+        aws_access_key_id = st.text_input("AWS Access Key ID")
+        aws_secret_access_key = st.text_input("AWS Secret Access Key", type="password")
+        aws_session_token = st.text_input("AWS Session Token (optional)", type="password")
+        region_name = st.text_input("AWS Region", value="us-east-1")
+        if not aws_access_key_id or not aws_secret_access_key or not region_name:
+            st.warning("Please enter AWS credentials and region.")
+            st.stop()
+        else:
+            # Initialize boto3 client
+            try:
+                session = boto3.Session(
+                    aws_access_key_id=aws_access_key_id,
+                    aws_secret_access_key=aws_secret_access_key,
+                    aws_session_token=aws_session_token if aws_session_token else None,
+                    region_name=region_name
+                )
+                bedrock_client = session.client('bedrock-runtime')
+                # Get available models
+                # For now, we'll hardcode some model names
+                model_names = ["anthropic.claude-v2", "ai21.j2-jumbo-instruct"]
+            except Exception as e:
+                st.warning(f"Error initializing Amazon Bedrock client: {e}")
+                # Allow manual input
+                model_names = []
+            if model_names:
+                selected_model = st.selectbox(
+                    "Choose a Model",
+                    options=model_names,
+                    index=0
+                )
+            else:
+                st.info("Enter model name manually:")
+                selected_model = st.text_input("Model Name")
+                if selected_model:
+                    # Test the model by making a small query
+                    try:
+                        # Make a simple test call
+                        test_body = json.dumps({
+                            "prompt": "Hello",
+                            "maxTokens": 5
+                        })
+                        response = bedrock_client.invoke_model(
+                            modelId=selected_model,
+                            accept='application/json',
+                            contentType='application/json',
+                            body=test_body
+                        )
+                        st.success("Model is accessible and ready.")
+                    except Exception as e:
+                        st.error(f"Failed to access the model: {e}")
+                        st.stop()
+                else:
+                    st.warning("Please enter a model name.")
+                    st.stop()
+    elif selected_provider == "Anthropic":
+        st.subheader("Anthropic Configuration")
+        # Anthropic API Key
+        anthropic_api_key = st.text_input("Enter Anthropic API Key", type="password")
+        if not anthropic_api_key:
+            st.warning("Please enter your Anthropic API Key.")
+            st.stop()
+        else:
+            os.environ['ANTHROPIC_API_KEY'] = anthropic_api_key
+            # Initialize anthropic client
+            try:
+                anthropic_client = anthropic.Client(api_key=anthropic_api_key)
+                # Fetch available models (assuming API provides a way)
+                # For now, we'll hardcode some model names
+                model_names = ['claude-3-5-sonnet-latest', 'claude-3-5-haiku-latest', 'claude-3-opus-latest', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307']
+            except Exception as e:
+                st.warning(f"Error initializing Anthropic client: {e}")
+                # Allow manual input
+                model_names = []
+            if model_names:
+                selected_model = st.selectbox(
+                    "Choose a Model",
+                    options=model_names,
+                    index=0
+                )
+            else:
+                st.info("Enter model name manually:")
+                selected_model = st.text_input("Model Name")
+                if selected_model:
+                    # Test the model by making a small query
+                    try:
+                        response = client.messages.create(
+                            model=selected_model,
+                            system="You are a helpful assistant.",
+                            messages=[
+                                {"role": "user", "content": "Hello"}
+                            ],
+                            max_tokens=5
+                        )
+
+                        st.success("Model is accessible and ready.")
+                    except Exception as e:
+                        st.error(f"Failed to access the model: {e}")
+                        st.stop()
+                else:
+                    st.warning("Please enter a model name.")
+                    st.stop()
 
     # Return the settings
     return {

@@ -11,7 +11,8 @@ import streamlit as st
 from entity_bridge.utils import (
     generate_unique_identifier,
     normalize_text,
-    log_normalization_actions
+    log_normalization_actions,
+    calculate_similarity
 )
 
 def check_and_merge_similar_names(df, selected_fields, entity_type='parent', similarity_threshold=0.9):

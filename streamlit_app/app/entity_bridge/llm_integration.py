@@ -10,9 +10,15 @@ such as OpenAI, Ollama, Anthropic, Google Vertex AI, and AWS Bedrock.
 import os
 import logging
 from typing import Any, Dict
+import json
+import re
 
 # Import necessary clients or SDKs for each provider
 # Note: Users must install the required SDKs for each provider they intend to use.
+
+# Ollama
+import ollama
+from ollama import Client
 
 # OpenAI
 try:
@@ -38,18 +44,6 @@ try:
 except ImportError:
     boto3 = None
 
-# Ollama (Assuming a hypothetical client, as Ollama is an open-source model runner)
-# In practice, users would need to implement their own client or use an existing one.
-# For demonstration purposes, we'll define a placeholder.
-class OllamaClient:
-    def __init__(self, base_url):
-        self.base_url = base_url
-
-    def generate(self, prompt):
-        # Placeholder method to call Ollama API
-        pass
-
-
 def setup_llm_client(provider: str, **credentials) -> Any:
     """
     Set up the LLM client based on the selected provider and credentials.
@@ -70,8 +64,8 @@ def setup_llm_client(provider: str, **credentials) -> Any:
         api_key = credentials.get('api_key')
         if not api_key:
             raise ValueError("API key is required for OpenAI.")
-        openai.api_key = api_key
-        return openai
+        openai_client = OpenAI(api_key=)api_key
+        return openai_client
     elif provider.lower() == 'anthropic':
         if anthropic is None:
             raise ImportError("Anthropic library is not installed. Please install it with 'pip install anthropic'.")
@@ -94,7 +88,7 @@ def setup_llm_client(provider: str, **credentials) -> Any:
         return client
     elif provider.lower() == 'ollama':
         base_url = credentials.get('base_url', 'http://localhost:11434')
-        client = OllamaClient(base_url=base_url)
+        client = Client(host=base_url)
         return client
     else:
         raise ValueError(f"Unsupported provider: {provider}")
