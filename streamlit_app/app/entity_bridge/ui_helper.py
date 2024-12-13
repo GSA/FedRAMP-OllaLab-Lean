@@ -10,6 +10,7 @@ import streamlit as st
 import pandas as pd
 import os
 import requests
+from entity_bridge.llm_integration import OllamaClient
 
 def display_file_upload():
     """

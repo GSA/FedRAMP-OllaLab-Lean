@@ -364,7 +364,7 @@ def construct_unique_child_list(data_frames):
     return unique_children_df
 
 
-def enrich_data_frames_with_unique_ids(data_frames, unique_parents_df, unique_children_df):
+def enrich_data_frames_with_unique_entity_ids(data_frames, unique_parents_df, unique_children_df):
     """
     Enrich the original data frames with unique parent and child IDs.
 

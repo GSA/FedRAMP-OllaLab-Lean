@@ -13,6 +13,7 @@ from entity_bridge import duplicate_remover
 from entity_bridge import entity_matcher
 from entity_bridge import ui_helper
 from entity_bridge import llm_integration
+from entity_bridge import utils
 
 if 'proceed1' not in st.session_state:
     st.session_state['proceed1'] = False
@@ -216,7 +217,7 @@ if st.session_state['proceed1']:
 
                     # For each confirmed group, generate a unique ID for the group's parent, map group member IDs
                     for group in confirmed_groups:
-                        group_parent_id = generate_unique_identifier()
+                        group_parent_id = utils.generate_unique_identifier()
                         group_members = group['members']
                         group_parent_name = group['parent']
 
@@ -224,10 +225,10 @@ if st.session_state['proceed1']:
                         for member_name in group_members:
                             unique_parents_df.loc[unique_parents_df['ParentName'] == member_name, 'UniqueParentID'] = group_parent_id
                         # Optionally, you may want to add a new row for the group parent
-                        unique_parents_df = unique_parents_df.append({
-                            'ParentName': group_parent_name,
-                            'UniqueParentID': group_parent_id
-                        }, ignore_index=True)
+                        #unique_parents_df = unique_parents_df.append({
+                            #'ParentName': group_parent_name,
+                            #'UniqueParentID': group_parent_id
+                        #}, ignore_index=True)
 
                         st.write(f"**Group Parent ID:** {group_parent_id}")
                         st.write(f"**Group Parent Name:** {group_parent_name}")
@@ -238,15 +239,16 @@ if st.session_state['proceed1']:
 
         # Proceed to Enrich DataFrames with Unique IDs using the updated unique_parents_df
         enriched_data_frames = entity_matcher.enrich_data_frames_with_unique_ids(
-            deduplicated_data_frames, unique_parents_df, unique_children_df
+            deduplicated_data_frames, unique_parents_df, entity_type='parent'
         )
 
         # Step 6: Construct Unique Child List
         unique_children_df = entity_matcher.construct_unique_child_list(deduplicated_data_frames)
 
         # Step 7: Enrich DataFrames with Unique IDs
+        # Need rework: might work best if enrich with parent id only.
         enriched_data_frames = entity_matcher.enrich_data_frames_with_unique_ids(
-            deduplicated_data_frames, unique_parents_df, unique_children_df
+            deduplicated_data_frames, unique_children_df,entity_type='child'
         )
 
         # Step 8: Display Enriched DataFrames

@@ -1,0 +1,38 @@
+{
+    "guide_ArticleSum": {
+        "value": "- Read the entire article to understand overall content and structure.\n- Determine the main objective or thesis of the article\n- Locate and mark key points, arguments, and conclusions in each section.\n- Jot down important evidence, examples, or data that reinforce the main ideas.\n- Rewrite the main ideas and supporting details\n- Combine the paraphrased points into a coherent and concise narrative.\n- Compare the summary with the original article to ensure accuracy and completeness, making adjustments as needed.",
+        "num_tokens": 82,
+        "timestamp": "2024-12-10T08:16:26.699882",
+        "origin": "prompt"
+    },
+    "get_rawSum": {
+        "value": "I have the following content:\n{{sample_content}}\n\nFor context, I work in FedRAMP.\n{{context_FedRAMP}}\n\nPlease summarize the content considering the context and the following summarization guide:\n{{guide_ArticleSum}}",
+        "num_tokens": 26,
+        "timestamp": "2024-12-10T08:20:40.927209",
+        "origin": "prompt"
+    },
+    "guide_sum4personas": {
+        "value": "- Analyze the given persona.\n- Ascertain what each persona values and requires from the summary (e.g. , high-level insights for executives, technical details for engineers).\n- Adjust content focus, highlight relevant sections.\n- Customize language and tone.\n- Present the summary in a format suitable for each group.\n- If possible, use examples or scenarios that align with each persona's responsibilities and interests",
+        "num_tokens": 64,
+        "timestamp": "2024-12-10T08:34:28.099973",
+        "origin": "response"
+    },
+    "get_targetedSum": {
+        "value": "I have the following content:\n{{sample_content}}\n\nI have the following context:\n{{context_FedRAMP}}\n\nI target the following persona:\n________\n\nI have the following guide for summarizing an article:\n{{guide_ArticleSum}}\n\nI have the following guide for tailoring summation to a targeted persona:\n{{guide_sum4personas}}\n\nPlease summarize the content considering the context, the targeted personal, and related guides. \n",
+        "num_tokens": 54,
+        "timestamp": "2024-12-10T08:42:32.686433",
+        "origin": "prompt"
+    },
+    "persona_FRdirector": {
+        "value": "**Responsibilities:**\n- Program Oversight: Lead the FedRAMP Program Management Office (PMO) in operating a security authorization process that meets federal agencies' needs and provides a navigable framework for cloud service providers.\n- Policy Guidance: Collaborate with the FedRAMP Board to approve and guide policies, ensuring the program's health and performance.\n- Stakeholder Engagement: Build and foster strong partnerships with FedRAMP stakeholders, including federal agencies, cloud service providers, and third-party assessment organizations.\n- Program Expansion: Grow the use of secure cloud technologies within government agencies and enhance the framework for securing and authorizing these technologies.\nFedRAMP\n\n**Goals:**\n- Accelerate Cloud Adoption: Increase the adoption of secure cloud services across federal agencies by streamlining the authorization process and reducing barriers for cloud service providers.\n- Enhance Security Frameworks: Continuously improve FedRAMP's security assessment and authorization processes to address evolving cybersecurity threats and technological advancements.\n- Promote Collaboration: Engage with industry and government stakeholders to ensure FedRAMP policies and processes are transparent, efficient, and aligned with best practices.\n\n**Challenges:**\n- Evolving Cyber Threats: Staying ahead of emerging cybersecurity threats and ensuring that authorized cloud services maintain robust security postures.\n- Process Efficiency: Balancing the need for thorough security assessments with the demand for timely authorizations to facilitate rapid cloud adoption.\n- Resource Management: Allocating sufficient resources to support the growing number of cloud service providers seeking FedRAMP authorization while maintaining high assessment standards.\n\n**Communication Preferences:**\n- Data-Driven Insights: Values concise, data-driven reports that highlight key metrics and trends relevant to cloud security and program performance.\n- Strategic Alignment: Prefers communications that align with FedRAMP's strategic goals and offer actionable recommendations for program improvement.\n- Collaborative Dialogue: Encourages open and transparent discussions with stakeholders to foster collaboration and mutual understanding.",
+        "num_tokens": 286,
+        "timestamp": "2024-12-10T09:15:07.242544",
+        "origin": "response"
+    },
+    "get_targetedSum2": {
+        "value": "I have the following context:\n{{context_FedRAMP}}\n\nI target the FedRAMP Director persona with the following details:\n{{persona_FRdirector}}\n\nI have the following guide for summarizing an article:\n{{guide_ArticleSum}}\n\nI have the following guide for tailoring summation to a targeted persona:\n{{guide_sum4personas}}\n\nThe content to summarize is as follows:\n{{sample_content}}\n\nPlease summarize the content considering the context, the FedRAMP Director persona, and the above guides. \n",
+        "num_tokens": 63,
+        "timestamp": "2024-12-10T09:28:15.900391",
+        "origin": "prompt"
+    }
+}

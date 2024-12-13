@@ -78,7 +78,7 @@ def handle_missing_data(df, strategy, default_value=None, missing_threshold=0.5)
         raise ValueError(f"Unsupported missing data handling strategy: {strategy}")
     return df
 
-def select_fields(df, file_name, idx):
+def select_fields(df, file_name, idx): #potentially deprecated func
     """
     Allow the user to select fields from the DataFrame.
 
@@ -146,7 +146,7 @@ def select_fields(df, file_name, idx):
     }
     return selected_fields
 
-def load_and_preprocess_files(uploaded_files):
+def load_and_preprocess_files(uploaded_files): # potentially deprecated func
     """
     Load and preprocess multiple uploaded files.
 
