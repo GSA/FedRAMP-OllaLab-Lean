@@ -197,15 +197,10 @@ with st.sidebar:
             try:
                 models_response = openai_client.models.list()
                 # Filter models to only include chat models
-                allowed_models = ['gpt-3.5-turbo', 'gpt-4', 'gpt-4o', 'gpt-4o-mini', 'o1-mini', 'o1-preview']
+                allowed_models = ['gpt-4o', 'gpt-4o-mini', 'o1-mini', 'o1-preview', 'o1', 'o3'] # o3 is not available on API yet
                 model_names = [model.id for model in models_response.data if model.id in allowed_models]
-                if not model_names:
-                    st.warning("No permitted models available for your OpenAI API key.")
-                    # Allow manual input
-                    model_names = []
             except Exception as e:
                 st.warning(f"Error retrieving models from OpenAI: {e}")
-                # Allow manual input
                 model_names = []
             if model_names:
                 selected_model = st.selectbox(
@@ -214,22 +209,7 @@ with st.sidebar:
                     index=0
                 )
             else:
-                st.info("Enter model name manually:")
-                selected_model = st.text_input("Model Name")
-                if selected_model:
-                    # Test the model by making a small query
-                    try:
-                        response = openai_client.chat.completions.create(
-                            model=selected_model,
-                            messages=[{"role": "user", "content": "Hello"}],
-                        )
-                        st.success("Model is accessible and ready.")
-                    except Exception as e:
-                        st.error(f"Failed to access the model: {e}")
-                        st.stop()
-                else:
-                    st.warning("Please enter a model name.")
-                    st.stop()
+                st.stop()
     elif selected_provider == "Google Vertex AI":
         st.subheader("Google Vertex AI Configuration")
         # Get project ID and location
