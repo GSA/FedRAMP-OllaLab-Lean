@@ -1,22 +1,30 @@
 # Problem Statement
 
-In interacting with LLMs, the quality of questions directly impacts the quality of answers. Prompt Engineering is all about crafting the best possible questions (prompts). Robust Prompt Engineering will help FedRAMP, GSA members, and all internal/external Stakeholders engage more effectively with LLMs.
+In interacting with LLMs, the quality of questions directly impacts the quality of answers. Prompt Engineering is all about crafting the best possible questions (prompts). Robust Prompt Engineering will help FedRAMP, GSA members, and all internal/external Stakeholders engage more effectively with LLMs in solving any kind of problems.
 
-Mainstream chat interfaces such as those provided by OpenAI and Anthropic have all or some of the following limitations:
+Mainstream chat application interfaces such as those provided by OpenAI and Anthropic have all or some of the following limitations:
 - Lack of selective inclusion of chat results for more precise context
 - Lack of abstraction interface for better content navigation and awareness
 - Lack of back-up mechanisms for both prompts and results
 - Lack of flexibility in sharing different abstractions of chat results
 - Lack of supports for teamwork and convenient reusability
 
-OllaLab - SimpleChat aims to solve the above limitations by providing key features of:
-- Selectively save LLM responses to prompt variables
-- Save prompts to prompt variables
-- Automatically extract user-specified local folders and files to prompt variables
-- Embed prompt variables in future prompts
-- Chain prompt variables to form new variables
-- Allow convenient share and reuse prompt variables
-- Provide other automation/integration features
+OllaLab - SimpleChat aims to:
+1. Improve context building by allowing users to:
+  - Selectively save LLM responses to prompt variables
+  - Save prompts to prompt variables
+  - Automatically extract user-specified local folders and files to prompt variables
+  - Embed prompt variables in any fashion in prompts
+2. Improve content abstraction with supports for:
+  - Prompt variable chaining
+  - Prompt variable files containing prompt chains
+3. Improve prompt back-up mechanisms by allowing the users to:
+  - Save modified prompt versions to prompt variables
+  - Commit prompt variable files to versioning platforms like GitHub
+4. Provide flexibility in sharing chat results and team collaboration by:
+  - Allow convenient share and reuse prompt variables
+  - Allow prompt variable file to be shared using existing systems' file sharing features
+  - Provide other automation/integration features
 
 
 # Input Description
@@ -44,36 +52,67 @@ Program variables are saved in the simplechat.yaml file
 - Maximum context window (context_window): The maximum number of tokens that can be used as input for LLMs. The default value is 128000.
 - Supported LLM platforms (llm_platform): A comma-separated list of supported LLM platforms. The default value is "Ollama, OpenAI, Google Vertex AI, Amazon Bedrock, Anthropic".
 - Guard server (guard_server): The url of the LLM guard server. The default value is "empty".
-- Monitoring server (monitoring_server): The url of the LLM monitoring server. The default value is "empty".
+- Monitoring server (monitoring_server): The url of the LangFuse LLM monitoring server. The default value is "empty".
 - Selected LLM platform (selected_provider): The LLM platform that the application will leverage. The default value is "Ollama".
 - Selected LLM endpoint (selected_endpoint): The LLM endpoint that the application will leverage. The default value is "http://127.0.0.1:11434".
-
+- Allowed OpenAI models (allowed_openai_models): A comma-separated list of allowed OpenAI models. The default value is 'gpt-4o', 'gpt-4o-mini', 'o1-mini', 'o1-preview', 'o1', 'o3'
+- Allowed Google Vertex models (allowed_vertex_models): A comma-separated list of allowed Google Vertex models. The default value is "chat-bison@001"
+- Allowed AWS Bedrock models (allowed_bedrock_models): A comma-separated list of allowed AWS Bedrock models. The default value is - - Allowed Anthropic models (allowed_anthropic_models): A comma-separated list of allowed Anthropic models. The default value is "anthropic.claude-v2", "ai21.j2-jumbo-instruct"
+'claude-3-5-sonnet-latest', 'claude-3-5-haiku-latest', 'claude-3-opus-latest', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307'
 **Prompt Variable Values**:
 - promptvariable_filepath: the path to the folder hosting all prompt variable files. The default value is /app/simple_chat/prompt_variables
 - data_filepath: the path to the folder hosting all data folders and files. The default value is /app/simple_chat/data_files
-- default_filename: the default name for a json prompt variable file when there is no existing prompt variable file. The default value is "default__promptvariables.json"
-- postfix_filename: the text to append to the end of a user-declared file name for a prompt variable file. The default value is "_promptvariables"
+- default_filename: the default name for a json prompt variable file when there is no existing prompt variable file. The default value is "default__promptvariables.json".
+- postfix_filename: the text to append to the end of a user-declared file name for a prompt variable file. The default value is "_promptvariables".
 
 ## 3\. LLM endpoint selection and configuration
 **User interface**
-- Display the user interface for LLM endpoint selection and configuration on the side bar
-- Get the list of supported LLM platforms from llm_platform
+- Display the user interface for LLM endpoint selection and configuration on the side bar. The whole LLM endpoint selection and configuration can be collapsed and is expanded by default.
+- Get the list of supported LLM platforms from llm_platform.
 - Follow the default values for LLM endpoint and check if a connection with the default endpoint can be made.
-- If there is an issue with the default endpoint, ask user to select a platform from the list
-- For a selected platform, present the user with options to properly configure the platform API
+- If there is an issue with the default endpoint, ask user to select a platform from the list.
+- For a selected platform, present the user with options to properly configure the platform API.
 - Once connection is successfully established with the selected LLM endpoint, fetch a list of LLMs supported by the platform, allow the user to select which supported LLM model to use.
-- At anytime, user can use the interface to change the LLM platform and/or LLMs
-- Use proper mechanisms to sustain/persist user-selected values until user decide to change them.
+- At anytime, user can use the interface to change the LLM platform and/or LLMs.
+- Use proper mechanisms to sustain/persist user-selected values and configurations until user decide to change them.
 **Configuring Ollama**
-- tba
+- The default endpoint is "Localhost": "http://127.0.0.1:11434"
+- An alternative endpoint is "Docker Internal": "http://host.docker.internal:8000"
+- User also has nother option to input custom Ollama endpoint.
+- Once endpoint is configured and confirmed, connect to the endpoint and provide error message if connection is unsuccessful
+- Upon successful connection, fetch available models in Olllama. If there is no model available, instruct the user to load at least an LLM in Ollama.
+- Upon successfully fetch model, ask the user to select a model.
+- Test the model by submiting a prompt. If the model does not respond, display an error message.
 **Configuring OpenAI**
-- tba - make sure to use encryption to encrypt the keys
+- Get openAI API key from the user.
+- Load a list of allowed openAI models (allowed_openai_models).
+- Fetch available openAI models and only allow the models that are in allowed_openai_models.
+- Upon successfully fetch model, ask the user to select a model.
+- Test the model by submiting a prompt. If the model does not respond, display an error message.
 **Configuring Anthropic**
-- tba - make sure to use encryption to encrypt the keys
+- Ask the user to input  Anthropic API Key
+- Load a list of allowed Anthropic models (allowed_anthropic_models)
+- Fetch available openAI models and only allow the models that are in allowed_anthropic_models.
+- Upon successfully fetch model, ask the user to select a model.
+- Test the model by submiting a prompt. If the model does not respond, display an error message.
 **Configuring Google Vertex AI**
-- tba
+- Ask user to input Google Cloud Project ID
+- Ask user to input cloud location
+- Ask user to upload Service Account JSON Key File
+- Initialize the AI platform
+- Try to fetch available models from the platform
+- Only allow the models that are in allowed_vertex_models
+- Upon successfully fetch model, ask the user to select a model.
+- Test the model by submiting a prompt. If the model does not respond, display an error message.
 **Configuring Amazon Bedrock**
-- tba
+- Ask user to input AWS Access Key ID
+- Ask user to input AWS Secret Access Key
+- Ask user to input AWS Session Token (optional)
+- Ask user to input AWS Region
+- Initialize boto3 client
+- Fetch available models that are allowed in allowed_bedrock_models
+- Upon successfully fetch model, ask the user to select a model.
+- Test the model by submiting a prompt. If the model does not respond, display an error message.
 
 ## 4\. The main application interface
 The Simple Chat application interface contains the side bar and the main application interfaces. The main application interface can be described as follows:
@@ -205,8 +244,22 @@ The Simple Chat application interface contains the side bar and the main applica
 - Load the file from the prompt variable folder (promptvariable_filepath)
 - When saveing a prompt varible file, saves the file as a json with indent=4 to the prompt variable folder (promptvariable_filepath)
 
-## 7\. Supports for Apache AirFlow
+## 7\. LLM Monitoring and Guard
+- >>>>>>>tba - decorator based
+
+## 8\. Supports for Apache AirFlow
 - >>>>>>>tba
+
+## 9\. Supports for Cybersecurity Continuous Monitoring
+### a\. Continuous Penetration testing of AI features
+**Executable benchmarks**
+- >>>>>>>tba - benchmark datasets (including benchmarking guard and security features) for both local and cloud based LLMs
+**Agent-based penetration testing**
+- >>>>>>>tba - API for continuous automatic agent-based penetration testing
+### b\. Continuous Penetration testing of non-AI features
+- >>>>>>>tba - test cases, web-based pen-test, etc.
+### c\. Compliance checks
+- >>>>>>>tba - how to generate OSCAL details from program codes
 
 ## 8\. User Interface and Experience Improvements
 To enhance usability:

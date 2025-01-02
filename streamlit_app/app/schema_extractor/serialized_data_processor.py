@@ -31,7 +31,7 @@ def process_serialized_data(sanitized_data):
     parsed_data = parse_serialized_data(sanitized_data)
     if parsed_data:
         # Perform Exploratory Data Analysis
-        perform_eda(parsed_data)
+        #perform_eda(parsed_data)
         # Extract Data Schemas
         extracted_schemas = extract_schema(parsed_data)
         # Validate Data Against Schemas
