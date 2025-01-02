@@ -2,3 +2,4 @@
 __pycache__/
 *.pyc
 .DS_Store
+streamlit_app/app/FR_Demo_promptvariables.json
