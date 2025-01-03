@@ -216,12 +216,13 @@ Program variables are saved in the simplechat.yaml file. The variable details ar
 The Simple Chat application graphical user interface contains the side bar and the main application graphical user interfaces. The main application graphical user interface can be described as follows:
 #### The Prompt Composer section
 - The Promp Composer section is in the same row with the Prompt Variable Management section and occupies 60% of the row width.
-- The title of the section (for user to see) is "Craft your question".
+- The title of the section is "Craft a question".
 - Below the section title is a text area input text box containing user's input lines of texts.
 - Below the input text area is the Prompt Infomatic Area.
 - Below the Prompt Infomatic Area is the Prompt Action Area.
 - A user can reference a prompt variable by enclosing the prompt variable name within {{ and }}. A prompt variable is basically a chunk of texts that was saved and may contain other prompt variables, using the same referencing method of {{ and }}.
-- A referenced prompt variable may or may not exist in a selected prompt variable file.
+- A referenced prompt variable may or may not exist in a selected prompt variable file. If a referenced prompt variable does not exist, it will be shown in the Prompt Infomatic Area.
+- No special character is allowed in the text area.
 **Prompt Infomatic Area**
 - Context window: display the context window size in tokens from context_window
 - Prompt tokens: display the total token number based on all texts within the user input prompt, and the texts in all of the prompt variables referenced by the prompt and the referencing prompt variables. The user input prompt token number is updated as user types the prompt. The prompt variable token number is updated after the related prompt variable(s) is modified and saved.
@@ -233,7 +234,7 @@ The Simple Chat application graphical user interface contains the side bar and t
 - Improve prompt: a button for user to ask LLM for potential prompt improvements. Click this button will open the prompt improvement graphical user interface.
 - All these buttons should be in the same row.
 **Prompt variable creation from prompt graphical user interface**
-- The prompt variable creation graphical user interface is within a modal dialog.
+- The prompt variable creation from prompt graphical user interface is within a modal dialog.
 - Ask the user to input variable name.
 - The prompt variable type will be "Question".
 - Follow section 6\. Promp Variable Management for procedures to properly create the prompt variable of "Question" type.
@@ -249,20 +250,46 @@ The Simple Chat application graphical user interface contains the side bar and t
   - Problem solving: user prompt tries to solve a relatively complex problem (more complex than instructional prompt)
   - Exploratory: user prompt is trying to explore ideas or brainstorm a solution
   - Evaluation: user prompt asks the AI to provide constructive feedback or evaluate content
->>>>>> prompt_improvement_instruction - tba
+- Suggest Prompt Improvements: this is a button which executes the following upon click:
+  - Load prompt_improvement_instruction to the `prompt_improvement_instruction` program variable.
+  - Load quality control questions for the selected prompt type to the `prompt_improvement_questions` program variable.
+  - Load current text area input text box content to the `user_prompt` program variable.
+  - Build a prompt improvement prompt with the following
+    "
+    We have the following prompt:
+    `user_prompt`
+
+    Please improve the prompt using the following prompt improvement instructions:
+    `prompt_improvement_instruction`
+    while thinking carefully about the following questions:
+    `prompt_improvement_questions`
+    "
+  - Send the prompt improvement prompt to the main LLM for response.
+  - Close out of the modal dialog so that the user can see the LLM's response.
 
 #### The Prompt Variable Management section
-**Prompt variable file user interface**:
+- The title of the section is "Prompt Variable Management".
+- Below the title is a prompt variable file selection box with the default prompt variable file selected.
+- Below the prompt variable file selection box are Prompt variable display tabs.
+- Click any of the displayed variables will open up the View/update prompt variable interface.
+- Below the prompt variable display tabs is a row of "Create prompt variable" and "Clone prompt variable" buttons.
+- Clicking the "Create prompt variable" button will open the Create prompt variable interface.
+- Clicking the "Clone prompt variable" button will open the Clone prompt variable interface.
+**Prompt variable file selection box**:
 - Prompt variable files are loaded, ordered alphabetically and displayed within a drop down box in the application side bar. User selects one prompt variable file to use.
 - When a new prompt variable file was successfully created and saved, update the drop down box.
 - User can click the "Create new prompt variable file" button to create new prompt variable file. Once clicked, a streamlit dialog box appears with options for user to create a new file.
-**Modify/update prompt variable interface**
+**Prompt variable display tabs**
 - tba
-**Load and display prompt variable content and statistics**
+**View/update prompt variable interface**
 - Display a user-clicked prompt variable content and statistics in a st.dialog
 - Integrity check
 - Dependency check (both parent and child)
 - Tokens
+**Create prompt variable interface**
+- tba
+**Clone prompt variable interface**
+- tba
 #### The LLM Response Section
 - tba
 - Allow comparision of two LLMs
