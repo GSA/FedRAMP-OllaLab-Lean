@@ -304,7 +304,7 @@ The Simple Chat application graphical user interface contains the side bar and t
   - Display the components of the prompt variable.
   - Display Integrity check result.
   - Display Dependency check
-  - Display a row of "Modify" and "Close" buttons.
+  - Display a row of "Update" and "Close" buttons.
   - If "Close" is clicked, close out the modal dialog.
   - Display the Update prompt variable option appropriate for the prompt variable type. The detailed processes are in section 6\. Promp Variable Management.
 - **Create prompt variable interface**
@@ -399,12 +399,15 @@ The Simple Chat application graphical user interface contains the side bar and t
   - Update logs: when there is a new "Latest time" value, append the value to this updated logs comma-separated list.
 **Create prompt variables of "Web" type**
 - Ask user to put in the name of the variable.
-- Crawl and extract a website content using user-provided url and optional div tag. Once a div tag is provided, only extract html content within the div tag. Clean up extracted texts.
+- User can optionally provide multiple div tags.
+- Crawl and extract a website content using user-provided url and the optional div tags. If div tags are provided, only extract html content within the div tags.
+- Clean up the extracted texts.
+- Create a Source object that contains the  user-provided url and the optional div tags. The program can later use this Source object to revisit the website and extract the contents again.
 - Create a prompt variable of type "Web" with the user-provided variable name.
 - Save the variable with the following additional values
   - Variable value:
     - Texts: the cleaned up extracted texts
-    - Source: the user-provided url
+    - Source: the Source object
   - Creation time: The time right before the variable was first saved to a variable file.
   - Latest time: The time when the url was last visited, its content was successfully extracted, and the variable is successfully updated. The default value is the Creation time.
   - Hash: The hash of the content of Variable value - Texts and Salt.
@@ -444,62 +447,180 @@ The Simple Chat application graphical user interface contains the side bar and t
 - Compare the hash result with the prompt variable's hash.
 - Integrity check is passed if the two hash values are the same.
 **Dependency check**
-- tba
+- To be performed when a prompt variable is referenced by the user. The prompt variable can be referenced by other parent prompt variables and/or referencing other child prompt variables in its Variable value - Texts.
+- The Dependency Check will check and report any identified issues with both parent and child prompt variables.
+- The potential issues to be checked are:
+  - The parent/child variables do not exist.
+  - The parent/child variables are empty.
+  - The parent/child variables reference prompt variables that are either empty or do not exist. 
 **Update prompt variables of "File" type**
-- Done automatically, can't be manipulated by the user.
+- This process is done automatically each time a prompt variable of "File" type is referenced by the user's prompt.
+- The "File" type variable value is updated following the same process in Create prompt variables of "File" type.
+- Only update the variable and its child variables when there are changes in folder structures, folder/file names, folder/file contents.
 **Update prompt variables of "Web" type**
-- Variable value:
-  - Texts:
-  - Source:
-- Creation time:
-- Latest time:
-- Hash
-- Update logs:
+- In the View/update prompt variable interface, when user click the "Update" button, the Variable value - Source object will be parsed. The application will visit the website and perform proper content extraction of either the whole website or the content within the div tags.
+- If there are issues, report the issues to user and do not update the Variable value - Texts.
+- Potential issues are:
+  - Website refuses to serve the expected content.
+  - Website requires bot verification.
+  - Website is temporarily unavailable.
+  - Website takes too long to load.
+  - The specified div tags are no longer available.
+- If there is no issue, update the variable with the following:
+  - Variable value:
+    - Texts: will be updated if the extracted texts are different from the existing texts.
+    - Source: the Source object should remain the same.
+  - Creation time: remain the same
+  - Latest time: The time immediately before the variable was updated on the variable file.
+  - Hash: The hash of the content of newly extracted Variable value - Texts and Salt.
+  - Update logs: Append the Latest time
 **Update prompt variables of "API" type**
+- In the View/update prompt variable interface, when user click the "Update" button, the Variable value - Source object (the API query object) will be parsed. Based on the parsed result, the application will properly connect to the API endpoint and query the endpoint to gather a result object.
+- If there are issues, report the issues to user and do not update the Variable value - Texts.
+- Potential issues are:
+  - Authentication and authorization issues.
+  - Request formating errors which can happen due to changes/upgrades on the API host.
+  - Network issues such as connnection timeout.
+  - Exceeded API rate limit.
+  - API deprecation or changes.
+  - Data related issues such as requesting too much data in a single query.
+- If there is no issue, update the variable with the following:
 - Variable value:
-  - Texts:
-  - Source:
-- Creation time:
-- Latest time:
-- Hash
-- Update logs:
-**Update prompt variables of other types**
-- Variable value:
-  - Texts:
-  - Source:
-- Creation time:
-- Latest time:
-- Hash
-- Update logs:
+  - Texts: the updated cleaned up API texts
+  - Source: remain the same
+- Creation time: remain the same
+- Latest time: The time immediately before the variable was updated on the variable file.
+- Hash: The hash of the content of newly extracted Variable value - Texts and Salt.
+- Update logs: Append the Latest time
+**Update prompt variables of Question or Answer types**
+- In the View/update prompt variable interface, the user is able to make changes to the variable Value - Texts box.
+- After the user made the changes and when user click the "Update" button, update the variable with the following values
+  - Variable value:
+    - Texts: the user updated texts
+    - Source: remain the same
+  - Creation time: remain the same
+  - Latest time: The time immediately before the variable was updated on the variable file.
+  - Hash: The hash of the content of newly extracted Variable value - Texts and Salt.
+  - Update logs: Append the Latest time
 
 ### 7\. External API Integration
+- tba
+#### 7a\. Threat Intelligence
+- **Government Sources**
+  - National Vulnerability Database 	U.S. National Vulnerability Database https://nvd.nist.gov/vuln/Data-Feeds/JSON-feed-changelog
+  - 
+- **Industry Sources**
+  - AlienVault Open Threat Exchange (OTX) 	https://otx.alienvault.com/api 	IP/domain/URL reputation 	FREE
+  - FullHunt 	Searchable attack surface database of the entire internet https://api-docs.fullhunt.io/#introduction
+  - PhishStats 	Phishing database https://phishstats.info/#apidoc
+  - Spamhaus https://www.spamhaus.com/product/intelligence-api/
+  - Cisco PSIRT https://developer.cisco.com/psirt/
+- **Community Sources**
+  - [Bugcrowd](https://docs.bugcrowd.com/api/getting-started/) 	Bugcrowd API for interacting and tracking the reported issues programmatically
+  - HackerNews 	https://github.com/HackerNews/API 	Social news for CS and entrepreneurship 	FREE
+  - Bing Web Search API 	https://www.microsoft.com/en-us/bing/apis/bing-web-search-api 	Search in Bing (+instant answers and location) 	1000 transactions per month FREE
+  - Google Custom Search JSON API 	https://developers.google.com/custom-search/v1/overview 	Search in Google 	100 requests FREE
+
+#### 7b\. Malware
+- VirusTotal 	https://developers.virustotal.com/reference 	files and urls analyze 	Public API is FREE
+- Malpedia - https://malpedia.caad.fkie.fraunhofer.de/usage/api
+#### 7c\. Network Intelligence
+- **Network Operations**
+  - Shodan 	Search engine for Internet connected devices
+  - Cloudflare Trace 	https://github.com/fawazahmed0/cloudflare-trace-api 	Get IP Address, Timestamp, User Agent, Country Code, IATA, HTTP Version, TLS/SSL Version & More 	FREE
+  - Shodan 	https://developer.shodan.io 
+  - Censys.io 	https://censys.io/api
+  - Host.io 	https://host.io/ 	Get info about domain 	FREE
+  - BeVigil OSINT API 	https://bevigil.com/osint-api 	provides access to millions of asset footprint data points including domain intel, cloud services, API information, and third party assets extracted from millions of mobile apps being continuously uploaded and scanned by users on bevigil.com 	50 credits free/1000 credits/$50
+  - EVA 	https://eva.pingutil.com/ 	Measuring email deliverability & quality 	FREE
+  - Kickbox 	https://open.kickbox.com/ 	Email verification API 	FREE
+  - FachaAPI 	https://api.facha.dev/ 	Allows checking if an email domain is a temporary email domain 	FREE
+- **Network Archive**
+  - Wayback Machine API (Memento API, CDX Server API, Wayback Availability JSON API) 	https://archive.org/help/wayback_api.php 	Retrieve information about Wayback capture data 	FREE
+  - TROVE (Australian Web Archive) API 	https://trove.nla.gov.au/about/create-something/using-api 	Retrieve information about TROVE capture data 	FREE
+  - UK Web Archive API 	https://ukwa-manage.readthedocs.io/en/latest/#api-reference 	Retrieve information about UK Web Archive capture data 	FREE
+  - Library Of Congress archive API 	https://www.loc.gov/apis/ 	Provides structured data about Library of Congress collections 	FREE
+  - BotsArchive 	https://botsarchive.com/docs.html 	JSON formatted details about Telegram Bots available in database 	FREE
+- **Crypto Networks**
+  - BTC.com 	https://btc.com/btc/adapter?type=api-doc 	get information about addresses and transanctions 	FREE
+  - Bitcointabyse 	https://www.bitcoinabuse.com/api-docs 	Lookup bitcoin addresses that have been linked to criminal activity 	FREE
+  - Bitcoinwhoswho 	https://www.bitcoinwhoswho.com/api 	Scam reports on the Bitcoin Address 	FREE
+  - Etherscan 	https://etherscan.io/apis 	Ethereum explorer API 	FREE
+  - BlockFacts 	https://blockfacts.io/ 	Real-time crypto data from multiple exchanges via a single unified API, and much more 	FREE
+  - Brave NewCoin 	https://bravenewcoin.com/developers 	Real-time and historic crypto data from more than 200+ exchanges 	FREE
+  - WalletLabels 	https://www.walletlabels.xyz/docs 	Labels for 7,5 million Ethereum wallets 	FREE
+
+#### 7d\. News and Geo-Political Intelligence
+- **Cybersecurity News**
+  - tba
+- **US Government News**
+  - tba
+  - sources on policies and legislation?
+  - FDIC Bank Data API 	https://banks.data.fdic.gov/docs/ 	institutions, locations and history events 	FREE
+- **World News**
+  - tba
+- **Geo-Social-Intelligence**
+  - Linkedin company search API 	https://docs.microsoft.com/en-us/linkedin/marketing/integrations/community-management/organizations/company-search?context=linkedin%2Fcompliance%2Fcontext&tabs=http 	Find companies using keywords, industry, location, and other criteria 	FREE
+  - US Street Address 	https://smartystreets.com/docs/cloud/us-street-api 	Validate and append data for any US postal address 	FREE
+  - Zipcodebase 	https://zipcodebase.com 	Lookup postal codes, calculate distances and much more 	5000 requests FREE
+  - Veriphone 	https://veriphone.io/ 	Phone number validation & carrier lookup 	1000 requests/month FREE
+  - Twillo 	https://www.twilio.com/docs/lookup/api 	Provides a way to retrieve additional information about a phone number 	Free or $0.01 per request (for caller lookup)
+  - Ipstack 	https://ipstack.com 	Detect country, region, city and zip code 	FREE
+  - Alpaca 	https://alpaca.markets/docs/api-documentation/api-v2/market-data/alpaca-data-api-v2/ 	Realtime and historical market data on all US equities and ETFs 	FREE
+  - Genderize.io 	https://genderize.io 	Instantly answers the question of how likely a certain name is to be male or female and shows the popularity of the name. 	1000 names/day free
+  - Nataonalize.io 	https://nationalize.io 	Predicts the nationality of a person given their name 	1000 names/day free
+
+#### 7e\. Social Networks
+- Twitter API 	https://developer.twitter.com/en 		
+- Linkedin API 	https://docs.microsoft.com/en-us/linkedin/ 		
+- All Facebook and Instagram API 	https://developers.facebook.com/docs/
+- Reddit 	https://www.reddit.com/dev/api/
+- Telegram and Telegram Bot API 	https://core.telegram.org 		
+- Weibo API 	https://open.weibo.com/wiki/API文档/en 		
+- XING 	https://dev.xing.com/partners/job_integration/api_docs 		
+- Viber 	https://developers.viber.com/docs/api/rest-bot-api/ 		
+- Discord 	https://discord.com/developers/docs
+- Blogger 	https://developers.google.com/blogger/ 	The Blogger APIs allows client applications to view and update Blogger content 	FREE
+- Disqus 	https://disqus.com/api/docs/auth/ 	Communicate with Disqus data 	FREE
+- Foursquare 	https://developer.foursquare.com/ 	Interact with Foursquare users and places (geolocation-based checkins, photos, tips, events, etc) 	FREE
+- Kakao 	https://developers.kakao.com/ 	Kakao Login, Share on KakaoTalk, Social Plugins and more 	FREE
+- Line 	https://developers.line.biz/ 	Line Login, Share on Line, Social Plugins and more 	FRE
+- Social Links 	https://sociallinks.io/products/sl-api (paid)
+
+#### 7f\. Research & Development
 - tba
 
 ### 8\. LLM Monitoring and Guard
 - >>>>>>>tba - decorator based
 
-### 9\. Supports for Apache AirFlow
+### 9\. Supports for API Interface
+- The python code must support the building of a robust API interface based on FastAPI and Kong Gateway.
+- The API will be RESTful.
+- The API can be divided into service categories.
+- The API uses OpenAPI specification.
 - >>>>>>>tba
 
-### 10\. Supports for Cybersecurity Continuous Monitoring
+### 10\. Supports for Apache AirFlow
+- >>>>>>>tba
+
+### 11\. Supports for Cybersecurity Continuous Monitoring
 #### a\. Continuous Penetration testing of AI features
 **Executable benchmarks**
 - >>>>>>>tba - benchmark datasets (including benchmarking guard and security features) for both local and cloud based LLMs
 **Agent-based penetration testing**
 - >>>>>>>tba - API for continuous automatic agent-based penetration testing
 #### b\. Continuous Penetration testing of non-AI features
-- Unit Testing:
-  - Develop unit tests for each function and component.
-  - Use test-driven development practices where feasible.
-- Performance Testing:
-  - Evaluate performance with datasets of varying sizes and complexities.
-  - Optimize algorithms based on profiling results.
+**Unit Testing**
+- Develop unit tests for each function and component.
+- Use test-driven development practices where feasible.
+**Performance Testing**
+- Evaluate performance with datasets of varying sizes and complexities.
+- Optimize algorithms based on profiling results.
 - >>>>>>>tba - test cases, web-based pen-test, etc.
 #### c\. Compliance checks
 - >>>>>>>tba - how to generate structured compliance details from program codes and documentations
 
-### 11\. User Interface and Experience Improvements
-To enhance usability:
+### 12\. User Interface and Experience Improvements
 - Organize UI elements logically, using tabs, accordions, or multi-step forms to manage complexity.
 - Progress Indicators:
   - Display progress bars or status updates during lengthy operations.
@@ -512,18 +633,20 @@ To enhance usability:
   - Present clear, actionable error messages.
   - Guide users on how to resolve issues when they occur.
 
-### 12\. Testing, Validation, Documentation, and Extensibility
-
-To ensure reliability and future-proofing:
+### 13\. Testing, Validation, Documentation, and Extensibility
+**To ensure reliability and future-proofing:**
 - Extensibility:
   - Design the system to handle multiple datasets beyond just two.
   - Support additional data formats (e.g., JSON, XML) and database connections.
   - Modularize components to allow for easy updates and feature additions.
 
-To aid users and developers:
+**To aid users and developers:**
 - Comprehensive Documentation:
+  - Provide professional github md files.
   - Provide a detailed user manual with step-by-step instructions.
   - Include technical documentation for developers, outlining system architecture and codebase.
+  - Use Swagger UI for API documentation.
+  - >>>>>>>>>>>>> TBA
 - Logging and Auditability:
   - Implement detailed logging of user actions and system processes.
   - Store logs securely and provide access for audit purposes if needed.
@@ -532,8 +655,8 @@ To aid users and developers:
   - Offer support channels such as email, chat, or forums.
   - Regularly update documentation with FAQs and troubleshooting tips.
 
-### 13\. Other Considerations
-#### Performance Considerations
+### 14\. Other Considerations
+**Performance Considerations**
 Processing large datasets, especially in a web-based application like Streamlit, can lead to performance bottlenecks.
 
 Recommendations:
@@ -541,7 +664,7 @@ Recommendations:
 - Asynchronous Processing: Use asynchronous programming to prevent the UI from freezing during long operations.
 - Resource Limits: Set limits on the size of files that can be uploaded or provide warnings for large files.
 
-#### Streamlit Execution Flow Optimization
+**Streamlit Execution Flow Optimization**
 Reruns are a central part of every Streamlit app. When users interact with widgets, our script reruns from top to bottom, and our app's frontend is updated. Streamlit provides several features to help us develop our app within this execution model. Streamlit version 1.37.0 introduced fragments to allow rerunning a portion of our code instead of our full script. As our app grows larger and more complex, these fragment reruns help our app be efficient and performant. Fragments give us finer, easy-to-understand control over our app's execution flow.
 
 Streamlit provides a decorator (st.fragment) to turn any function into a fragment function. When we call a fragment function that contains a widget function, a user triggers a fragment rerun instead of a full rerun when they interact with that fragment's widget. During a fragment rerun, only our fragment function is re-executed. Anything within the main body of our fragment is updated on the frontend, while the rest of our app remains the same. 
