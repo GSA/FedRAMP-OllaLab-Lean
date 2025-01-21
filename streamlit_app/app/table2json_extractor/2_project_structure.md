@@ -1,905 +1,1239 @@
-# FedRAMP OllaLab - Table to Json Extractor
-The following sub-sections describe the project's structure.
+# Proposed Project Structure and Function Design for the FedRAMP OllaLab - Table to JSON Extractor
 
-## Detailed Doc-Strings for Functions/Classes
+## 1. Project Folder Structure
+
+```plaintext
+project_root/
+├── README.md
+├── LICENSE
+├── .gitignore
+├── requirements.txt
+├── config/
+│   └── config.yaml
+├── locales/
+│   ├── en/
+│   ├── es/
+│   └── ...
+├── scripts/
+│   ├── maintenance.sh
+│   ├── deploy.sh
+│   └── ...
+├── tests/
+│   ├── unit/
+│   ├── integration/
+│   └── e2e/
+├── .github/
+│   └── workflows/
+│       ├── ci.yml
+│       └── cd.yml
+├── docs/
+│   ├── architecture.md
+│   ├── api_reference.md
+│   ├── user_guide.md
+│   ├── developer_guide.md
+│   └── operational_procedures.md
+└── streamlit_app/
+    └── app/
+        ├── main.py
+        ├── logging_config.py
+        ├── monitoring.py
+        ├── config.py
+        ├── pages/
+        │   └── Table2Json_Extractor.py
+        ├── table2json_extractor/
+        │   ├── __init__.py
+        │   ├── data_processing.py
+        │   ├── extraction_parameters.py
+        │   ├── structure_interpretation.py
+        │   ├── user_interface.py
+        │   ├── validation.py
+        │   ├── logging_handlers.py
+        │   ├── locale_manager.py
+        │   ├── accessibility.py
+        │   ├── events.py
+        │   ├── assets/
+        │   │   ├── styles.css
+        │   │   └── templates/
+        │   └── tests/
+        │       ├── __init__.py
+        │       ├── test_data_processing.py
+        │       ├── test_structure_interpretation.py
+        │       └── ...
+        └── ...
+```
+
+## 2. Files and Brief Descriptions
+
+### **Project Root Files**
+
+- **`README.md`**: Provides an overview of the project, setup instructions, and general documentation.
+- **`LICENSE`**: Contains licensing information for the project.
+- **`.gitignore`**: Specifies files and directories to be ignored by Git.
+- **`requirements.txt`**: Lists all Python dependencies required for the project.
+
+### **Configuration and Localization**
+
+- **`config/config.yaml`**: Central configuration file containing application settings.
+- **`locales/`**: Directory containing internationalization files for different languages.
+  - **`locales/en/`**: English language localization files.
+  - **`locales/es/`**: Spanish language localization files.
+
+### **Scripts**
+
+- **`scripts/maintenance.sh`**: Script for performing routine maintenance tasks.
+- **`scripts/deploy.sh`**: Script for automating deployment processes.
+
+### **Tests**
+
+- **`tests/unit/`**: Directory for unit tests of individual modules.
+- **`tests/integration/`**: Directory for integration tests across modules.
+- **`tests/e2e/`**: Directory for end-to-end tests simulating user interactions.
+
+### **Continuous Integration/Deployment**
+
+- **`.github/workflows/ci.yml`**: Configuration for continuous integration workflows.
+- **`.github/workflows/cd.yml`**: Configuration for continuous deployment workflows.
+
+### **Documentation**
+
+- **`docs/architecture.md`**: Detailed description of the system architecture.
+- **`docs/api_reference.md`**: Documentation of APIs and their usage.
+- **`docs/user_guide.md`**: User instructions and tutorials.
+- **`docs/developer_guide.md`**: Guidelines for developers contributing to the project.
+- **`docs/operational_procedures.md`**: Standard operating procedures for system maintenance.
+
+### **Streamlit Application**
+
+- **`streamlit_app/app/main.py`**: Main entry point of the parent Streamlit application.
+- **`streamlit_app/app/logging_config.py`**: Configuration for logging across the application.
+- **`streamlit_app/app/monitoring.py`**: Scripts and tools for application monitoring.
+- **`streamlit_app/app/config.py`**: Application-wide configuration settings.
+
+### **Streamlit Pages**
+
+- **`streamlit_app/app/pages/Table2Json_Extractor.py`**: Streamlit page handling user interactions and displaying results for the Table to JSON Extractor app.
+
+### **Table to JSON Extractor Module**
+
+- **`streamlit_app/app/table2json_extractor/__init__.py`**: Indicates that this directory is a Python package.
+- **`streamlit_app/app/table2json_extractor/data_processing.py`**: Module handling data parsing and ingestion logic.
+- **`streamlit_app/app/table2json_extractor/extraction_parameters.py`**: Handles user-specified extraction parameters.
+- **`streamlit_app/app/table2json_extractor/structure_interpretation.py`**: Logic for interpreting complex table structures.
+- **`streamlit_app/app/table2json_extractor/user_interface.py`**: Components for the web and command-line interfaces.
+- **`streamlit_app/app/table2json_extractor/validation.py`**: Data validation and error correction mechanisms.
+- **`streamlit_app/app/table2json_extractor/logging_handlers.py`**: Custom logging handlers specific to this module.
+- **`streamlit_app/app/table2json_extractor/locale_manager.py`**: Handles internationalization within the module.
+- **`streamlit_app/app/table2json_extractor/accessibility.py`**: Ensures compliance with accessibility standards.
+- **`streamlit_app/app/table2json_extractor/events.py`**: Implements event-driven architecture components.
+- **`streamlit_app/app/table2json_extractor/assets/`**: Contains static files like stylesheets or templates.
+  - **`styles.css`**: Stylesheet for the application.
+  - **`templates/`**: Directory for template files.
+- **`streamlit_app/app/table2json_extractor/tests/`**: Module-specific tests.
+  - **`__init__.py`**
+  - **`test_data_processing.py`**
+  - **`test_structure_interpretation.py`**
+  - **`...`**
+
+## 3. Function and Class Designs with Detailed Doc-strings
+
+Below is the design of the functions and classes needed to implement the program, including detailed doc-strings as per your specifications.
+
+### **Module: data_processing.py**
 
 ---
 
-### **Module: document_parser.py**
-
----
-
-#### **Function: `parse_document(filepath)`**
+#### **Function: parse_documents**
 
 ```python
-def parse_document(filepath):
+def parse_documents(file_paths):
     """
-    Parses a document (MS Word or PDF) and extracts raw tables.
+    Parses multiple documents and extracts raw table data.
 
     Parameters:
-        filepath (str): 
-            - The file path to the document to parse.
+        file_paths (List[str]): 
+            A list of file paths to the documents (MS Word or PDF) to be parsed.
 
     Returns:
-        tables (list of Table): 
-            - A list of raw Table objects extracted from the document.
+        List[Document]:
+            A list of Document objects containing extracted table data and metadata.
 
     Raises:
-        FileNotFoundError: 
-            - If the specified file does not exist.
-        UnsupportedFileTypeError: 
-            - If the file type is neither .docx nor .pdf.
-        DocumentParseError: 
-            - If there is an error parsing the document.
+        FileNotFoundError:
+            If any of the files in `file_paths` cannot be found.
+        UnsupportedFileTypeError:
+            If any of the files are not supported types (.doc, .docx, .pdf).
+        ParsingError:
+            If an error occurs during parsing of any document.
 
     Upstream functions:
-        - Called by the main application flow when a document needs to be parsed.
-        - Called by the Streamlit app upon user document upload.
+        - Called by `process_documents` in `user_interface.py`.
 
     Downstream functions:
-        - `_parse_ms_word(filepath)`: Parses MS Word documents.
-        - `_parse_pdf(filepath)`: Parses PDF documents.
+        - `extract_raw_tables`
+        - `read_word_document`
+        - `read_pdf_document`
 
     Dependencies:
-        - Requires 'python-docx' library for MS Word parsing.
-        - Requires 'pdfplumber' library for PDF parsing.
-        - File system access to read the document.
+        - Requires access to file system to read the specified documents.
+        - Depends on libraries for reading Word and PDF documents (e.g., python-docx, PyPDF2).
     """
-    pass
-```
-
-#### **Function: `_parse_ms_word(filepath)`**
-
-```python
-def _parse_ms_word(filepath):
-    """
-    Parses an MS Word document and extracts raw tables.
-
-    Parameters:
-        filepath (str): 
-            - The file path to the MS Word document to parse.
-
-    Returns:
-        tables (list of Table): 
-            - A list of raw Table objects extracted from the MS Word document.
-
-    Raises:
-        DocumentParseError: 
-            - If there is an error parsing the MS Word document.
-
-    Upstream functions:
-        - `parse_document(filepath)`
-
-    Downstream functions:
-        - None.
-
-    Dependencies:
-        - Requires 'python-docx' library.
-        - Properly formatted MS Word (.docx) document.
-    """
-    pass
-```
-
-#### **Function: `_parse_pdf(filepath)`**
-
-```python
-def _parse_pdf(filepath):
-    """
-    Parses a PDF document and extracts raw tables.
-
-    Parameters:
-        filepath (str): 
-            - The file path to the PDF document to parse.
-
-    Returns:
-        tables (list of Table): 
-            - A list of raw Table objects extracted from the PDF document.
-
-    Raises:
-        DocumentParseError: 
-            - If there is an error parsing the PDF document.
-
-    Upstream functions:
-        - `parse_document(filepath)`
-
-    Downstream functions:
-        - None.
-
-    Dependencies:
-        - Requires 'pdfplumber' library.
-        - The PDF must be accessible and not corrupted.
-    """
-    pass
-```
-
----
-
-### **Module: table_selector.py**
-
----
-
-#### **Function: `list_tables(tables)`**
-
-```python
-def list_tables(tables):
-    """
-    Generates a list of tables with indices and summaries for selection.
-
-    Parameters:
-        tables (list of Table): 
-            - The list of Table objects extracted from the document.
-
-    Returns:
-        table_summaries (list of dict): 
-            - A list containing summaries of each table, including index and preview.
-
-    Raises:
-        ValueError: 
-            - If the input tables list is empty.
-
-    Upstream functions:
-        - Called after parsing the document to prepare for table selection.
-
-    Downstream functions:
-        - Used by the user interface to display table options.
-
-    Dependencies:
-        - None.
-    """
-    pass
-```
-
-#### **Function: `select_tables(tables, selection_criteria)`**
-
-```python
-def select_tables(tables, selection_criteria):
-    """
-    Selects tables based on provided selection criteria.
-
-    Parameters:
-        tables (list of Table): 
-            - The list of Table objects extracted from the document.
-        selection_criteria (dict): 
-            - Criteria provided by the user for selecting tables.
-            - Can include 'indices', 'keywords', 'row_conditions', 'column_conditions'.
-
-    Returns:
-        selected_tables (list of Table): 
-            - The list of tables that meet the selection criteria.
-
-    Raises:
-        SelectionError: 
-            - If no tables match the selection criteria.
-        InvalidCriteriaError: 
-            - If the selection criteria are improperly formatted.
-
-    Upstream functions:
-        - Called by the user interface after user specifies selection criteria.
-
-    Downstream functions:
-        - Feeds into the table extraction process.
-
-    Dependencies:
-        - Relies on accurate parsing of tables.
-        - Requires that the selection criteria are validated prior to use.
-    """
-    pass
+    pass  # Implementation goes here
 ```
 
 ---
 
-### **Module: table_extractor.py**
-
----
-
-#### **Function: `extract_table(raw_table, extraction_parameters)`**
+#### **Function: extract_raw_tables**
 
 ```python
-def extract_table(raw_table, extraction_parameters):
+def extract_raw_tables(document):
     """
-    Extracts and formats a single table based on extraction parameters.
+    Extracts raw tables from a single document object.
 
     Parameters:
-        raw_table (Table): 
-            - The raw Table object to be processed.
-        extraction_parameters (dict): 
-            - Parameters defining how the extraction should be performed.
-            - May include 'header_rows', 'data_types', 'formatting_rules', 'error_handling'.
+        document (Document): 
+            A Document object representing the parsed document content.
 
     Returns:
-        extracted_table (Table): 
-            - The processed Table object ready for structure interpretation.
+        List[Table]:
+            A list of Table objects extracted from the document.
 
     Raises:
-        ExtractionError: 
-            - If there is an error during the extraction process.
-        InvalidParameterError: 
-            - If extraction parameters are invalid.
+        TableExtractionError:
+            If an error occurs during table extraction.
 
     Upstream functions:
-        - Invoked for each selected table after selection.
+        - Called by `parse_documents`.
 
     Downstream functions:
-        - Passes the extracted table to the structure interpreter.
+        - `process_table_content`
 
     Dependencies:
-        - Accurate raw_table data from the parser.
-        - Correctly specified extraction_parameters.
+        - Document parsing must be successful prior to table extraction.
     """
-    pass
+    pass  # Implementation goes here
 ```
 
 ---
 
-### **Module: structure_interpreter.py**
+#### **Function: read_word_document**
+
+```python
+def read_word_document(file_path):
+    """
+    Reads a Microsoft Word document and prepares it for table extraction.
+
+    Parameters:
+        file_path (str): 
+            The file path to the Word document.
+
+    Returns:
+        Document:
+            A Document object containing the content of the Word file.
+
+    Raises:
+        FileNotFoundError:
+            If the file at `file_path` does not exist.
+        DocxFileError:
+            If an error occurs while reading the Word document.
+
+    Upstream functions:
+        - Called by `parse_documents`.
+
+    Downstream functions:
+        - None
+
+    Dependencies:
+        - Requires the `python-docx` library.
+    """
+    pass  # Implementation goes here
+```
 
 ---
 
-#### **Function: `interpret_structure(table, structure_guidelines)`**
+#### **Function: read_pdf_document**
 
 ```python
-def interpret_structure(table, structure_guidelines):
+def read_pdf_document(file_path):
     """
-    Interprets the structure of a table based on guidelines for complex table features.
+    Reads a PDF document and prepares it for table extraction.
 
     Parameters:
-        table (Table): 
-            - The Table object to interpret.
-        structure_guidelines (dict): 
-            - Guidelines specifying how to handle complex structures.
-            - Includes handling of merged cells, nested tables, irregularities.
+        file_path (str): 
+            The file path to the PDF document.
 
     Returns:
-        interpreted_table (Table): 
-            - The Table object with structures interpreted and ready for validation.
+        Document:
+            A Document object containing the content of the PDF file.
 
     Raises:
-        StructureInterpretationError: 
-            - If the table's structure cannot be interpreted as per guidelines.
+        FileNotFoundError:
+            If the file at `file_path` does not exist.
+        PDFFileError:
+            If an error occurs while reading the PDF document.
 
     Upstream functions:
-        - Receives the extracted table from the extraction process.
+        - Called by `parse_documents`.
 
     Downstream functions:
-        - Passes the interpreted table to the data validator.
+        - None
 
     Dependencies:
-        - Accurate extraction of the table.
-        - Comprehensive structure guidelines.
+        - Requires a PDF parsing library (e.g., PyPDF2, pdfplumber).
+        - May require OCR capabilities (e.g., Tesseract OCR) if handling scanned PDFs.
     """
-    pass
+    pass  # Implementation goes here
 ```
 
-#### **Function: `handle_merged_cells(table)`**
+---
+
+#### **Class: Document**
+
+```python
+class Document:
+    """
+    Represents a parsed document and its content.
+
+    Attributes:
+        file_path (str): 
+            The file path to the document.
+        content (Any): 
+            The raw content of the document.
+        tables (List[Table]): 
+            A list of tables extracted from the document.
+        metadata (Dict[str, Any]): 
+            Metadata associated with the document.
+
+    Methods:
+        - None
+
+    Dependencies:
+        - None
+    """
+    pass  # Implementation goes here
+```
+
+---
+
+#### **Class: Table**
+
+```python
+class Table:
+    """
+    Represents a table extracted from a document.
+
+    Attributes:
+        data (List[List[Any]]): 
+            The raw data of the table as a list of rows, each row being a list of cells.
+        position (int): 
+            The index position of the table in the document.
+        metadata (Dict[str, Any]): 
+            Metadata about the table, such as page number, titles, etc.
+
+    Methods:
+        - None
+
+    Dependencies:
+        - None
+    """
+    pass  # Implementation goes here
+```
+
+### **Module: extraction_parameters.py**
+
+---
+
+#### **Class: ExtractionParameters**
+
+```python
+class ExtractionParameters:
+    """
+    Defines the parameters and criteria for extracting tables from documents.
+
+    Attributes:
+        table_selection (TableSelectionCriteria): 
+            Criteria for selecting which tables to extract.
+        formatting_rules (FormattingRules): 
+            Rules for formatting the extracted data.
+        data_types (Dict[str, Type]): 
+            Expected data types for table columns.
+        error_handling (ErrorHandlingStrategy): 
+            Strategy for handling errors during extraction.
+        parser_config (ParserConfiguration): 
+            Configurations for the parsing engine.
+
+    Methods:
+        validate_parameters()
+
+    Dependencies:
+        - Relies on defined classes for selection criteria and formatting rules.
+    """
+    def validate_parameters(self):
+        """
+        Validates the extraction parameters to ensure they are correctly specified.
+
+        Raises:
+            InvalidParameterError:
+                If any of the parameters are invalid.
+
+        Upstream functions:
+            - May be called by `process_user_input` in `user_interface.py`.
+
+        Downstream functions:
+            - None
+
+        Dependencies:
+            - None
+        """
+        pass  # Implementation goes here
+```
+
+---
+
+#### **Class: TableSelectionCriteria**
+
+```python
+class TableSelectionCriteria:
+    """
+    Specifies criteria for selecting tables to extract from documents.
+
+    Attributes:
+        method (str): 
+            Selection method ('indexing', 'keyword', 'regex', etc.).
+        indices (List[int]): 
+            Indices of tables to extract when using indexing.
+        keywords (List[str]): 
+            List of keywords for keyword matching.
+        regex_patterns (List[str]): 
+            Regular expressions for pattern matching.
+        row_conditions (Dict[str, Any]): 
+            Conditions based on the data within rows.
+        column_conditions (Dict[str, Any]): 
+            Conditions based on the data within columns.
+
+    Methods:
+        - None
+
+    Dependencies:
+        - None
+    """
+    pass  # Implementation goes here
+```
+
+---
+
+#### **Class: FormattingRules**
+
+```python
+class FormattingRules:
+    """
+    Defines rules for formatting extracted data.
+
+    Attributes:
+        preserve_styles (bool): 
+            Indicates whether to preserve text styles like bold or italic.
+        date_format (str): 
+            Specifies the date format to use.
+        number_format (str): 
+            Specifies the numerical format to use.
+        encoding (str): 
+            Character encoding to use for text data.
+        placeholder_for_missing (Any): 
+            Value to use for missing data.
+
+    Methods:
+        - None
+
+    Dependencies:
+        - None
+    """
+    pass  # Implementation goes here
+```
+
+---
+
+#### **Class: ErrorHandlingStrategy**
+
+```python
+class ErrorHandlingStrategy:
+    """
+    Specifies how errors should be handled during data extraction.
+
+    Attributes:
+        on_parsing_error (str): 
+            Action to take on parsing errors ('skip', 'abort', 'log').
+        on_validation_error (str): 
+            Action to take on validation errors ('correct', 'omit', 'prompt').
+        fallback_mechanisms (List[Callable]): 
+            List of fallback functions to call on error.
+
+    Methods:
+        - None
+
+    Dependencies:
+        - None
+    """
+    pass  # Implementation goes here
+```
+
+---
+
+#### **Class: ParserConfiguration**
+
+```python
+class ParserConfiguration:
+    """
+    Configurations for the parsing engine.
+
+    Attributes:
+        ocr_enabled (bool): 
+            Whether to use OCR for scanned PDFs.
+        language (str): 
+            Language of the documents to assist parsing.
+        resource_limits (ResourceLimits): 
+            Limits on system resources for parsing.
+
+    Methods:
+        - None
+
+    Dependencies:
+        - May depend on OCR libraries and language models.
+    """
+    pass  # Implementation goes here
+```
+
+---
+
+#### **Class: ResourceLimits**
+
+```python
+class ResourceLimits:
+    """
+    Limits on system resources for the extraction process.
+
+    Attributes:
+        max_memory (int): 
+            Maximum memory (in MB) to use.
+        max_time (int): 
+            Maximum time (in seconds) allowed for extraction.
+        max_cpu_usage (int): 
+            Maximum CPU percentage to use.
+
+    Methods:
+        - None
+
+    Dependencies:
+        - System resource monitoring capabilities.
+    """
+    pass  # Implementation goes here
+```
+
+### **Module: structure_interpretation.py**
+
+---
+
+#### **Function: handle_merged_cells**
 
 ```python
 def handle_merged_cells(table):
     """
-    Handles merged cells within a table by appropriately redistributing or representation.
+    Processes merged cells in a table and adjusts the data structure accordingly.
 
     Parameters:
         table (Table): 
-            - The Table object that may contain merged cells.
+            The Table object containing raw data with merged cells.
 
     Returns:
-        table (Table): 
-            - The Table object with merged cells handled.
+        Table:
+            A new Table object with merged cells properly handled.
 
     Raises:
-        MergedCellHandlingError: 
-            - If merged cells cannot be handled according to specified rules.
+        StructureInterpretationError:
+            If an error occurs during merged cell handling.
 
     Upstream functions:
-        - Called within `interpret_structure` if merged cells are detected.
+        - Called by `interpret_table_structure`.
 
     Downstream functions:
-        - May be followed by handling nested tables or irregular structures.
+        - None
 
     Dependencies:
-        - Accurate detection of merged cells.
+        - Requires accurate identification of merged cells in the table data.
     """
-    pass
+    pass  # Implementation goes here
 ```
 
-#### **Function: `handle_nested_tables(table)`**
+---
+
+#### **Function: handle_nested_tables**
 
 ```python
 def handle_nested_tables(table):
     """
-    Processes nested tables within the main table, representing them appropriately.
+    Processes nested tables within a table and represents them appropriately.
 
     Parameters:
         table (Table): 
-            - The Table object that may contain nested tables.
+            The Table object that may contain nested tables.
 
     Returns:
-        table (Table): 
-            - The Table object with nested tables processed.
+        Table:
+            The Table object with nested tables processed and represented.
 
     Raises:
-        NestedTableHandlingError: 
-            - If nested tables cannot be processed correctly.
+        StructureInterpretationError:
+            If an error occurs during nested table handling.
 
     Upstream functions:
-        - Invoked within `interpret_structure` when nested tables are present.
+        - Called by `interpret_table_structure`.
 
     Downstream functions:
-        - Continues to further structure interpretation steps.
+        - `parse_nested_table`
 
     Dependencies:
-        - Ability to detect nested tables.
-        - Rules for representing nested structures.
+        - Requires the ability to detect and parse nested tables recursively.
     """
-    pass
+    pass  # Implementation goes here
 ```
 
-#### **Function: `handle_irregular_structures(table)`**
+---
+
+#### **Function: interpret_table_structure**
 
 ```python
-def handle_irregular_structures(table):
+def interpret_table_structure(table, parameters):
     """
-    Manages irregular table structures by normalizing or documenting inconsistencies.
+    Interprets the structure of a table according to the specified parameters.
 
     Parameters:
         table (Table): 
-            - The Table object with potential irregularities.
+            The Table object to be interpreted.
+        parameters (ExtractionParameters): 
+            Parameters guiding the interpretation.
 
     Returns:
-        table (Table): 
-            - The normalized Table object.
+        Table:
+            The Table object with structure interpreted as per the parameters.
 
     Raises:
-        IrregularStructureError: 
-            - If the table cannot be normalized.
+        StructureInterpretationError:
+            If an error occurs during structure interpretation.
 
     Upstream functions:
-        - Called within `interpret_structure` when irregularities are found.
+        - Called by `process_tables` in `user_interface.py`.
 
     Downstream functions:
-        - May proceed to data validation after handling irregularities.
+        - `handle_merged_cells`
+        - `handle_nested_tables`
 
     Dependencies:
-        - Methods for detecting and correcting irregular structures.
+        - Depends on the functions for handling merged cells and nested tables.
     """
-    pass
+    pass  # Implementation goes here
 ```
 
 ---
 
-### **Module: data_validator.py**
-
----
-
-#### **Function: `validate_table(table, validation_rules)`**
+#### **Function: parse_nested_table**
 
 ```python
-def validate_table(table, validation_rules):
+def parse_nested_table(cell_content):
     """
-    Validates the data within a table according to specified validation rules.
+    Parses a nested table found within a cell's content.
 
     Parameters:
-        table (Table): 
-            - The Table object to validate.
-        validation_rules (dict): 
-            - Rules specifying how to validate data, e.g., data types, constraints.
+        cell_content (Any): 
+            The content of the cell containing the nested table.
 
     Returns:
-        is_valid (bool): 
-            - True if the table data passes all validation rules.
-        errors (list of str): 
-            - List of validation errors encountered.
+        Table:
+            A Table object representing the nested table.
 
     Raises:
-        ValidationError: 
-            - If validation process fails unexpectedly.
+        NestedTableParsingError:
+            If an error occurs during nested table parsing.
 
     Upstream functions:
-        - Receives the table from the structure interpreter.
+        - Called by `handle_nested_tables`.
 
     Downstream functions:
-        - If valid, passes the table to the converter.
+        - May recursively call itself for deeply nested tables.
 
     Dependencies:
-        - Accurate and comprehensive validation rules.
+        - Accurate detection of table structures within cell content.
     """
-    pass
+    pass  # Implementation goes here
 ```
 
----
-
-### **Module: converter.py**
+### **Module: user_interface.py**
 
 ---
 
-#### **Function: `convert_table_to_json(table)`**
+#### **Function: process_user_input**
 
 ```python
-def convert_table_to_json(table):
+def process_user_input(user_inputs):
     """
-    Converts a Table object to a structured JSON format.
+    Processes user inputs from the web or command-line interface.
 
     Parameters:
-        table (Table): 
-            - The validated Table object to convert.
+        user_inputs (Dict[str, Any]): 
+            A dictionary containing inputs provided by the user.
 
     Returns:
-        json_output (str): 
-            - A JSON-formatted string representing the table.
+        ExtractionParameters:
+            An object containing validated extraction parameters.
 
     Raises:
-        ConversionError: 
-            - If the table cannot be converted to JSON.
+        InvalidUserInputError:
+            If the user inputs fail validation checks.
 
     Upstream functions:
-        - Called after data validation confirms table is valid.
+        - Called by UI handlers in `Table2Json_Extractor.py`.
 
     Downstream functions:
-        - The output is used for storage or further processing.
+        - `validate_user_inputs` in `validation.py`
+        - Constructs `ExtractionParameters` object
 
     Dependencies:
-        - Properly formatted and validated Table object.
-        - 'json' standard library module.
+        - Requires the `validation` module for input validation.
     """
-    pass
+    pass  # Implementation goes here
 ```
 
-#### **Function: `convert_table_to_markdown(table, markdown_style='default')`**
+---
+
+#### **Function: process_documents**
 
 ```python
-def convert_table_to_markdown(table, markdown_style='default'):
+def process_documents(file_paths, parameters):
     """
-    Converts a Table object to a Markdown formatted string.
+    Orchestrates the processing of documents based on user parameters.
 
     Parameters:
-        table (Table): 
-            - The validated Table object to convert.
-        markdown_style (str, optional): 
-            - The style or flavor of Markdown to use (e.g., 'GitHub', 'MultiMarkdown').
-            - Default is 'default'.
+        file_paths (List[str]): 
+            List of file paths to the documents to be processed.
+        parameters (ExtractionParameters): 
+            Parameters guiding the extraction process.
 
     Returns:
-        markdown_output (str): 
-            - A Markdown-formatted string representing the table.
+        List[Dict]:
+            A list of dictionaries representing the extracted data in JSON format.
 
     Raises:
-        ConversionError: 
-            - If the table cannot be converted to Markdown.
+        ProcessingError:
+            If an error occurs during document processing.
 
     Upstream functions:
-        - Called after data validation confirms table is valid.
+        - Called by UI handlers in `Table2Json_Extractor.py`.
 
     Downstream functions:
-        - The output is used for display or documentation purposes.
+        - `parse_documents` in `data_processing.py`
+        - `interpret_table_structure` in `structure_interpretation.py`
+        - `validate_extracted_data` in `validation.py`
 
     Dependencies:
-        - Correctly formatted and validated Table object.
-        - Any necessary Markdown libraries if custom styles are used.
+        - Depends on several modules for parsing, interpreting, and validating data.
     """
-    pass
+    pass  # Implementation goes here
 ```
 
 ---
 
-### **Module: logging_setup.py**
+#### **Function: render_results**
+
+```python
+def render_results(data, output_format):
+    """
+    Renders the extracted data in the desired output format (e.g., JSON, Markdown).
+
+    Parameters:
+        data (List[Dict]): 
+            The data extracted from the documents.
+        output_format (str): 
+            The format in which to render the results ('json', 'markdown').
+
+    Returns:
+        str:
+            The rendered data as a string in the specified format.
+
+    Raises:
+        RenderingError:
+            If an error occurs during data rendering.
+
+    Upstream functions:
+        - Called by UI handlers after processing is complete.
+
+    Downstream functions:
+        - None
+
+    Dependencies:
+        - May use templating engines or formatting libraries.
+    """
+    pass  # Implementation goes here
+```
+
+### **Module: validation.py**
 
 ---
 
-#### **Function: `setup_logging()`**
+#### **Function: validate_user_inputs**
+
+```python
+def validate_user_inputs(user_inputs):
+    """
+    Validates user inputs to ensure they meet required criteria.
+
+    Parameters:
+        user_inputs (Dict[str, Any]): 
+            The inputs provided by the user.
+
+    Returns:
+        bool:
+            True if validation passes, otherwise raises an exception.
+
+    Raises:
+        ValidationError:
+            If any of the inputs are invalid.
+
+    Upstream functions:
+        - Called by `process_user_input` in `user_interface.py`.
+
+    Downstream functions:
+        - None
+
+    Dependencies:
+        - None
+    """
+    pass  # Implementation goes here
+```
+
+---
+
+#### **Function: validate_extracted_data**
+
+```python
+def validate_extracted_data(data, parameters):
+    """
+    Validates the extracted data against the specified parameters.
+
+    Parameters:
+        data (List[Dict]): 
+            The data extracted from the documents.
+        parameters (ExtractionParameters): 
+            Parameters that guide the validation process.
+
+    Returns:
+        bool:
+            True if validation is successful, False otherwise.
+
+    Raises:
+        DataValidationError:
+            If the data fails validation checks.
+
+    Upstream functions:
+        - Called by `process_documents` in `user_interface.py`.
+
+    Downstream functions:
+        - May call error correction functions if validation fails.
+
+    Dependencies:
+        - Depends on `ExtractionParameters` for validation rules.
+    """
+    pass  # Implementation goes here
+```
+
+### **Module: logging_handlers.py**
+
+---
+
+#### **Function: setup_logging**
 
 ```python
 def setup_logging():
     """
-    Sets up logging configuration for the application.
+    Configures logging for the Table to JSON Extractor module.
 
     Parameters:
-        None.
+        None
 
     Returns:
-        logger (logging.Logger): 
-            - Configured logger for the application.
+        Logger:
+            Configured logger for the module.
 
     Raises:
-        LoggingConfigurationError: 
-            - If there is an error configuring the logger.
+        LoggingConfigurationError:
+            If an error occurs during logging setup.
 
     Upstream functions:
-        - Called at the start of the application to initialize logging.
+        - Called during module initialization.
 
     Downstream functions:
-        - Provides logging capabilities to all other modules.
+        - None
 
     Dependencies:
-        - Python 'logging' standard library.
-        - Access to logging configuration settings.
+        - Access to logging configurations in `logging_config.py`.
     """
-    pass
+    pass  # Implementation goes here
 ```
 
 ---
 
-## Proposed Folder Structure and Files
-
-```
-streamlit_app/
-└── app/
-    ├── main.py
-    ├── pages/
-    │   └── Table2Json_Extractor.py
-    ├── table2json_extractor/
-    │   ├── __init__.py
-    │   ├── document_parser.py
-    │   ├── table_selector.py
-    │   ├── table_extractor.py
-    │   ├── structure_interpreter.py
-    │   ├── data_validator.py
-    │   ├── converter.py
-    │   ├── logging_setup.py
-    │   ├── utils.py
-    │   └── tests/
-    │       ├── __init__.py
-    │       ├── test_document_parser.py
-    │       ├── test_table_selector.py
-    │       ├── test_table_extractor.py
-    │       ├── test_structure_interpreter.py
-    │       ├── test_data_validator.py
-    │       └── test_converter.py
-```
-
-- **main.py**: The main entry point of the parent Streamlit application that provides navigation to apps like the FedRAMP OllaLab - Table to Json Extractor.
-- **pages/Table2Json_Extractor.py**: The Streamlit page for this app, handling user interactions and displaying results.
-- **table2json_extractor/**: Package containing modules for the Table to JSON Extractor app.
-  - **__init__.py**: Initializes the package.
-  - **document_parser.py**: Module for parsing MS Word and PDF documents to extract raw tables.
-  - **table_selector.py**: Module that provides functionalities for listing and selecting tables based on user criteria.
-  - **table_extractor.py**: Module that handles the extraction of tables with user-defined parameters.
-  - **structure_interpreter.py**: Module that interprets complex table structures (merged cells, nested tables, irregular structures).
-  - **data_validator.py**: Module that validates the extracted data according to specified rules.
-  - **converter.py**: Module that converts tables into JSON and Markdown formats.
-  - **logging_setup.py**: Module that sets up logging for the application.
-  - **utils.py**: Utility functions and helper methods.
-  - **tests/**: Contains all test files for the app.
-    - **__init__.py**: Initializes the test package.
-    - **test_document_parser.py**: Unit tests for document_parser.py.
-    - **test_table_selector.py**: Unit tests for table_selector.py.
-    - **test_table_extractor.py**: Unit tests for table_extractor.py.
-    - **test_structure_interpreter.py**: Unit tests for structure_interpreter.py.
-    - **test_data_validator.py**: Unit tests for data_validator.py.
-    - **test_converter.py**: Unit tests for converter.py.
-
-## Proposed Content of Each Files**
-
----
-
-### **File: streamlit_app/app/main.py**
+#### **Class: CustomLogHandler**
 
 ```python
-# main.py
-
-import streamlit as st
-
-def main():
+class CustomLogHandler(logging.Handler):
     """
-    Main function to run the parent Streamlit application.
-    Provides navigation to different apps including the Table to JSON Extractor.
+    A custom log handler for handling module-specific logging needs.
+
+    Attributes:
+        log_queue (Queue): 
+            A thread-safe queue to hold log records.
+
+    Methods:
+        emit(record):
+            Processes a log record and adds it to the queue.
+
+    Dependencies:
+        - Inherits from `logging.Handler`.
     """
-    st.title("OllaLab Application Suite")
-    st.sidebar.title("Navigation")
-    # Navigation options to different apps
-    app_selection = st.sidebar.selectbox("Select an App", ["Table to JSON Extractor"])
+    def emit(self, record):
+        """
+        Emits a log record by adding it to the log queue.
 
-    if app_selection == "Table to JSON Extractor":
-        # Navigate to the Table2Json_Extractor page
-        from pages import Table2Json_Extractor
-        Table2Json_Extractor.run()
+        Parameters:
+            record (LogRecord): 
+                The log record to be processed.
 
-if __name__ == "__main__":
-    main()
+        Raises:
+            None
+
+        Upstream functions:
+            - Used by the logging system when a log record is emitted.
+
+        Downstream functions:
+            - None
+
+        Dependencies:
+            - Thread-safe queue for inter-thread communication.
+        """
+        pass  # Implementation goes here
 ```
+
+### **Module: locale_manager.py**
 
 ---
 
-### **File: streamlit_app/app/pages/Table2Json_Extractor.py**
+#### **Function: load_locale**
 
 ```python
-# Table2Json_Extractor.py
-
-import streamlit as st
-from table2json_extractor import document_parser, table_selector, table_extractor
-from table2json_extractor import structure_interpreter, data_validator, converter, logging_setup
-
-def run():
+def load_locale(language_code):
     """
-    Streamlit page function for the Table to JSON Extractor app.
-    Handles user interactions and displays results.
-    """
-    st.title("FedRAMP OllaLab - Table to JSON Extractor")
-
-    # Setup logging
-    logger = logging_setup.setup_logging()
-
-    # File upload
-    uploaded_file = st.file_uploader("Upload a document (MS Word or PDF)", type=["docx", "pdf"])
-    if uploaded_file is not None:
-        # Save uploaded file to a temporary location
-        with open("temp_uploaded_file", "wb") as f:
-            f.write(uploaded_file.getbuffer())
-
-        # Parse document
-        try:
-            tables = document_parser.parse_document("temp_uploaded_file")
-            st.success(f"Found {len(tables)} tables in the document.")
-        except Exception as e:
-            st.error(f"Error parsing document: {e}")
-            return
-
-        # List tables and allow selection
-        table_summaries = table_selector.list_tables(tables)
-        # Display table summaries and get user selection
-        # ...
-
-        # Get user input for extraction parameters
-        # extraction_parameters = ...
-
-        # Extract and process selected tables
-        # for table in selected_tables:
-            # extracted_table = table_extractor.extract_table(table, extraction_parameters)
-            # interpreted_table = structure_interpreter.interpret_structure(extracted_table, structure_guidelines)
-            # is_valid, errors = data_validator.validate_table(interpreted_table, validation_rules)
-            # if is_valid:
-                # json_output = converter.convert_table_to_json(interpreted_table)
-                # Display or download json_output
-            # else:
-                # Display validation errors
-
-        # Clean up temporary files
-        # ...
-
-if __name__ == "__main__":
-    run()
-```
-
----
-
-### **File: streamlit_app/app/table2json_extractor/__init__.py**
-
-```python
-# __init__.py
-
-"""
-Package initialization for table2json_extractor.
-"""
-
-__all__ = [
-    "document_parser",
-    "table_selector",
-    "table_extractor",
-    "structure_interpreter",
-    "data_validator",
-    "converter",
-    "logging_setup",
-    "utils"
-]
-```
-
----
-
-### **File: streamlit_app/app/table2json_extractor/document_parser.py**
-
-```python
-# document_parser.py
-
-"""
-Module for parsing MS Word and PDF documents to extract raw tables.
-"""
-
-def parse_document(filepath):
-    # Doc-string as previously defined
-    pass
-
-def _parse_ms_word(filepath):
-    # Doc-string as previously defined
-    pass
-
-def _parse_pdf(filepath):
-    # Doc-string as previously defined
-    pass
-
-# Additional helper functions if needed
-```
-
----
-
-### **File: streamlit_app/app/table2json_extractor/table_selector.py**
-
-```python
-# table_selector.py
-
-"""
-Module providing functionalities for listing and selecting tables.
-"""
-
-def list_tables(tables):
-    # Doc-string as previously defined
-    pass
-
-def select_tables(tables, selection_criteria):
-    # Doc-string as previously defined
-    pass
-
-# Additional helper functions
-```
-
----
-
-### **File: streamlit_app/app/table2json_extractor/table_extractor.py**
-
-```python
-# table_extractor.py
-
-"""
-Module handling the extraction of tables with user-defined parameters.
-"""
-
-def extract_table(raw_table, extraction_parameters):
-    # Doc-string as previously defined
-    pass
-
-# Additional helper functions
-```
-
----
-
-### **File: streamlit_app/app/table2json_extractor/structure_interpreter.py**
-
-```python
-# structure_interpreter.py
-
-"""
-Module that interprets complex table structures.
-"""
-
-def interpret_structure(table, structure_guidelines):
-    # Doc-string as previously defined
-    pass
-
-def handle_merged_cells(table):
-    # Doc-string as previously defined
-    pass
-
-def handle_nested_tables(table):
-    # Doc-string as previously defined
-    pass
-
-def handle_irregular_structures(table):
-    # Doc-string as previously defined
-    pass
-
-# Additional helper functions
-```
-
----
-
-### **File: streamlit_app/app/table2json_extractor/data_validator.py**
-
-```python
-# data_validator.py
-
-"""
-Module that validates the extracted data according to specified rules.
-"""
-
-def validate_table(table, validation_rules):
-    # Doc-string as previously defined
-    pass
-
-# Additional helper functions
-```
-
----
-
-### **File: streamlit_app/app/table2json_extractor/converter.py**
-
-```python
-# converter.py
-
-"""
-Module that converts tables into JSON and Markdown formats.
-"""
-
-def convert_table_to_json(table):
-    # Doc-string as previously defined
-    pass
-
-def convert_table_to_markdown(table, markdown_style='default'):
-    # Doc-string as previously defined
-    pass
-
-# Additional helper functions
-```
-
----
-
-### **File: streamlit_app/app/table2json_extractor/logging_setup.py**
-
-```python
-# logging_setup.py
-
-"""
-Module that sets up logging for the application.
-"""
-
-import logging
-
-def setup_logging():
-    # Doc-string as previously defined
-    pass
-
-# Additional helper functions
-```
-
----
-
-### **File: streamlit_app/app/table2json_extractor/utils.py**
-
-```python
-# utils.py
-
-"""
-Utility functions and helpers for the application.
-"""
-
-def check_file_type(filepath):
-    """
-    Checks the file type of the given filepath.
+    Loads localization files for the specified language.
 
     Parameters:
-        filepath (str): 
-            - The file path to check.
+        language_code (str): 
+            The ISO code of the language to load (e.g., 'en', 'es').
 
     Returns:
-        file_type (str): 
-            - The type of the file ('docx', 'pdf', etc.)
+        Locale:
+            A Locale object containing localized strings.
 
     Raises:
-        UnsupportedFileTypeError: 
-            - If the file type is unsupported.
-    """
-    pass
+        LocaleNotFoundError:
+            If the localization files for the specified language are not found.
 
-# Additional utility functions
+    Upstream functions:
+        - Called during application initialization or when the user changes language settings.
+
+    Downstream functions:
+        - None
+
+    Dependencies:
+        - Access to localization files in the `locales/` directory.
+    """
+    pass  # Implementation goes here
 ```
 
 ---
 
-### **Files in streamlit_app/app/table2json_extractor/tests/**
-
-Each test file (e.g., `test_document_parser.py`) will contain unit tests for its corresponding module.
-
-Example content for `test_document_parser.py`:
+#### **Class: Locale**
 
 ```python
-# test_document_parser.py
+class Locale:
+    """
+    Represents a collection of localized strings for a specific language.
 
-import unittest
-from table2json_extractor import document_parser
+    Attributes:
+        strings (Dict[str, str]): 
+            A dictionary mapping keys to localized strings.
 
-class TestDocumentParser(unittest.TestCase):
-    def test_parse_document_with_docx(self):
-        # Test parsing a valid .docx file
-        pass
+    Methods:
+        get(key):
+            Retrieves the localized string for a given key.
 
-    def test_parse_document_with_pdf(self):
-        # Test parsing a valid .pdf file
-        pass
+    Dependencies:
+        - None
+    """
+    def get(self, key):
+        """
+        Retrieves the localized string for a given key.
 
-    def test_parse_document_with_invalid_file(self):
-        # Test handling of invalid file types
-        pass
+        Parameters:
+            key (str): 
+                The key for the desired string.
 
-    # Additional test methods
+        Returns:
+            str:
+                The localized string.
 
-if __name__ == '__main__':
-    unittest.main()
+        Raises:
+            KeyError:
+                If the key is not found in the localization strings.
+
+        Upstream functions:
+            - Called whenever a localized string is needed.
+
+        Downstream functions:
+            - None
+
+        Dependencies:
+            - Localization strings must be loaded into the `strings` attribute.
+        """
+        pass  # Implementation goes here
 ```
+
+### **Module: accessibility.py**
+
+---
+
+#### **Function: check_accessibility_compliance**
+
+```python
+def check_accessibility_compliance(interface_elements):
+    """
+    Checks the user interface elements for compliance with accessibility standards.
+
+    Parameters:
+        interface_elements (List[InterfaceElement]): 
+            A list of interface elements to check.
+
+    Returns:
+        bool:
+            True if all elements comply, False otherwise.
+
+    Raises:
+        AccessibilityComplianceError:
+            If any element fails compliance checks.
+
+    Upstream functions:
+        - May be called during UI rendering in `Table2Json_Extractor.py`.
+
+    Downstream functions:
+        - None
+
+    Dependencies:
+        - Requires definitions of interface elements and accessibility standards.
+    """
+    pass  # Implementation goes here
+```
+
+---
+
+#### **Class: InterfaceElement**
+
+```python
+class InterfaceElement:
+    """
+    Represents an element of the user interface.
+
+    Attributes:
+        id (str): 
+            Unique identifier for the element.
+        type (str): 
+            Type of the element (e.g., 'button', 'textfield').
+        properties (Dict[str, Any]): 
+            Properties of the element, such as labels and roles.
+
+    Methods:
+        - None
+
+    Dependencies:
+        - None
+    """
+    pass  # Implementation goes here
+```
+
+### **Module: events.py**
+
+---
+
+#### **Function: initialize_event_handlers**
+
+```python
+def initialize_event_handlers():
+    """
+    Initializes event handlers for the event-driven architecture.
+
+    Parameters:
+        None
+
+    Returns:
+        None
+
+    Raises:
+        EventHandlerInitializationError:
+            If an error occurs during initialization.
+
+    Upstream functions:
+        - Called during application startup.
+
+    Downstream functions:
+        - Registers event handlers with the event bus.
+
+    Dependencies:
+        - Requires an event bus or messaging system.
+    """
+    pass  # Implementation goes here
+```
+
+---
+
+#### **Function: on_table_extracted**
+
+```python
+def on_table_extracted(event):
+    """
+    Event handler called when a table is extracted.
+
+    Parameters:
+        event (Event): 
+            The event object containing details of the table extraction.
+
+    Returns:
+        None
+
+    Raises:
+        None
+
+    Upstream functions:
+        - Registered with the event system in `initialize_event_handlers`.
+
+    Downstream functions:
+        - May trigger further processing or logging.
+
+    Dependencies:
+        - Depends on the event system being operational.
+    """
+    pass  # Implementation goes here
+```
+
+### **Module: assets/styles.css**
+
+- Contains CSS styles for the web interface, ensuring consistent and accessible design across the application.
+
+### **Module: assets/templates/**
+
+- Contains HTML or other templates used by the application for rendering outputs or messages.
+
+---
+
+## 4. Content of Each File (Without Specific Implementations)
+
+Each file in the project contains the necessary imports, class and function definitions, and any module-level variables or configurations. Below is an outline of the content of each file.
+
+### **streamlit_app/app/main.py**
+
+- Imports necessary Streamlit modules and custom modules.
+- Configures the main Streamlit application settings.
+- Implements the main navigation to different pages, including the Table to JSON Extractor.
+
+### **streamlit_app/app/logging_config.py**
+
+- Defines logging configurations for the application.
+- Sets log levels, formats, handlers, and destinations (e.g., file, console).
+
+### **streamlit_app/app/monitoring.py**
+
+- Implements application monitoring features.
+- Includes functions for tracking performance metrics.
+- Configures alerting mechanisms for critical events.
+
+### **streamlit_app/app/config.py**
+
+- Contains application-wide configuration settings.
+- Loads configurations from `config/config.yaml`.
+- Provides access to configurations throughout the application.
+
+### **streamlit_app/app/pages/Table2Json_Extractor.py**
+
+- Imports Streamlit and custom modules.
+- Defines the Streamlit page layout and components for user interaction.
+- Handles user inputs and triggers the processing functions.
+- Displays results and handles downloads of extracted data.
+
+### **streamlit_app/app/table2json_extractor/__init__.py**
+
+- Initializes the module.
+- Imports key classes and functions for external access.
+
+### **streamlit_app/app/table2json_extractor/data_processing.py**
+
+- Contains functions for parsing documents (`parse_documents`) and reading specific document types (`read_word_document`, `read_pdf_document`).
+- Defines `Document` and `Table` classes to represent parsed data.
+
+### **streamlit_app/app/table2json_extractor/extraction_parameters.py**
+
+- Contains classes defining extraction parameters (`ExtractionParameters`, `TableSelectionCriteria`, `FormattingRules`, etc.).
+- Handles validation of parameters.
+
+### **streamlit_app/app/table2json_extractor/structure_interpretation.py**
+
+- Contains functions for interpreting complex table structures (`interpret_table_structure`, `handle_merged_cells`, `handle_nested_tables`).
+- Includes recursive parsing functions for nested structures.
+
+### **streamlit_app/app/table2json_extractor/user_interface.py**
+
+- Contains functions that process user inputs (`process_user_input`) and orchestrate processing (`process_documents`).
+- Handles rendering of results in specified formats (`render_results`).
+
+### **streamlit_app/app/table2json_extractor/validation.py**
+
+- Contains validation functions for user inputs (`validate_user_inputs`) and extracted data (`validate_extracted_data`).
+- Implements error correction mechanisms.
+
+### **streamlit_app/app/table2json_extractor/logging_handlers.py**
+
+- Contains custom logging handlers (`CustomLogHandler`) for module-specific logging needs.
+- Sets up logging configurations (`setup_logging`).
+
+### **streamlit_app/app/table2json_extractor/locale_manager.py**
+
+- Handles loading and managing localization files (`load_locale`).
+- Defines a `Locale` class for accessing localized strings.
+
+### **streamlit_app/app/table2json_extractor/accessibility.py**
+
+- Contains functions to ensure UI elements comply with accessibility standards (`check_accessibility_compliance`).
+- Defines `InterfaceElement` class representing UI components.
+
+### **streamlit_app/app/table2json_extractor/events.py**
+
+- Implements event-driven architecture components.
+- Contains functions to initialize event handlers (`initialize_event_handlers`) and define event responses (`on_table_extracted`).
+
+### **streamlit_app/app/table2json_extractor/assets/styles.css**
+
+- Defines CSS styles to be applied across the web interface.
+- Ensures styles meet accessibility and responsiveness requirements.
+
+### **streamlit_app/app/table2json_extractor/assets/templates/**
+
+- Contains template files used for rendering outputs.
+- May include HTML templates, email templates, or others as needed.
+
+### **streamlit_app/app/table2json_extractor/tests/**
+
+- Contains test files for unit tests (`test_data_processing.py`, `test_structure_interpretation.py`).
+- Each test file corresponds to a module and tests its functionalities.
 
 ---
