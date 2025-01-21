@@ -7,14 +7,13 @@ To improve efficiency and accuracy in workflows reliant on tabular data, we aim 
 ## Requirements
 ### **1. System Architecture and Design**
 - **Modular Architecture**: The system must be designed using a modular architecture to facilitate the addition of new modules and features without impacting existing functionality.
-- **Microservices Approach**: Implement a microservices architecture where each module (PEM, PAM, DEM) operates as an independent service with well-defined APIs.
 - **Scalable Infrastructure**: Design the system to scale horizontally and vertically to handle increasing workloads and data volumes.
 - **Separation of Concerns**: Ensure clear separation between data processing, business logic, and presentation layers to enhance maintainability.
 - **Loose Coupling**: Use asynchronous communication and message queues to decouple system components, enhancing resilience and scalability.
 - **Event-Driven Design**: Adopt an event-driven architecture to support real-time processing and responsiveness.
 
 ### **2. Accessibility and Interfaces**
-- **Web Interface**: All modules must be accessible through an intuitive and user-friendly web interface that supports all major browsers and devices.
+- **Web Interface**: All modules must be accessible through an intuitive and user-friendly python/streamlit web interface that supports all major browsers and devices. 
 - **Command Line Interface**: All functionalities can be executed in the command line interface.
 
 ### **3. Data Processing and Management**
@@ -32,15 +31,12 @@ To improve efficiency and accuracy in workflows reliant on tabular data, we aim 
 ### **6. Development and Deployment Practices**
 - **Continuous Integration/Continuous Deployment (CI/CD)**: Implement CI/CD pipelines for automated testing, building, and deployment of code changes.
 - **Automated Testing**: Include unit tests, integration tests, and end-to-end tests to ensure system reliability and prevent regressions.
-- **Containerization**: Use container technologies (e.g., Docker) to package applications for consistent deployment across environments.
-- **Infrastructure as Code (IaC)**: Manage infrastructure configurations using IaC tools (e.g., Terraform, Ansible) for reproducibility and scalability.
 - **Version Control**: Use a robust version control system (e.g., Git) for all code, configurations, and scripts.
 
 ### **7. Maintainability and Support**
 - **Code Quality Standards**: Adhere to coding standards and best practices to enhance readability and maintainability.
 - **Documentation**: Produce extensive documentation for system architecture, APIs, modules, and operational procedures.
 - **Automated Maintenance Tasks**: Schedule and automate routine maintenance tasks like database indexing, log rotation, and system updates.
-- **Support Infrastructure**: Set up support channels (e.g., ticketing systems, knowledge bases) to assist users and administrators.
 
 ### **8. Usability and Accessibility**
 - **User-Centered Design**: Employ user research and feedback to design interfaces that meet user needs and preferences.
@@ -60,8 +56,21 @@ To improve efficiency and accuracy in workflows reliant on tabular data, we aim 
 - **PDF Files**: The `.pdf` files that include the tables to be processed.
 ### User Guidance and Specifications
 The user will need to specify the following guidance and specifications.
-#### **1. Extraction Parameters**
-Extraction parameters are settings and guidelines that dictate how the data extraction process should be conducted. They can include instructions on aspects such as formatting, data types, and other characteristics that need attention during extraction. Key categories of extraction parameters can include:
+
+#### **1. Table Selection**
+Table selection allows users to specify which tables to extract from a document, particularly important when multiple tables are present or when only certain data is relevant. Users will be able to select the following methods:
+- **Table Indexing**: Users can refer to tables by their index (e.g., Table 1, Table 2) based on their order in the document. This requires a preview functionality so users can see a summary or a thumbnail of the tables available for extraction.
+- **Selective Extraction by Criteria**: Users may define specific criteria for the tables they need. This could include:
+  - **Keyword Matching**: Use keywords or phrases that must appear in the table content or header for it to be selected for extraction. For example, selecting only tables that have the word "Summary" in the header.
+  - **Row or Column Criteria**: Users can specify conditions based on the data within rows or columns. For instance, extract only tables with a specified number of rows or where a particular column contains values above a certain threshold.
+Additional support features are:
+- **Structured Preview**: Incorporate a structured preview feature where users can visualize the tables extracted temporarily without fully committing to the extraction. This functionality allows users to confirm selections before proceeding to structured extraction.
+- **Multiple Table Selection**: Provide the ability for users to select multiple tables simultaneously by checking boxes or using a multi-select dropdown list, enhancing the efficiency of the extraction process.
+- **Saved Queries/Profiles**: Allow users to save predefined extraction profiles based on their often-used parameters, including selection criteria, formatting expectations, and data handling rules. This feature supports repeatability for users who extract similar data frequently.
+- **Regular Expression Matching**: Use regular expressions to identify tables or specific data patterns across the document, facilitating more complex and flexible selection rules.
+
+#### **2. Extraction Parameters**
+Extraction parameters are settings and guidelines that dictate how the data extraction process should be conducted across all selected tables or per table. They can include instructions on aspects such as formatting, data types, and other characteristics that need attention during extraction. Key categories of extraction parameters can include:
 - **Column Headers**: Specify if the first row or a designated row of the table should be treated as headers to identify data categories.
 - **Data Types**: Define expected data types (e.g., string, integer, date) for each column to enforce validation during extraction.
 - **Formatting Rules**: Include rules for recognizing and preserving formatting, such as boldface or italicized text, which can indicate significance or categorization in the data.
@@ -70,17 +79,6 @@ Extraction parameters are settings and guidelines that dictate how the data extr
 - **Omission Rules**: Parameters to specify conditions under which certain rows or columns may be excluded from extraction (e.g., skipping empty rows or columns).
 - **Data Formatting**: Indications on how to format the extracted data for output (e.g., date formats, numerical formats).
 - **Error Handling Instructions**: Guidelines for how the system should behave when it encounters unexpected data formats or extraction errors, such as what fallback mechanisms to engage or how to log such occurrences.
-
-#### **2. Table Selection**
-Table selection allows users to specify which tables to extract from a document, particularly important when multiple tables are present or when only certain data is relevant. Consider the following aspects of table selection:
-- **Table Indexing**: Users can refer to tables by their index (e.g., Table 1, Table 2) based on their order in the document. This requires a preview functionality so users can see a summary or a thumbnail of the tables available for extraction.
-- **Selective Extraction by Criteria**: Users may define specific criteria for the tables they need. This could include:
-  - **Keyword Matching**: Use keywords or phrases that must appear in the table content or header for it to be selected for extraction. For example, selecting only tables that have the word "Summary" in the header.
-  - **Row or Column Criteria**: Users can specify conditions based on the data within rows or columns. For instance, extract only tables with a specified number of rows or where a particular column contains values above a certain threshold.
-- **Structured Preview**: Incorporate a structured preview feature where users can visualize the tables extracted temporarily without fully committing to the extraction. This functionality allows users to confirm selections before proceeding to structured extraction.
-- **Multiple Table Selection**: Provide the ability for users to select multiple tables simultaneously by checking boxes or using a multi-select dropdown list, enhancing the efficiency of the extraction process.
-- **Saved Queries/Profiles**: Allow users to save predefined extraction profiles based on their often-used parameters, including selection criteria, formatting expectations, and data handling rules. This feature supports repeatability for users who extract similar data frequently.
-- **Regular Expression Matching**: Use regular expressions to identify tables or specific data patterns across the document, facilitating more complex and flexible selection rules.
 
 #### **3. Structure Interpretation**
 Effective structure interpretation is crucial for accurately extracting and representing complex tables from files like Microsoft Word and PDF documents. Complex tables often include features such as merged cells, nested tables, irregular structures, and hierarchical data. Properly interpreting these structures ensures that the extracted data maintains its intended meaning and usability. User will need to clarify the guidelines and strategies for interpreting various complex table structures during the extraction process:
@@ -291,5 +289,3 @@ Effective structure interpretation is crucial for accurately extracting and repr
 ### User Permissions and Compliance Requirements
    - **Data Privacy Consents**: If the tables contain sensitive information, ensure that you have the necessary permissions and consents to process the data.
    - **Compliance Specifications**: Any regulatory requirements that dictate how data should be handled during extraction and conversion.
-
-# Solution
