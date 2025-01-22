@@ -3,35 +3,7 @@
 ## 1. Project Folder Structure
 
 ```plaintext
-project_root/
-├── README.md
-├── LICENSE
-├── .gitignore
-├── requirements.txt
-├── config/
-│   └── config.yaml
-├── locales/
-│   ├── en/
-│   ├── es/
-│   └── ...
-├── scripts/
-│   ├── maintenance.sh
-│   ├── deploy.sh
-│   └── ...
-├── tests/
-│   ├── unit/
-│   ├── integration/
-│   └── e2e/
-├── .github/
-│   └── workflows/
-│       ├── ci.yml
-│       └── cd.yml
-├── docs/
-│   ├── architecture.md
-│   ├── api_reference.md
-│   ├── user_guide.md
-│   ├── developer_guide.md
-│   └── operational_procedures.md
+repo_root/
 └── streamlit_app/
     └── app/
         ├── main.py
@@ -51,6 +23,35 @@ project_root/
         │   ├── locale_manager.py
         │   ├── accessibility.py
         │   ├── events.py
+        │   ├── exceptions.py               # New module for custom exceptions
+        │   ├── README.md
+        │   ├── LICENSE
+        │   ├── .gitignore
+        │   ├── requirements.txt
+        │   ├── config/
+        │   │   └── config.yaml
+        │   ├── locales/
+        │   │   ├── en/
+        │   │   ├── es/
+        │   │   └── ...
+        │   ├── scripts/
+        │   │   ├── maintenance.sh
+        │   │   ├── deploy.sh
+        │   │   └── ...
+        │   ├── tests/
+        │   │   ├── unit/
+        │   │   ├── integration/
+        │   │   └── e2e/
+        │   ├── .github/
+        │   │   └── workflows/
+        │   │       ├── ci.yml
+        │   │       └── cd.yml
+        │   ├── docs/
+        │   │   ├── architecture.md
+        │   │   ├── api_reference.md
+        │   │   ├── user_guide.md
+        │   │   ├── developer_guide.md
+        │   │   └── operational_procedures.md
         │   ├── assets/
         │   │   ├── styles.css
         │   │   └── templates/
@@ -1237,3 +1238,14 @@ Each file in the project contains the necessary imports, class and function defi
 - Each test file corresponds to a module and tests its functionalities.
 
 ---
+
+## 5. Updates to Each file:
+- Add cell class and update table class in data_processing.py
+  - Added Cell Class: A new Cell class is introduced to represent individual cells within a table. This class includes attributes for content, rowspan, colspan, styles, and nested tables.
+  - Updated Table Class:
+    - The data attribute is now a List[List[Cell]] instead of List[List[Any]] to incorporate the new Cell class.
+    - Updated the constructor and any methods that interact with the table data to accommodate the Cell objects.
+- Update validate_user_inputs in validation.py to raise ValidationError instead of returning a boolean.
+- Update the process_user_input function in user_interface.py to convert data type strings to actual Python types when constructing the ExtractionParameters object.
+- Updated parse_documents Function in data_processing.py. 
+- Ensure that process_user_input, process_documents, and render_results in user_interface.py can handle input from the Streamlit interface as described in Table2Json_Extractor.py.

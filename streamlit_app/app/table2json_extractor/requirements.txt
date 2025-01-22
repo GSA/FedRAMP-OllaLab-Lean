@@ -1,0 +1,5 @@
+# requirements.txt
+
+python-docx>=0.8.10
+pdfplumber>=0.5
+# Other existing dependencies
