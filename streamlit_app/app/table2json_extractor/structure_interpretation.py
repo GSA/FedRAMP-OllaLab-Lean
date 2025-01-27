@@ -4,8 +4,8 @@ from typing import List, Dict, Any, Optional
 from copy import deepcopy
 
 # Importing custom classes and exceptions
-from data_processing import Table, Cell
-from exceptions import StructureInterpretationError, MergedCellError, NestedTableParsingError
+from .data_processing import Table, Cell
+from .exceptions import StructureInterpretationError, MergedCellError, NestedTableParsingError
 
 # Logging
 import logging
@@ -38,14 +38,16 @@ def interpret_table_structure(table: Table, parameters) -> Table:
         # Deep copy the table to avoid modifying the original
         interpreted_table = deepcopy(table)
 
-        # Handle merged cells
-        interpreted_table = handle_merged_cells(interpreted_table)
+        # Handle merged cells if specified
+        if parameters.structure_interpretation.handle_merged_cells:
+            interpreted_table = handle_merged_cells(interpreted_table)
 
-        # Handle nested tables
-        interpreted_table = handle_nested_tables(interpreted_table)
+        # Handle nested tables if specified
+        if parameters.structure_interpretation.handle_nested_tables:
+            interpreted_table = handle_nested_tables(interpreted_table, parameters)
 
         # Handle irregular tables if parameters specify
-        if parameters.handle_irregular_structures:
+        if parameters.structure_interpretation.handle_irregular_structures:
             interpreted_table = handle_irregular_tables(interpreted_table)
 
         return interpreted_table
@@ -86,8 +88,8 @@ def handle_merged_cells(table: Table) -> Table:
                     logger.error("Column index exceeds max columns")
                     raise MergedCellError("Column index exceeds max columns")
 
-                rowspan = cell.rowspan
-                colspan = cell.colspan
+                rowspan = getattr(cell, 'rowspan', 1)
+                colspan = getattr(cell, 'colspan', 1)
 
                 for rowspan_index in range(rowspan):
                     for colspan_index in range(colspan):
@@ -97,7 +99,9 @@ def handle_merged_cells(table: Table) -> Table:
                             logger.error("Cell span exceeds table dimensions")
                             raise MergedCellError("Cell span exceeds table dimensions")
                         if grid[r][c] is None:
-                            grid[r][c] = cell
+                            # Clone the cell for each spanned position if needed
+                            spanned_cell = deepcopy(cell)
+                            grid[r][c] = spanned_cell
                         else:
                             logger.error("Overlapping cells detected")
                             raise MergedCellError("Overlapping cells detected")
@@ -114,13 +118,15 @@ def handle_merged_cells(table: Table) -> Table:
         logger.exception("Error handling merged cells")
         raise MergedCellError(f"Error handling merged cells: {str(e)}")
 
-def handle_nested_tables(table: Table) -> Table:
+def handle_nested_tables(table: Table, parameters) -> Table:
     """
     Processes nested tables within a table and represents them appropriately.
 
     Parameters:
         table (Table): 
             The Table object that may contain nested tables.
+        parameters (ExtractionParameters):
+            Extraction parameters guiding interpretation.
 
     Returns:
         Table:
@@ -134,7 +140,7 @@ def handle_nested_tables(table: Table) -> Table:
         logger.debug("Handling nested tables in table")
         for row in table.data:
             for cell in row:
-                if cell.nested_table:
+                if getattr(cell, 'nested_table', None):
                     # Recursively process nested tables
                     nested_tables = []
                     for nested_table in cell.nested_table:
@@ -171,8 +177,9 @@ def handle_irregular_tables(table: Table) -> Table:
         for row in table.data:
             current_cols = len(row)
             if current_cols < max_cols:
-                # Append None or empty Cells to match max_cols
-                row.extend([Cell(content='')] * (max_cols - current_cols))
+                # Append empty Cells to match max_cols
+                missing_cols = max_cols - current_cols
+                row.extend([Cell(content='')] * missing_cols)
 
         return table
     except Exception as e:

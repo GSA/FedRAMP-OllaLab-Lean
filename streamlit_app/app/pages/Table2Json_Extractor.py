@@ -1,40 +1,30 @@
-# streamlit_app/app/pages/Table2Json_Extractor.py
+# Table2Json_Extractor.py
 
-"""
-Table2Json_Extractor.py
-
-Streamlit page handling user interactions and displaying results for the Table to JSON Extractor app.
-
-This module provides the user interface for uploading documents, specifying extraction parameters,
-processing the documents, and displaying the extracted tables in JSON format.
-
-It relies on other modules for processing, including:
-- data_processing.py
-- extraction_parameters.py
-- structure_interpretation.py
-- user_interface.py
-- validation.py
-- logging_handlers.py
-"""
+app_version = "0.1"
+app_title = "OllaLab - Unstructured Table to JSON"
+app_description = "Extract unstructured table and save to JSON"
+app_icon = ":arrow_upper_right:"
 
 import streamlit as st
 import logging
+import os  # Added import os
 
 # Import necessary modules and functions
-from data_processing import parse_documents
-from extraction_parameters import (
+from table2json_extractor.data_processing import parse_documents
+from table2json_extractor.extraction_parameters import (
     ExtractionParameters,
     TableSelectionCriteria,
     FormattingRules,
     ErrorHandlingStrategy,
     ParserConfiguration,
     ResourceLimits,
+    StructureInterpretationRules
 )
-from structure_interpretation import interpret_table_structure
-from user_interface import process_user_input, process_documents, render_results
-from validation import validate_user_inputs, validate_extracted_data
-from locale_manager import load_locale
-from exceptions import (
+from table2json_extractor.structure_interpretation import interpret_table_structure
+from table2json_extractor.user_interface import process_user_input, process_documents, render_results
+from table2json_extractor.validation import validate_user_inputs, validate_extracted_data
+# Removed import of load_locale
+from table2json_extractor.exceptions import (
     InvalidUserInputError,
     DataValidationError,
     ProcessingError,
@@ -47,8 +37,7 @@ logger = logging.getLogger(__name__)
 
 # Set up logging configurations (assuming setup_logging from logging_config.py has been called in main.py)
 
-# Load locale (for internationalization)
-locale = load_locale('en')  # For simplicity, using English locale
+# Removed load_locale as it's not defined and not used in the script
 
 def main():
     st.set_page_config(page_title="Table to JSON Extractor", layout="wide")
@@ -155,28 +144,36 @@ def main():
                 'row_conditions': row_conditions,
                 'column_conditions': column_conditions
             },
-            'formatting_rules': {
-                'preserve_styles': preserve_styles,
-                'date_format': date_format,
-                'number_format': number_format if number_format else None,
-                'encoding': encoding,
-                'placeholder_for_missing': placeholder_for_missing if placeholder_for_missing else None
-            },
-            'error_handling': {
-                'on_parsing_error': on_parsing_error.lower(),
-                'on_validation_error': on_validation_error.lower(),
-                'fallback_mechanisms': []  # Placeholder
-            },
-            'parser_config': {
-                'ocr_enabled': ocr_enabled,
-                'language': language,
-                'resource_limits': {
-                    'max_memory': int(max_memory) if max_memory > 0 else None,
-                    'max_time': int(max_time) if max_time > 0 else None,
-                    'max_cpu_usage': int(max_cpu_usage) if max_cpu_usage > 0 else None
-                }
-            },
-            'data_types': {}  # Could be expanded to accept user inputs
+            'extraction_parameters': {
+                'formatting_rules': {
+                    'preserve_styles': preserve_styles,
+                    'date_format': date_format,
+                    'number_format': number_format if number_format else None,
+                    'encoding': encoding,
+                    'placeholder_for_missing': placeholder_for_missing if placeholder_for_missing else None,
+                    'header_rows': 0  # Assuming default value
+                },
+                'error_handling': {
+                    'on_parsing_error': on_parsing_error.lower(),
+                    'on_validation_error': on_validation_error.lower(),
+                    'fallback_mechanisms': []  # Placeholder
+                },
+                'parser_config': {
+                    'ocr_enabled': ocr_enabled,
+                    'language': language,
+                    'resource_limits': {
+                        'max_memory': int(max_memory) if max_memory > 0 else None,
+                        'max_time': int(max_time) if max_time > 0 else None,
+                        'max_cpu_usage': int(max_cpu_usage) if max_cpu_usage > 0 else None
+                    }
+                },
+                'structure_interpretation': {
+                    'handle_merged_cells': True,
+                    'handle_nested_tables': True,
+                    'handle_irregular_structures': True
+                },
+                'data_types': {}  # Could be expanded to accept user inputs
+            }
         }
 
         # Process user inputs

@@ -12,21 +12,30 @@ Includes functions for:
 
 """
 
+import datetime
 import logging
 from typing import Dict, Any, List
 
-from exceptions import InvalidUserInputError, ProcessingError, RenderingError, ValidationError, DataValidationError
-from extraction_parameters import (
+from .accessibility import AccessibilityManager
+from .exceptions import (
+    InvalidUserInputError,
+    ProcessingError,
+    RenderingError,
+    ValidationError,
+    DataValidationError
+)
+from .extraction_parameters import (
     ExtractionParameters,
     TableSelectionCriteria,
     FormattingRules,
     ErrorHandlingStrategy,
     ParserConfiguration,
-    ResourceLimits
+    ResourceLimits,
+    StructureInterpretationRules
 )
-from validation import validate_user_inputs, validate_extracted_data
-from data_processing import parse_documents, Table, Cell, Document
-from structure_interpretation import interpret_table_structure
+from .validation import validate_user_inputs, validate_extracted_data
+from .data_processing import parse_documents, Table, Cell, Document
+from .structure_interpretation import interpret_table_structure
 import json
 import re
 
@@ -34,7 +43,10 @@ import re
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-def process_user_input(user_inputs: Dict[str, Any]) -> ExtractionParameters:
+# Initialize AccessibilityManager
+accessibility_manager = AccessibilityManager(locale_dir='locales', default_language='en')
+
+def process_user_input(user_inputs: Dict[str, Any]) -> (List[str], ExtractionParameters):
     """
     Processes user inputs from the web or command-line interface.
 
@@ -43,8 +55,8 @@ def process_user_input(user_inputs: Dict[str, Any]) -> ExtractionParameters:
             A dictionary containing inputs provided by the user.
 
     Returns:
-        ExtractionParameters:
-            An object containing validated extraction parameters.
+        Tuple[List[str], ExtractionParameters]:
+            A tuple containing the list of source documents and an object containing validated extraction parameters.
 
     Raises:
         InvalidUserInputError:
@@ -58,28 +70,47 @@ def process_user_input(user_inputs: Dict[str, Any]) -> ExtractionParameters:
         validate_user_inputs(user_inputs)
         logger.info("User inputs passed validation.")
 
+        # Extract source documents
+        source_documents = user_inputs.get('source_documents', [])
+        logger.debug(f"Source documents: {source_documents}")
+
         # Extract parameters from user_inputs
+        table_selection_input = user_inputs.get('table_selection', {})
         table_selection = TableSelectionCriteria(
-            method=user_inputs.get('table_selection', {}).get('selection_method'),
-            indices=user_inputs.get('table_selection', {}).get('indices'),
-            keywords=user_inputs.get('table_selection', {}).get('keywords'),
-            regex_patterns=user_inputs.get('table_selection', {}).get('regex_patterns'),
-            row_conditions=user_inputs.get('table_selection', {}).get('row_conditions'),
-            column_conditions=user_inputs.get('table_selection', {}).get('column_conditions')
+            method=table_selection_input.get('method'),
+            indices=table_selection_input.get('indices'),
+            keywords=table_selection_input.get('keywords'),
+            regex_patterns=table_selection_input.get('regex_patterns'),
+            row_conditions=table_selection_input.get('row_conditions'),
+            column_conditions=table_selection_input.get('column_conditions'),
+            saved_profile=table_selection_input.get('saved_profile')
+        )
+
+        # Extract extraction parameters
+        extraction_parameters_input = user_inputs.get('extraction_parameters', {})
+
+        # Extract StructureInterpretationRules
+        structure_interpretation_input = extraction_parameters_input.get('structure_interpretation', {})
+        structure_interpretation = StructureInterpretationRules(
+            handle_merged_cells=structure_interpretation_input.get('handle_merged_cells', True),
+            handle_nested_tables=structure_interpretation_input.get('handle_nested_tables', True),
+            handle_irregular_structures=structure_interpretation_input.get('handle_irregular_structures', True)
         )
 
         # Extract FormattingRules
+        formatting_rules_input = extraction_parameters_input.get('formatting_rules', {})
         formatting_rules = FormattingRules(
-            preserve_styles=user_inputs.get('preserve_styles', False),
-            date_format=user_inputs.get('date_format', "%Y-%m-%d"),
-            number_format=user_inputs.get('number_format', None),
-            encoding=user_inputs.get('encoding', 'utf-8'),
-            placeholder_for_missing=user_inputs.get('placeholder_for_missing', None)
+            preserve_styles=formatting_rules_input.get('preserve_styles', False),
+            date_format=formatting_rules_input.get('date_format', "%Y-%m-%d"),
+            number_format=formatting_rules_input.get('number_format', None),
+            encoding=formatting_rules_input.get('encoding', 'utf-8'),
+            placeholder_for_missing=formatting_rules_input.get('placeholder_for_missing', None),
+            header_rows=formatting_rules_input.get('header_rows', 0)
         )
 
         # Convert data type strings to actual Python types
-        data_types_input = user_inputs.get('data_types', {})
-        valid_types_map = {'int': int, 'float': float, 'str': str, 'bool': bool, 'date': 'date'}
+        data_types_input = user_inputs.get('extraction_parameters', {}).get('data_types', {})
+        valid_types_map = {'int': int, 'float': float, 'str': str, 'bool': bool, 'date': datetime.datetime}
         data_types = {}
         for column, type_str in data_types_input.items():
             if type_str in valid_types_map:
@@ -88,22 +119,25 @@ def process_user_input(user_inputs: Dict[str, Any]) -> ExtractionParameters:
                 raise InvalidUserInputError(f"Invalid data type '{type_str}' for column '{column}'.")
 
         # Extract ErrorHandlingStrategy
+        error_handling_input = extraction_parameters_input.get('error_handling', {})
         error_handling = ErrorHandlingStrategy(
-            on_parsing_error=user_inputs.get('on_parsing_error', 'log'),
-            on_validation_error=user_inputs.get('on_validation_error', 'omit'),
-            fallback_mechanisms=user_inputs.get('fallback_mechanisms', [])
+            on_parsing_error=error_handling_input.get('on_parsing_error', 'log'),
+            on_validation_error=error_handling_input.get('on_validation_error', 'omit'),
+            fallback_mechanisms=error_handling_input.get('fallback_mechanisms', [])
         )
 
         # Extract ParserConfiguration
+        resource_limits_input = extraction_parameters_input.get('parser_config', {}).get('resource_limits', {})
         resource_limits = ResourceLimits(
-            max_memory=user_inputs.get('max_memory'),
-            max_time=user_inputs.get('max_time'),
-            max_cpu_usage=user_inputs.get('max_cpu_usage')
+            max_memory=resource_limits_input.get('max_memory'),
+            max_time=resource_limits_input.get('max_time'),
+            max_cpu_usage=resource_limits_input.get('max_cpu_usage')
         )
 
+        parser_config_input = extraction_parameters_input.get('parser_config', {})
         parser_config = ParserConfiguration(
-            ocr_enabled=user_inputs.get('ocr_enabled', False),
-            language=user_inputs.get('language', 'en'),
+            ocr_enabled=parser_config_input.get('ocr_enabled', False),
+            language=parser_config_input.get('language', 'en'),
             resource_limits=resource_limits
         )
 
@@ -113,7 +147,8 @@ def process_user_input(user_inputs: Dict[str, Any]) -> ExtractionParameters:
             formatting_rules=formatting_rules,
             data_types=data_types,
             error_handling=error_handling,
-            parser_config=parser_config
+            parser_config=parser_config,
+            structure_interpretation=structure_interpretation
         )
 
         # Validate extraction parameters
@@ -121,7 +156,7 @@ def process_user_input(user_inputs: Dict[str, Any]) -> ExtractionParameters:
 
         logger.info("Extraction parameters have been successfully created and validated.")
 
-        return extraction_parameters
+        return source_documents, extraction_parameters
 
     except ValidationError as e:
         logger.error(f"User inputs failed validation: {e}")
@@ -175,7 +210,7 @@ def process_documents(file_paths: List[str], parameters: ExtractionParameters) -
 
                 # Validate the extracted data
                 try:
-                    validate_extracted_data(table_data, parameters)
+                    validate_extracted_data(table_data['data'], parameters)
                 except DataValidationError as e:
                     # Handle invalid data as per error_handling rules
                     action = parameters.error_handling.on_validation_error
@@ -229,7 +264,7 @@ def render_results(data: List[Dict], output_format: str) -> str:
     """
     try:
         if output_format.lower() == 'json':
-            rendered_output = json.dumps(data, indent=4)
+            rendered_output = json.dumps(data, indent=4, default=str)
         elif output_format.lower() == 'markdown':
             rendered_output = convert_to_markdown(data)
         else:
@@ -281,6 +316,9 @@ def select_tables(tables: List[Table], selection_criteria: TableSelectionCriteri
         for table in tables:
             if table_matches_conditions(table, selection_criteria.row_conditions, selection_criteria.column_conditions):
                 selected_tables.append(table)
+    elif selection_criteria.method == 'saved_profile':
+        # Implement logic for loading and applying saved profiles
+        logger.warning("Saved profile selection method is not yet implemented.")
     else:
         logger.warning(f"Unknown selection method: {selection_criteria.method}")
 
@@ -336,17 +374,37 @@ def table_matches_conditions(table: Table, row_conditions: Dict[str, Any], colum
         table (Table):
             The table to check.
         row_conditions (Dict[str, Any]):
-            Conditions based on row data.
+            Conditions based on the data within rows.
         column_conditions (Dict[str, Any]):
-            Conditions based on column data.
+            Conditions based on the data within columns.
 
     Returns:
         bool:
             True if the table meets the conditions, False otherwise.
     """
     # Placeholder implementation
-    # Actual implementation should evaluate the conditions specified
-    return True  # For demonstration purposes
+    # TODO: Implement evaluation logic based on the specified conditions
+    logger.debug("Evaluating table against row and column conditions.")
+    if row_conditions:
+        # Evaluate row conditions
+        # Example: Check if the table has a specific number of rows
+        if 'min_rows' in row_conditions:
+            min_rows = row_conditions['min_rows']
+            if len(table.data) < min_rows:
+                return False
+        # Add more condition evaluations as needed
+
+    if column_conditions:
+        # Evaluate column conditions
+        # Example: Check if the table has a specific number of columns
+        if 'min_columns' in column_conditions:
+            min_columns = column_conditions['min_columns']
+            max_columns = max(len(row) for row in table.data)
+            if max_columns < min_columns:
+                return False
+        # Add more condition evaluations as needed
+
+    return True  # Return True if all conditions are met
 
 def table_to_dict(table: Table, parameters: ExtractionParameters) -> Dict:
     """
@@ -366,24 +424,42 @@ def table_to_dict(table: Table, parameters: ExtractionParameters) -> Dict:
     data = []
 
     # Identify header rows if specified
-    header_rows = parameters.formatting_rules.header_rows if hasattr(parameters.formatting_rules, 'header_rows') else 0
+    header_rows = parameters.formatting_rules.header_rows
 
-    for row_idx, row in enumerate(table.data):
+    # Extract header names if header_rows > 0
+    headers = []
+    if header_rows > 0:
+        for h_idx in range(header_rows):
+            if h_idx >= len(table.data):
+                logger.warning(f"Header row index {h_idx} is out of range.")
+                continue
+            row = table.data[h_idx]
+            headers.append([str(cell.content) for cell in row])
+        column_names = merge_headers(headers)
+    else:
+        # If no headers are specified, use default column names
+        max_cols = max(len(row) for row in table.data)
+        column_names = [f"Column_{i+1}" for i in range(max_cols)]
+
+    for row_idx in range(header_rows, len(table.data)):
         row_data = {}
+        row = table.data[row_idx]
         for col_idx, cell in enumerate(row):
             cell_content = cell.content
             # Apply data types if specified
-            column_name = f"Column_{col_idx+1}"
+            column_name = column_names[col_idx] if col_idx < len(column_names) else f"Column_{col_idx+1}"
             if parameters.data_types and column_name in parameters.data_types:
                 expected_type = parameters.data_types[column_name]
                 try:
-                    if expected_type == 'date':
-                        # Handle date conversion if necessary
-                        pass  # Placeholder for date parsing
+                    if expected_type == datetime.datetime:
+                        # Handle date conversion
+                        date_format = parameters.formatting_rules.date_format
+                        cell_content = datetime.datetime.strptime(cell_content, date_format)
                     else:
                         cell_content = expected_type(cell_content)
                 except ValueError:
                     logger.warning(f"Failed to convert cell content '{cell_content}' to {expected_type}")
+                    # Optionally assign placeholder or continue based on error handling strategy
 
             if parameters.formatting_rules.placeholder_for_missing is not None and (cell_content is None or cell_content == ''):
                 cell_content = parameters.formatting_rules.placeholder_for_missing
@@ -395,6 +471,22 @@ def table_to_dict(table: Table, parameters: ExtractionParameters) -> Dict:
     table_dict['data'] = data
     table_dict['metadata'] = table.metadata
     return table_dict
+
+def merge_headers(headers: List[List[str]]) -> List[str]:
+    column_names = []
+    max_length = max(len(h) for h in headers)
+    for col_idx in range(max_length):
+        col_name_parts = []
+        for header_row in headers:
+            if col_idx < len(header_row):
+                col_name_parts.append(str(header_row[col_idx]).strip())
+            else:
+                col_name_parts.append("")
+        col_name = ' '.join(part for part in col_name_parts if part)
+        if not col_name:
+            col_name = f"Column_{col_idx+1}"
+        column_names.append(col_name)
+    return column_names
 
 def correct_data(data: Dict) -> Dict:
     """

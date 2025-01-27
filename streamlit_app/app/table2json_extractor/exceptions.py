@@ -59,3 +59,7 @@ class ValidationError(Exception):
     """Raised when validation of user inputs fails."""
     def __init__(self, message):
         super().__init__(message)
+
+class MergedCellError(Exception):
+    """Raised when an error occurs when parsing merged cells."""
+    pass

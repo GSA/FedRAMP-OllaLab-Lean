@@ -9,8 +9,26 @@ Module defining the parameters and criteria for extracting tables from documents
 from typing import List, Dict, Any, Callable, Type, Optional
 import re
 import datetime
-from exceptions import InvalidParameterError
+from .exceptions import InvalidParameterError
 
+class StructureInterpretationRules:
+    def __init__(
+        self,
+        handle_merged_cells: bool = True,
+        handle_nested_tables: bool = True,
+        handle_irregular_structures: bool = True
+    ):
+        self.handle_merged_cells = handle_merged_cells
+        self.handle_nested_tables = handle_nested_tables
+        self.handle_irregular_structures = handle_irregular_structures
+
+    def validate(self):
+        if not isinstance(self.handle_merged_cells, bool):
+            raise InvalidParameterError("handle_merged_cells must be a boolean.")
+        if not isinstance(self.handle_nested_tables, bool):
+            raise InvalidParameterError("handle_nested_tables must be a boolean.")
+        if not isinstance(self.handle_irregular_structures, bool):
+            raise InvalidParameterError("handle_irregular_structures must be a boolean.")
 
 class ExtractionParameters:
     """
@@ -38,7 +56,8 @@ class ExtractionParameters:
         formatting_rules: 'FormattingRules', 
         data_types: Dict[str, Type], 
         error_handling: 'ErrorHandlingStrategy', 
-        parser_config: 'ParserConfiguration'
+        parser_config: 'ParserConfiguration',
+        structure_interpretation: 'StructureInterpretationRules'
     ):
         """
         Initializes the ExtractionParameters object.
@@ -60,6 +79,7 @@ class ExtractionParameters:
         self.data_types = data_types
         self.error_handling = error_handling
         self.parser_config = parser_config
+        self.structure_interpretation = structure_interpretation
 
         self.validate_parameters()
 
@@ -76,6 +96,7 @@ class ExtractionParameters:
         self._validate_data_types()
         self.error_handling.validate()
         self.parser_config.validate()
+        self.structure_interpretation.validate()
 
     def _validate_data_types(self):
         """
@@ -101,7 +122,7 @@ class TableSelectionCriteria:
 
     Attributes:
         method (str): 
-            Selection method ('indexing', 'keyword', 'regex', 'criteria').
+            Selection method ('indexing', 'keyword', 'regex', 'criteria', 'saved_profile').
         indices (Optional[List[int]]): 
             Indices of tables to extract when using indexing.
         keywords (Optional[List[str]]): 
@@ -112,7 +133,7 @@ class TableSelectionCriteria:
             Conditions based on the data within rows.
         column_conditions (Optional[Dict[str, Any]]): 
             Conditions based on the data within columns.
-        saved_profiles (Optional[str]): 
+        saved_profile (Optional[str]): 
             Name of a saved selection profile to use.
 
     Methods:
@@ -128,7 +149,7 @@ class TableSelectionCriteria:
         regex_patterns: Optional[List[str]] = None,
         row_conditions: Optional[Dict[str, Any]] = None,
         column_conditions: Optional[Dict[str, Any]] = None,
-        saved_profiles: Optional[str] = None,
+        saved_profile: Optional[str] = None,
     ):
         """
         Initializes the TableSelectionCriteria object.
@@ -146,7 +167,7 @@ class TableSelectionCriteria:
                 Conditions based on the data within rows.
             column_conditions (Optional[Dict[str, Any]]): 
                 Conditions based on the data within columns.
-            saved_profiles (Optional[str]): 
+            saved_profile (Optional[str]): 
                 Name of a saved selection profile to use.
         """
         self.method = method
@@ -155,7 +176,7 @@ class TableSelectionCriteria:
         self.regex_patterns = regex_patterns
         self.row_conditions = row_conditions
         self.column_conditions = column_conditions
-        self.saved_profiles = saved_profiles
+        self.saved_profile = saved_profile
 
     def validate(self):
         """
@@ -217,7 +238,7 @@ class TableSelectionCriteria:
             )
 
     def _validate_saved_profile(self):
-        if not self.saved_profiles or not isinstance(self.saved_profiles, str):
+        if not self.saved_profile or not isinstance(self.saved_profile, str):
             raise InvalidParameterError(
                 "A saved profile name must be provided as a string when method is 'saved_profile'."
             )
@@ -250,6 +271,7 @@ class FormattingRules:
         number_format: Optional[str] = None,  # Optional format string
         encoding: str = "utf-8",
         placeholder_for_missing: Any = None,
+        header_rows: int = 0
     ):
         """
         Initializes the FormattingRules object.
@@ -271,6 +293,7 @@ class FormattingRules:
         self.number_format = number_format
         self.encoding = encoding
         self.placeholder_for_missing = placeholder_for_missing
+        self.header_rows = header_rows
 
     def validate(self):
         """
@@ -301,6 +324,8 @@ class FormattingRules:
 
         if not isinstance(self.encoding, str):
             raise InvalidParameterError("encoding must be a string.")
+        if not isinstance(self.header_rows, int) or self.header_rows < 0:
+            raise InvalidParameterError("header_rows must be a non-negative integer.")
 
         # No specific validation for placeholder_for_missing
 

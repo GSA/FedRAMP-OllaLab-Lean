@@ -6,14 +6,15 @@ validation.py
 Module containing validation functions for user inputs and extracted data.
 """
 
-from exceptions import ValidationError, DataValidationError
-from extraction_parameters import (
+from .exceptions import ValidationError, DataValidationError
+from .extraction_parameters import (
     ExtractionParameters,
     TableSelectionCriteria,
     FormattingRules,
     ErrorHandlingStrategy,
     ParserConfiguration,
     ResourceLimits,
+    StructureInterpretationRules
 )
 from typing import Dict, Any, List, Type
 import re
@@ -47,7 +48,7 @@ def validate_user_inputs(user_inputs: Dict[str, Any]) -> None:
     logger.debug("Validating user inputs.")
 
     # Required fields
-    required_fields = ['source_documents', 'table_selection', 'extraction_parameters']
+    required_fields = ['table_selection', 'extraction_parameters']
     for field in required_fields:
         if field not in user_inputs:
             logger.error(f"Missing required input: {field}")
@@ -62,8 +63,6 @@ def validate_user_inputs(user_inputs: Dict[str, Any]) -> None:
         if not isinstance(file_path, str) or not file_path.strip():
             logger.error(f"Invalid file path: {file_path}")
             raise ValidationError(f"Invalid file path: {file_path}")
-
-        # Note: Further validation of file existence should occur elsewhere
 
     # Validate table_selection
     table_selection = user_inputs.get('table_selection')
@@ -96,7 +95,7 @@ def validate_table_selection_criteria(criteria: Dict[str, Any]) -> None:
     """
     logger.debug("Validating table selection criteria.")
 
-    valid_methods = ['indexing', 'keyword', 'regex', 'criteria']
+    valid_methods = ['indexing', 'keyword', 'regex', 'criteria', 'saved_profile']
     method = criteria.get('method')
     if method not in valid_methods:
         logger.error(f"Invalid table selection method '{method}'. Valid methods are {valid_methods}")
@@ -135,6 +134,11 @@ def validate_table_selection_criteria(criteria: Dict[str, Any]) -> None:
         if not row_conditions and not column_conditions:
             logger.error("At least one of row_conditions or column_conditions must be provided when method is 'criteria'.")
             raise ValidationError("At least one of row_conditions or column_conditions must be provided when method is 'criteria'.")
+    elif method == 'saved_profile':
+        saved_profile = criteria.get('saved_profile')
+        if not saved_profile or not isinstance(saved_profile, str):
+            logger.error("A saved profile name must be provided as a string when method is 'saved_profile'.")
+            raise ValidationError("A saved profile name must be provided as a string when method is 'saved_profile'.")
     else:
         logger.error(f"Invalid table selection method '{method}'.")
         raise ValidationError(f"Invalid table selection method '{method}'.")
@@ -182,6 +186,12 @@ def validate_extraction_parameters(params: Dict[str, Any]) -> None:
                 logger.error(f"Invalid encoding '{encoding}'.")
                 raise ValidationError(f"Invalid encoding '{encoding}'.")
 
+        header_rows = formatting_rules.get('header_rows')
+        if header_rows is not None:
+            if not isinstance(header_rows, int) or header_rows < 0:
+                logger.error("header_rows must be a non-negative integer.")
+                raise ValidationError("header_rows must be a non-negative integer.")
+
     # Validate data_types
     data_types = params.get('data_types')
     if data_types:
@@ -196,6 +206,33 @@ def validate_extraction_parameters(params: Dict[str, Any]) -> None:
             if not isinstance(dtype, str) or dtype not in valid_type_strings:
                 logger.error(f"Invalid data type '{dtype}' for column '{column}'. Valid types are {valid_type_strings}")
                 raise ValidationError(f"Invalid data type '{dtype}' for column '{column}'. Valid types are {valid_type_strings}")
+
+    # Validate error_handling
+    error_handling = params.get('error_handling')
+    if error_handling:
+        if not isinstance(error_handling, dict):
+            logger.error("error_handling must be a dictionary.")
+            raise ValidationError("error_handling must be a dictionary.")
+        on_parsing_error = error_handling.get('on_parsing_error')
+        valid_parsing_actions = ['skip', 'abort', 'log']
+        if on_parsing_error and on_parsing_error not in valid_parsing_actions:
+            logger.error(f"Invalid on_parsing_error action '{on_parsing_error}'. Valid actions are {valid_parsing_actions}.")
+            raise ValidationError(f"Invalid on_parsing_error action '{on_parsing_error}'. Valid actions are {valid_parsing_actions}.")
+        on_validation_error = error_handling.get('on_validation_error')
+        valid_validation_actions = ['correct', 'omit', 'prompt', 'abort']
+        if on_validation_error and on_validation_error not in valid_validation_actions:
+            logger.error(f"Invalid on_validation_error action '{on_validation_error}'. Valid actions are {valid_validation_actions}.")
+            raise ValidationError(f"Invalid on_validation_error action '{on_validation_error}'. Valid actions are {valid_validation_actions}.")
+
+        fallback_mechanisms = error_handling.get('fallback_mechanisms')
+        if fallback_mechanisms:
+            if not isinstance(fallback_mechanisms, list):
+                logger.error("fallback_mechanisms must be a list of callables.")
+                raise ValidationError("fallback_mechanisms must be a list of callables.")
+            for func in fallback_mechanisms:
+                if not callable(func):
+                    logger.error("All fallback mechanisms must be callable.")
+                    raise ValidationError("All fallback mechanisms must be callable.")
 
     # Validate parser_config
     parser_config = params.get('parser_config')
@@ -218,6 +255,25 @@ def validate_extraction_parameters(params: Dict[str, Any]) -> None:
                 logger.error("resource_limits must be a dictionary.")
                 raise ValidationError("resource_limits must be a dictionary.")
             validate_resource_limits(resource_limits)
+
+    # Validate structure_interpretation
+    structure_interpretation = params.get('structure_interpretation')
+    if structure_interpretation:
+        if not isinstance(structure_interpretation, dict):
+            logger.error("structure_interpretation must be a dictionary.")
+            raise ValidationError("structure_interpretation must be a dictionary.")
+        handle_merged_cells = structure_interpretation.get('handle_merged_cells')
+        if handle_merged_cells is not None and not isinstance(handle_merged_cells, bool):
+            logger.error("handle_merged_cells must be a boolean.")
+            raise ValidationError("handle_merged_cells must be a boolean.")
+        handle_nested_tables = structure_interpretation.get('handle_nested_tables')
+        if handle_nested_tables is not None and not isinstance(handle_nested_tables, bool):
+            logger.error("handle_nested_tables must be a boolean.")
+            raise ValidationError("handle_nested_tables must be a boolean.")
+        handle_irregular_structures = structure_interpretation.get('handle_irregular_structures')
+        if handle_irregular_structures is not None and not isinstance(handle_irregular_structures, bool):
+            logger.error("handle_irregular_structures must be a boolean.")
+            raise ValidationError("handle_irregular_structures must be a boolean.")
 
 def validate_resource_limits(limits: Dict[str, Any]) -> None:
     """
@@ -307,7 +363,7 @@ def validate_value_type(value: Any, expected_type: Any) -> bool:
         bool:
             True if the value is of the expected type, False otherwise.
     """
-    if expected_type == 'date':
+    if expected_type == datetime.datetime:
         return isinstance(value, (datetime.date, datetime.datetime))
     else:
         return isinstance(value, expected_type)

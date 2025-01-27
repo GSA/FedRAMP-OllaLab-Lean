@@ -1,4 +1,4 @@
-# FedRAMP OllaLab - Simple Chat 
+# FedRAMP RAGAR - Prompt Engineering Module (PEM)
 ## Problem Statement
 
 In interacting with LLMs, the quality of questions directly impacts the quality of answers. Prompt Engineering is all about crafting the best possible questions (prompts). Robust Prompt Engineering will help FedRAMP, GSA members, and all internal/external Stakeholders engage more effectively with LLMs in solving any kind of problems.
@@ -10,7 +10,7 @@ Mainstream chat application interfaces such as those provided by OpenAI and Anth
 - Lack of flexibility in sharing different abstractions of chat results
 - Lack of supports for teamwork and convenient reusability
 
-OllaLab - SimpleChat aims to:
+FedRAMP RAGAR - Prompt Engineering Module (PEM) aims to:
 1. Improve context building by allowing users to:
   - Selectively save LLM responses to prompt variables
   - Save prompts to prompt variables
@@ -27,201 +27,511 @@ OllaLab - SimpleChat aims to:
   - Allow prompt variable file to be shared using existing systems' file sharing features
   - Provide other automation/integration features
 
+## The FedRAMP RAGAR Architecture
+- FedRAMP RAGAR - Prompt Engineering Module is a module within FedRAMP RAGAR (RAGAR).
+- RAGAR leverages AI to automate retrieval, analysis, and reporting of complex, evolving information across multiple data sources such as local folders, APIs, websites, etc. The main purpose is to reduce manual effort in processing and analyzing data, enhance decision making, and boost overall efficiency in all work tasks.
+- RAGAR near-term operational goals are as follows:
+  - Reliably parse any amount of text-based data such as texts, MS word files, PDF files, websites using both automatic and user-guided mechanisms.
+  - Accurately extract structured data such as data tables, JSON data from parsed data.
+  - Reliably perform automated analysis on extracted structured data to gain general insights.
+  - Reliably answer users’ inquiries.
+  - Execute users’ defined prompt templates for the generation of custom insights, summaries, and reports.
+- There are three main modules within RAGAR.
+  - Prompt Engineering Module (PEM) has the main goal of designing and optimizing prompts that guide AI models, particularly large language models (LLMs), to generate the most accurate, relevant, and desired responses by providing clear context, instructions, and examples, effectively steering the AI towards the specific output intended by the user. PEM has features such as creating prompt variables from various data sources, nesting of prompt variables, saving prompt variables to files, and so on. PEM details are further described in this document.
+  - Prompt Automation Module (PAM) allows the user to design, manage, and orchestrate data workflows that involve PEM's prompt variables and beyond. PAM should be able to read PEM's prompt variable files and convert them to PAM's work flows. A single prompt variable in PEM can be a node in PAM. Under the hood, PAM is based on Apache Airflow which has the following key features:
+    - Directed Acyclic Graphs (DAGs): Represent workflows as a collection of tasks and their dependencies. 
+    - Scheduling: Automate task scheduling and define when and how often each task should run.
+    - Monitoring: Use the web UI to track workflows in real-time, receive alerts, and access logs.
+    - Scalability: Scale workflows based on workload demands without compromising data integrity.
+    - Error handling: Detect errors and receive real-time notifications.
+    - Integration: Integrate with other systems, like Apache Kafka, to complement its batch processing capabilities.
+    - Extensibility: Integrate with a wide range of systems and services, including cloud platforms, databases, messaging systems, and custom APIs.
+    - Dynamic workflows: Create workflows that adapt to changing conditions and data inputs.
+    - Command-line interface (CLI): Perform various functions directly from the terminal. 
+  - Data Engineering Module (DEM) supports the creation of DEM variable which can be chained with prompt variables to transform data or extract/infer new data. A DEM variable is a function that takes input data, applies a specific DEM function to transform the data, and returns the function's outputs. DEM functions are of the following types: normal (programmable logics and classical data transformations), machine learning, deep learning, and LLM-based (i.e. RAG functions, LLM-based structured data extractor, etc.)
+
+## Overarching Requirements
+### **1. System Architecture and Design**
+- **Modular Architecture**: The system must be designed using a modular architecture to facilitate the addition of new modules and features without impacting existing functionality.
+- **Microservices Approach**: Implement a microservices architecture where each module (PEM, PAM, DEM) operates as an independent service with well-defined APIs.
+- **Scalable Infrastructure**: Design the system to scale horizontally and vertically to handle increasing workloads and data volumes.
+- **Separation of Concerns**: Ensure clear separation between data processing, business logic, and presentation layers to enhance maintainability.
+- **Loose Coupling**: Use asynchronous communication and message queues to decouple system components, enhancing resilience and scalability.
+- **Event-Driven Design**: Adopt an event-driven architecture to support real-time processing and responsiveness.
+
+### **2. Accessibility and Interfaces**
+- **Web Interface**: All modules must be accessible through an intuitive and user-friendly web interface that supports all major browsers and devices.
+- **API Interface**: Provide comprehensive RESTful or GraphQL APIs for all functionalities to enable integration with other systems and programmatic access.
+- **Third-Party Integration**: Design the system to easily integrate with external systems and data sources (local folders, APIs, websites, etc.).
+
+### **3. Modularity and Extensibility**
+- **Plugin Mechanism**: Implement a plugin or extension framework to allow new modules or functionalities to be added with minimal changes to the core system.
+- **Modular Deployment**: Allow modules to be deployed independently, enabling selective scaling and updates.
+- **Interoperability**: Ensure modules can interact seamlessly through standardized interfaces and protocols.
+
+### **4. Data Processing and Management**
+- **Data Parsing**: Reliably parse and ingest any amount of text-based data, including plain text, MS Word files, PDFs, and web content, using both automatic and user-guided mechanisms.
+- **Structured Data Extraction**: Accurately extract structured data (e.g., data tables, JSON) from unstructured sources.
+- **Data Transformation**: Provide robust data transformation capabilities through DEM functions, including classical data transformations, machine learning, deep learning, and LLM-based processing.
+- **Data Pipelines**: Support the creation and management of complex data processing pipelines with data lineage tracking.
+
+### **5. Workflow Orchestration**
+- **Workflow Management**: Utilize Apache Airflow in PAM to design, manage, and orchestrate data workflows involving PEM's prompt variables and beyond.
+- **Dynamic Workflows**: Support dynamic, data-driven workflows that can adapt to changing conditions and inputs.
+- **Scheduling and Monitoring**: Provide scheduling capabilities and real-time monitoring of workflows, tasks, and dependencies.
+- **Error Handling**: Implement robust error detection and handling mechanisms with real-time notifications and retry capabilities.
+
+### **6. User Interaction and Experience**
+- **Intuitive UI/UX**: Provide an intuitive user interface that simplifies complex tasks, reduces the learning curve, and enhances productivity.
+- **Customization**: Allow users to customize prompts, workflows, dashboards, and reports according to their preferences.
+- **Collaboration Tools**: Enable collaboration features such as sharing, version control, and commenting on prompts and workflows.
+- **Documentation and Help**: Offer comprehensive documentation, tutorials, and tooltips within the user interface.
+
+### **7. Security and Compliance**
+- **Authentication and Authorization**: Implement secure authentication mechanisms supporting Single Sign-On (SSO) with identity providers like Google, Login.gov, etc.
+- **Role-Based Access Control (RBAC)**: Enforce access controls based on user roles and permissions to restrict access to sensitive functionalities and data.
+- **Data Encryption**: Protect data at rest and in transit using strong encryption standards.
+- **Vulnerability Management**: Regularly scan for and remediate security vulnerabilities in system components and dependencies.
+- **Compliance Standards**: Ensure compliance with FedRAMP guidelines and other relevant industry standards and regulations (e.g., NIST, GDPR).
+- **Audit Logging**: Maintain comprehensive audit logs of user activities, system access, and data changes for regulatory compliance and forensic analysis.
+
+### **8. Identity and Access Management**
+- **SSO Integration**: Support SSO through industry-standard protocols like OAuth 2.0, OpenID Connect, and SAML 2.0.
+- **Multi-Factor Authentication (MFA)**: Provide options for MFA to enhance security for user authentication.
+
+### **9. Scalability and Performance**
+- **Horizontal Scaling**: Design components to scale horizontally across multiple servers or instances.
+- **Performance Optimization**: Optimize algorithms and data processing workflows for high performance, minimizing latency and resource consumption.
+- **Load Balancing**: Implement load balancers to distribute workloads evenly across servers.
+- **Real-Time Processing Readiness**: Architect the system to support future needs for real-time data processing and analysis.
+
+### **10. Logging, Monitoring, and Alerting**
+- **Comprehensive Logging**: Implement detailed logging for all system components, capturing system events, errors, and user activities.
+- **Monitoring Dashboards**: Provide real-time dashboards displaying system health, performance metrics, workflow statuses, and security events.
+- **Alerting Mechanisms**: Set up automated alerts for critical events, failures, and security incidents.
+- **Cybersecurity Monitoring**: Integrate with Security Information and Event Management (SIEM) systems for continuous cybersecurity monitoring and threat detection.
+- **Compliance Monitoring**: Include tools to monitor compliance with security policies and standards.
+
+### **11. Data Governance and Privacy**
+- **Data Lineage**: Track the origin and transformation of data throughout the system.
+- **Data Retention Policies**: Implement configurable data retention policies according to regulatory and organizational requirements.
+- **Anonymization and Masking**: Provide capabilities to anonymize or mask sensitive data where necessary.
+- **Consent Management**: Ensure that data processing complies with user consents and privacy agreements.
+- **Ethical AI Practices**: Incorporate ethical considerations in AI model usage to prevent biases and unfair outcomes.
+
+### **12. Integration and Interoperability**
+- **Standardized Interfaces**: Use standardized data formats (e.g., JSON, XML) and protocols (e.g., REST, gRPC) for external integrations.
+- **API Management**: Provide API gateways and management tools to control access, monitor usage, and ensure security.
+- **Third-Party Services**: Facilitate integration with third-party services and APIs for extended functionalities.
+- **Open-Source Solutions**: Leverage and contribute to reliable open-source projects where applicable, ensuring compliance with their licenses.
+
+### **13. Development and Deployment Practices**
+- **Continuous Integration/Continuous Deployment (CI/CD)**: Implement CI/CD pipelines for automated testing, building, and deployment of code changes.
+- **Automated Testing**: Include unit tests, integration tests, and end-to-end tests to ensure system reliability and prevent regressions.
+- **Containerization**: Use container technologies (e.g., Docker) to package applications for consistent deployment across environments.
+- **Infrastructure as Code (IaC)**: Manage infrastructure configurations using IaC tools (e.g., Terraform, Ansible) for reproducibility and scalability.
+- **Version Control**: Use a robust version control system (e.g., Git) for all code, configurations, and scripts.
+
+### **14. High Availability and Disaster Recovery**
+- **Redundancy**: Implement redundancy at all levels (application servers, databases, storage) to prevent single points of failure.
+- **Failover Mechanisms**: Design the system to failover automatically or with minimal intervention during outages.
+- **Backup Solutions**: Regularly back up data and configurations, ensuring backups are secure and tested for restorability.
+- **Disaster Recovery Plan**: Develop a comprehensive disaster recovery plan outlining procedures for various failure scenarios.
+
+### **15. Maintainability and Support**
+- **Code Quality Standards**: Adhere to coding standards and best practices to enhance readability and maintainability.
+- **Documentation**: Produce extensive documentation for system architecture, APIs, modules, and operational procedures.
+- **Automated Maintenance Tasks**: Schedule and automate routine maintenance tasks like database indexing, log rotation, and system updates.
+- **Support Infrastructure**: Set up support channels (e.g., ticketing systems, knowledge bases) to assist users and administrators.
+
+### **16. Usability and Accessibility**
+- **User-Centered Design**: Employ user research and feedback to design interfaces that meet user needs and preferences.
+- **Accessibility Compliance**: Ensure the system complies with accessibility standards (e.g., WCAG 2.1) to support users with disabilities.
+- **Responsive Design**: Design the web interface to be responsive across different devices and screen sizes.
+- **Internationalization (i18n)**: Support multiple languages and regional settings to accommodate a global user base.
+
+### **17. Extensibility for AI and Machine Learning**
+- **Model Integration**: Allow integration with various AI models, including LLMs from different providers, through a standardized interface.
+- **Model Management**: Provide tools to manage AI models, including deployment, versioning, and scaling.
+- **Algorithm Flexibility**: Enable users to select or customize algorithms and models used.
+
+### **18. Data Quality and Validation**
+- **Data Validation**: Implement validation rules to ensure data integrity and correctness at all stages of processing.
+- **Error Correction**: Provide mechanisms to detect and correct errors or inconsistencies in data.
+- **Quality Metrics**: Monitor and report on data quality metrics, such as completeness, accuracy, and consistency.
+
+### **19. Compliance and Regulatory Requirements**
+- **FedRAMP Compliance**: Adhere strictly to FedRAMP security controls, documentation, and continuous monitoring requirements.
+- **Privacy Regulations**: Comply with data protection laws and regulations (e.g., GDPR, CCPA) as applicable.
+- **Audit Readiness**: Maintain documentation and evidence required for security audits and assessments.
+
+### **20. Documentation and Training**
+- **User Guides**: Provide detailed user guides, FAQs, and tutorials for end-users.
+- **Developer Documentation**: Offer comprehensive API documentation and developer guides for integrators and third-party developers.
+- **Training Programs**: Develop training materials and programs to onboard users and administrators effectively.
+- **Knowledge Base**: Create a searchable knowledge base for troubleshooting and best practices.
+
+### **21. Cost Management**
+- **Resource Optimization**: Design the system to optimize resource utilization, reducing operational costs.
+- **Scalable Pricing Models**: If applicable, offer scalable pricing models aligned with usage patterns.
+- **Cost Monitoring**: Implement tools to monitor and report on operational costs, enabling informed budgeting decisions.
+
+### **22. Future-Proofing and Innovation**
+- **Technology Stack Evaluation**: Regularly assess and update the technology stack to incorporate advancements and maintain support.
+- **API Versioning**: Implement API versioning strategies to support backward compatibility and smooth transitions.
+- **Research and Development**: Allocate resources for R&D to explore new technologies, models, and methodologies that can enhance the system.
+- **Community Engagement**: Engage with open-source communities and industry groups to stay abreast of trends and best practices.
+
+### **23. Feedback Mechanisms**
+- **User Feedback**: Implement features that allow users to provide feedback, report issues, or request features directly within the system.
+- **Analytics**: Collect usage analytics (in compliance with privacy policies) to understand user behavior and improve the system.
+- **Continuous Improvement**: Establish processes for reviewing feedback and analytics to prioritize system enhancements.
 
 ## Input Description
+RAGAR should support the following input types:
+#### **1. File-Based Inputs**
+- **Configuration Files**:
+  - **`.yaml`, `.json`, `.xml` files**: Used for system settings, defining prompt variables, workflows, DEM functions, and other configurations.
+- **Text Documents**:
+  - **Plain text files (`.txt`)**: Contain unstructured textual data for processing.
+  - **Word documents (`.doc`, `.docx`)**: Rich text data for parsing and analysis.
+  - **PDF files (`.pdf`)**: Text and structured data extraction and processing.
+- **Tabular Data Files**:
+  - **CSV files**: Tabular data for analysis.
+  - **Excel files (`.xls`, `.xlsx`)**: Spreadsheet data extraction and analysis.
+- **Uploaded Files**: Files uploaded via the application interface by users.
+- **Local Directory Files**: Files placed in monitored local folders for automatic loading by the application.
 
-User inputs can be provided via:
+#### **2. Textual Inputs**
+- **User-Entered Text**:
+  - Text typed directly into the application's user interface.
+  - Inputs in prompt variable creation boxes within PEM.
+- **Command-Line Inputs**: Inputs provided via command-line interfaces or scripts when invoking application commands or APIs.
 
-1. simplechat.yaml file
-2. Files copied to a local folder to be loaded by the application
-3. Texts typed into the application
-4. Texts typed into the prompt variable creation box
+#### **3. API Inputs**
+- **HTTP Requests**:
+  - **Query Parameters**: Key-value pairs in URLs for filters, searches, pagination.
+  - **Path Parameters**: Variables in the URL path identifying specific resources.
+  - **Request Body**: Data sent in JSON, XML, or form-encoded formats for complex submissions.
+  - **Form Data**: Key-value pairs for simple data or file uploads (`multipart/form-data`).
+  - **Headers**: Metadata like authentication tokens, API keys, content types.
+  - **Cookies**: Session management and tracking data.
+- **WebSocket Messages**: Real-time data exchange over persistent connections.
+- **GraphQL Queries/Mutations**: Inputs specifying exact data requirements or mutations.
+- **Custom Encodings**: Binary or protobuf formats for specialized data transfer.
+- **Command-Line Inputs**: Inputs via tools like `curl` or Postman when interacting with APIs.
 
-## Program Description
-The following sections describes the components of the Simple Chat program.
+#### **4. External Data Sources**
+- **Web Content**: URLs or websites to scrape or parse content.
+- **APIs**: Data retrieved from third-party or internal APIs.
+- **Databases**: Queries to relational or NoSQL databases for data retrieval.
+- **Message Queues and Streams**: Inputs from systems like Kafka, RabbitMQ for real-time processing.
+- **Cloud Storage Services**: Files from services like AWS S3, Azure Blob Storage, Google Cloud Storage.
+
+#### **5. User Interactions**
+- **UI Selections and Configurations**: Options selected or settings configured by users within the application.
+- **Forms and Surveys**: Data entered through forms or wizards in the application.
+
+#### **6. Environmental and Configuration Inputs**
+- **Environment Variables**: System variables for configurations (e.g., API keys, database URLs).
+- **Authentication Credentials**: Usernames, passwords, OAuth tokens, API keys for authentication.
+- **SSO Tokens**: Credentials via Single Sign-On mechanisms (e.g., SAML, OAuth 2.0).
+
+#### **7. Workflow Definitions**
+- **DAG Definitions**: Workflow configurations for Apache Airflow in PAM (Python code or configs).
+- **Prompt Variable Files**: Definitions from PEM used to generate workflows in PAM.
+
+#### **8. Data Transformation and Processing Inputs**
+- **DEM Variables and Functions**: Specifications for data transformations, including code or function definitions.
+- **Machine Learning Models**: Pre-trained models or configurations used in DEM for processing.
+
+#### **9. Scheduled or Automated Inputs**
+- **Cron Schedules and Timers**: Scheduling information for workflows and tasks.
+- **Event Triggers**: System events or conditions that initiate workflows.
+
+#### **10. Other input types**
+- **Integration Configurations**: Endpoints, credentials, and settings for external services or APIs.
+- **User Inquiries and Questions**: Natural language queries for information retrieval and analysis.
+- **User Feedback**: Comments, annotations, or ratings provided within the system.
+- **Assistive Technologies**: Inputs from screen readers, voice commands, or other accessibility tools.
+
+## PEM Program Description
+The following sections further describe the FedRAMP RAGAR - Prompt Engineering Module.
 
 ### 1\. Program requirements
-- Software dependencies such as needed python packages are saved in the requirements.txt file.
-- The program must support Streamlit graphical user interface.
-- The program must have a Python API interface.
-- Python functions and API interface must support Apache AirFlow.
-- >>>>>> << other key requirements here >>
+The following are must-have requirements for PEM
+- **Software Dependencies and Environment**
+  - Manage all software dependencies using a `requirements.txt` file, specifying exact package versions to ensure reproducibility. Always try to use the latest package version.
+  - Utilize virtual environments to isolate dependencies and prevent conflicts.
+  - Support easy installation and setup processes, potentially through Docker containers for consistent deployment across environments.
+- **User Interface (UI)**
+  - Develop an intuitive and user-friendly graphical user interface using Streamlit.
+  - Ensure the UI is responsive and compatible with all major web browsers and devices.
+  - Organize UI elements logically, utilizing tabs, accordions, or multi-step forms to manage complexity.
+  - Implement progress indicators for lengthy operations and provide clear feedback on system status.
+  - Include undo and revert options where feasible to enhance user control.
+  - Support future change of UI programming language such as replacing Streamlit with Svelte.
+- **API Interface**
+  - Expose a comprehensive RESTful API built with FastAPI, adhering to OpenAPI specifications for standardization.
+  - Organize APIs into service categories for clarity and ease of use.
+  - Utilize tools like Swagger UI for interactive API documentation.
+  - Implement robust error handling and input validation within the API.
+- **Support for API Gateway**
+    - Utilize Kong Gateway or a similar solution to manage API traffic, authentication, and rate limiting.
+    - Implement secure, scalable, and reliable API access.
+    - Ensure APIs are documented, versioned, and adhere to best practices for security and performance.
+- **Integration with Apache Airflow**
+  - Ensure all Python functions and the API interface support integration with Apache Airflow for workflow orchestration.
+  - Allow prompt variables to be read and converted into Airflow workflows (DAGs), enabling users to design, manage, and orchestrate data workflows.
+  - Support dynamic, data-driven workflows that adapt to changing inputs and conditions.
+- **Integration with Other RAGAR Modules**
+  - Seamlessly integrate PEM with the Prompt Automation Module (PAM) and the Data Engineering Module (DEM).
+  - Utilize well-defined APIs and standardized data exchange formats (e.g., JSON) to enable interoperability.
+  - Ensure consistent data structures and naming conventions across modules.
+- **Prompt Variable Management**
+  - Support the creation, updating, cloning, and deletion of prompt variables of various types (Question, Answer, File, Web, API).
+  - Implement a namespace mechanism to avoid name collisions and support collaboration.
+  - Provide functionality for automatic inclusion of newly created prompt variables into the prompt editing area, based on user preferences.
+  - Include features for dependency and integrity checks of prompt variables, alerting users to any issues.
+- **LLM Endpoint Configuration and Management**
+  - Support configuration and selection of various LLM platforms (e.g., Ollama, OpenAI, Google Vertex AI, Amazon Bedrock, Anthropic).
+  - Enable users to configure main and alternative LLM platforms and models through the GUI.
+  - Implement connection testing, model selection, and error handling for LLM endpoints.
+  - Sustain user-selected values and configurations until intentionally changed by the user.
+- **Prompt Improvement and Feedback Mechanisms**
+  - Provide functionality for users to receive LLM-suggested improvements for their prompts.
+  - Support different prompt types and offer quality control questions specific to each type.
+  - Allow users to save improved prompts and manage versions effectively.
+  - Integrate a feedback system for users to report issues, request features, or provide general feedback directly within the application.
+- **Performance Comparison**
+  - Enable performance comparison between different LLM models by allowing prompts to be run against multiple models simultaneously.
+  - Display responses side by side for easy comparison.
+  - Provide metrics or visualizations to assist users in evaluating model performance.
+- **Security and Compliance**
+  - Implement secure authentication mechanisms, including Single Sign-On (SSO) and Multi-Factor Authentication (MFA).
+  - Enforce Role-Based Access Control (RBAC) to restrict access based on user roles and permissions.
+  - Ensure data encryption at rest and in transit using strong encryption standards.
+  - Comply with FedRAMP guidelines and other relevant industry standards and regulations (e.g., NIST).
+  - Maintain comprehensive audit logs of user activities, system access, and data changes.
+  - Ensure that variables like API keys (e.g., OpenAI, Anthropic) are stored securely, possibly using environment variables or secure vaults, rather than plain text in configuration files.
+  - Salt variables must be securely stored and handled.
+  - Implement robust validation for all user inputs, especially for configurations related to LLM endpoints and API integrations, to prevent injection attacks or misconfigurations.
+  - Ensure that any dynamic content included in prompts is sanitized to avoid malicious injections or unintended behaviors.
+- **Data Handling and Processing**
+  - Support parsing and ingestion of various text-based data formats, including plain text, MS Word files, PDFs, and web content.
+  - Provide robust data transformation capabilities through DEM functions, including classical data transformations, machine learning, deep learning, and LLM-based processing.
+  - Implement data validation, quality checks, and integrity verification for prompt variables and datasets.
+  - Support structured data extraction and management, including handling APIs and web content extraction.
+  - Implement validation rules to ensure data integrity and correctness at all stages of processing.
+  - Provide mechanisms to detect and correct errors or inconsistencies in data.
+  - Monitor and report on data quality metrics, such as completeness, accuracy, and consistency.
+- **Logging, Monitoring, and Error Handling**
+  - Implement detailed logging of user actions, system events, errors, and workflow processes.
+  - Provide real-time monitoring dashboards displaying system health, performance metrics, and security events.
+  - Set up automated alerts for critical events, failures, and security incidents.
+  - Present clear, actionable error messages and guide users on how to resolve issues when they occur.
+- **Testing and Validation**
+  - Include comprehensive unit tests, integration tests, and end-to-end tests to ensure system reliability and prevent regressions.
+  - Implement test-driven development practices where feasible.
+  - Establish continuous integration/continuous deployment (CI/CD) pipelines for automated testing, building, and deployment of code changes.
+  - Develop test cases and benchmarks for security features and LLM guard functionalities.
+- **Documentation and Training**
+  - Provide comprehensive user guides, FAQs, and tutorials for end-users.
+  - Offer detailed developer documentation, including API references and architectural overviews.
+  - Utilize tools like Swagger for interactive API documentation.
+  - Develop training materials and programs to onboard users and administrators effectively.
+  - Create a searchable knowledge base for troubleshooting and best practices.
+- **User Experience Enhancements**
+  - Employ user-centered design principles, incorporating feedback to meet user needs and preferences.
+  - Implement features like progress indicators during long-running operations.
+  - Provide undo and revert functionalities where feasible to enhance user control.
+  - Include help and guidance within the interface, such as tooltips, FAQs, and contextual assistance.
+  - Ensure the system complies with accessibility standards (e.g., WCAG 2.1) to support users with disabilities.
+- **Feedback Mechanisms and Continuous Improvement**
+  - Implement features allowing users to provide feedback, report issues, or request features directly within the system.
+  - Collect usage analytics (in compliance with privacy policies) to understand user behavior and improve the system.
+  - Establish processes for reviewing feedback and analytics to prioritize system enhancements.
+- **Streamlit Execution Flow Optimization**
+  - Optimize the application's execution flow using Streamlit's features to minimize unnecessary reruns.
+  - Utilize the `@st.fragment` decorator to turn functions into fragments and control execution flow.
+  - Employ `st.session_state` variables and appropriate UI components to enhance performance.
+  - Implement mechanisms like "Refresh" and "Reset" buttons within UI component functions to control state.
 
 ### 2\. Program variables
-Program variables are saved in the simplechat.yaml file. The variable details are:
-**Local User Values**:
-- Local user name (local_user_name): A string specified by the user to represent the user in certain activities and logs. The default value is "anonymous". The recommended value is the user's unique organization email which will provide implicit supports for user name collision avoidance and collaboration.
-- Salt (salt): A random string specified by the user to append to data before it is hashed, making the hash more robust to attacks. The default value is "empty".
-**LLM values**:
-- Maximum context window (context_window): The maximum number of tokens that can be used as input for LLMs. The default value is 128000.
-- Prompt size over context window ratio (prompt_ratio): The maximum ratio of number of prompt tokens over context window token. The default value is 0.85.
-- Supported LLM platforms (llm_platform): A comma-separated list of supported LLM platforms. The default value is "Ollama, OpenAI, Google Vertex AI, Amazon Bedrock, Anthropic".
-- Guard server (guard_server): The url of the LLM guard server. The default value is "empty".
-- Monitoring server (monitoring_server): The url of the LangFuse LLM monitoring server. The default value is "empty".
-- Selected LLM platform (selected_provider): The LLM platform that the application will leverage. The default value is "Ollama".
-- Selected LLM endpoint (selected_endpoint): The LLM endpoint that the application will leverage. The default value is "http://127.0.0.1:11434".
-- Allowed OpenAI models (allowed_openai_models): A comma-separated list of allowed OpenAI models. The default value is 'gpt-4o', 'gpt-4o-mini', 'o1-mini', 'o1-preview', 'o1', 'o3'
-- Allowed Google Vertex models (allowed_vertex_models): A comma-separated list of allowed Google Vertex models. The default value is "chat-bison@001"
-- Allowed AWS Bedrock models (allowed_bedrock_models): A comma-separated list of allowed AWS Bedrock models. The default value is - - Allowed Anthropic models (allowed_anthropic_models): A comma-separated list of allowed Anthropic models. The default value is "anthropic.claude-v2", "ai21.j2-jumbo-instruct"
-'claude-3-5-sonnet-latest', 'claude-3-5-haiku-latest', 'claude-3-opus-latest', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307'
-- LLM model feedback form (feedback_form): The Google form link to collect user feedback.
-**Prompt Management Values**:
-- promptvariable_filepath: the path to the folder hosting all prompt variable files. The default value is /app/simple_chat/prompt_variables
-- promptvariable_autoinclusion: automatically append the newly created prompt variables of types other than "File" and "Question" into the current user's text area. The default value is "True".
-- data_filepath: the path to the folder hosting all data folders and files. The default value is /app/simple_chat/data_files
-- default_filename: the default name for a json prompt variable file when there is no existing prompt variable file. The default value is "default__promptvariables.json".
-- postfix_filename: the text to append to the end of a user-declared file name for a prompt variable file. The default value is "_promptvariables".
-- prompt_improvement_instruction: instruction template for getting LLM suggested improvements of any prompt. The default value is:
-  ```
-  Please check to see if:
-  - The purpose and expected outcome can be better defined.
-  - There are potential areas for ambiguity elimination by actions such as providing more precise details, examples, or instructions.
-  - The focus needs to be narrowed to avoid overly broad or vague responses.
-  - A format should be described if there is no format described. If a format is described, check to see if it is the best suitable format if it can be better described.
-  - The context can be better defined.
-  - There are potential areas for biases and eliminate those potential biases.
-  - The prompt can be more concise.
-  - Constraints, limitations, and boundaries need to be added to guide the responses more effectively.
-  - The content is aligned with the intended topic or goal.
-  ```
-- prompt_improvement_questions_instructional: quality control questions for instructional prompts. The default value is:
-  ```
-  - Is the instruction clear and easy to follow?
-  - Have I defined the expected format or structure?
-  - Did I specify the desired level of detail?
-  - Is the task broken into manageable steps?
-  - Are there any ambiguities that could confuse the response?
-  - Have I included relevant examples for clarity?
-  - Did I explain the purpose or goal of the instruction?
-  - Is the tone appropriate for the audience?
-  - Are unnecessary details removed for simplicity?
-  - Would this instruction make sense to someone unfamiliar with the topic?
-  ```
-- prompt_improvement_questions_interactive: quality control questions for interactive prompts. The default value is:
-  ```
-  - Does the prompt encourage meaningful engagement?
-  - Have I set clear boundaries for the interaction?
-  - Is the scenario or game logic easy to understand?
-  - Have I clarified the AI’s role in the interaction?
-  - Did I specify how long or detailed the responses should be?
-  - Is there room for creativity within the interaction?
-  - Did I avoid overly rigid instructions that hinder flexibility?
-  - Can the interaction adapt to user responses dynamically?
-  - Does the prompt ensure a smooth flow of conversation?
-  - Could this interaction keep the user engaged over multiple turns?
-  ```
-- prompt_improvement_questions_comparative: quality control questions for comparative prompts. The default value is:
-  ```
-  - Have I clearly stated what is being compared?
-  - Did I specify the criteria for comparison?
-  - Is the comparison limited to relevant aspects?
-  - Have I avoided bias in framing the comparison?
-  - Does the prompt require a balanced perspective?
-  - Is the purpose of the comparison clearly explained?
-  - Are there examples to illustrate the comparison?
-  - Have I asked for similarities, differences, or both?
-  - Is the scope of the comparison manageable and focused?
-  - Does the prompt encourage analytical reasoning?
-  ```
-- prompt_improvement_questions_problem-solving: quality control questions for problem-solving prompts. The default value is:
-  ```
-  - Is the problem clearly defined and unambiguous?
-  - Have I included all relevant details or constraints?
-  - Did I specify the type of solution I’m looking for?
-  - Is the problem statement concise but comprehensive?
-  - Have I ruled out unnecessary complexity?
-  - Does the prompt encourage logical reasoning or creativity?
-  - Have I provided examples or context if needed?
-  - Is the problem solvable with the given information?
-  - Did I specify the format of the solution (e.g., steps, code, summary)?
-  - Does the prompt avoid leading to a single expected answer?
-  ```
-- prompt_improvement_questions_exploratory: quality control questions for exploratory prompts. The default value is:
-  ```
-  - Does the prompt invite open-ended exploration?
-  - Have I made the topic or idea clear?
-  - Is the scope broad enough for diverse responses?
-  - Have I avoided narrowing the focus too early?
-  - Does the prompt encourage creativity or brainstorming?
-  - Are there examples or hints to spark ideas?
-  - Have I clarified the type of output desired (list, narrative, etc.)?
-  - Is the prompt free of restrictive assumptions?
-  - Did I specify whether the exploration should be speculative or factual?
-  - Could this prompt lead to innovative or unique ideas?
-  ```
-- prompt_improvement_questions_evaluation: quality control questions for evaluation prompts. The default value is:
-  ```
-  - Is the content being evaluated clearly defined?
-  - Have I explained the criteria for evaluation?
-  - Is the evaluation prompt free of bias?
-  - Did I specify the depth of feedback needed?
-  - Have I asked for constructive and actionable feedback?
-  - Is the purpose of the evaluation clear?
-  - Does the prompt include examples for reference?
-  - Have I limited the scope to avoid overwhelming responses?
-  - Is the tone neutral and objective?
-  - Could the evaluation lead to measurable improvements?
-  ```
+Key PEM variables are saved in the pem.yaml file. The variable details are:
+- **Local User Values**:
+  - Local user name (local_user_name): A string specified by the user to represent the user in certain activities and logs. The default value is "anonymous". The recommended value is the user's unique organization email which will provide implicit supports for user name collision avoidance and collaboration.
+  - Salt (salt): A random string specified by the user to append to data before it is hashed, making the hash more robust to attacks. The default value is "empty".
+- **LLM values**:
+  - Maximum context window (context_window): The maximum number of tokens that can be used as input for LLMs. The default value is 128000.
+  - Prompt size over context window ratio (prompt_ratio): The maximum ratio of number of prompt tokens over context window token. The default value is 0.85.
+  - Supported LLM platforms (llm_platform): A comma-separated list of supported LLM platforms. The default value is "Ollama, OpenAI, Google Vertex AI, Amazon Bedrock, Anthropic".
+  - Guard server (guard_server): The url of the LLM guard server. The default value is "empty".
+  - Monitoring server (monitoring_server): The url of the LangFuse LLM monitoring server. The default value is "empty".
+  - Selected LLM platform (selected_provider): The LLM platform that the application will leverage. The default value is "Ollama".
+  - Selected LLM endpoint (selected_endpoint): The LLM endpoint that the application will leverage. The default value is "http://127.0.0.1:11434".
+  - Allowed OpenAI models (allowed_openai_models): A comma-separated list of allowed OpenAI models. The default value is 'gpt-4o', 'gpt-4o-mini', 'o1-mini', 'o1-preview', 'o1', 'o3'
+  - Allowed Google Vertex models (allowed_vertex_models): A comma-separated list of allowed Google Vertex models. The default value is "chat-bison@001"
+  - Allowed AWS Bedrock models (allowed_bedrock_models): A comma-separated list of allowed AWS Bedrock models. The default value is - - Allowed Anthropic models (allowed_anthropic_models): A comma-separated list of allowed Anthropic models. The default value is "anthropic.claude-v2", "ai21.j2-jumbo-instruct"
+  'claude-3-5-sonnet-latest', 'claude-3-5-haiku-latest', 'claude-3-opus-latest', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307'
+  - LLM model feedback form (feedback_form): The Google form link to collect user feedback.
+- **Prompt Management Values**:
+  - promptvariable_filepath: the path to the folder hosting all prompt variable files. The default value is /app/pem/prompt_variables
+  - promptvariable_autoinclusion: automatically append the newly created prompt variables of types other than "File" and "Question" into the current user's text area. The default value is "True".
+  - data_filepath: the path to the folder hosting all data folders and files. The default value is /app/pem/data_files
+  - default_filename: the default name for a json prompt variable file when there is no existing prompt variable file. The default value is "default__promptvariables.json".
+  - postfix_filename: the text to append to the end of a user-declared file name for a prompt variable file. The default value is "_promptvariables".
+  - prompt_improvement_instruction: instruction template for getting LLM suggested improvements of any prompt. The default value is:
+    ```
+    Please check to see if:
+    - The purpose and expected outcome can be better defined.
+    - There are potential areas for ambiguity elimination by actions such as providing more precise details, examples, or instructions.
+    - The focus needs to be narrowed to avoid overly broad or vague responses.
+    - A format should be described if there is no format described. If a format is described, check to see if it is the best suitable format if it can be better described.
+    - The context can be better defined.
+    - There are potential areas for biases and eliminate those potential biases.
+    - The prompt can be more concise.
+    - Constraints, limitations, and boundaries need to be added to guide the responses more effectively.
+    - The content is aligned with the intended topic or goal.
+    ```
+  - prompt_improvement_questions_instructional: quality control questions for instructional prompts. The default value is:
+    ```
+    - Is the instruction clear and easy to follow?
+    - Have I defined the expected format or structure?
+    - Did I specify the desired level of detail?
+    - Is the task broken into manageable steps?
+    - Are there any ambiguities that could confuse the response?
+    - Have I included relevant examples for clarity?
+    - Did I explain the purpose or goal of the instruction?
+    - Is the tone appropriate for the audience?
+    - Are unnecessary details removed for simplicity?
+    - Would this instruction make sense to someone unfamiliar with the topic?
+    ```
+  - prompt_improvement_questions_interactive: quality control questions for interactive prompts. The default value is:
+    ```
+    - Does the prompt encourage meaningful engagement?
+    - Have I set clear boundaries for the interaction?
+    - Is the scenario or game logic easy to understand?
+    - Have I clarified the AI’s role in the interaction?
+    - Did I specify how long or detailed the responses should be?
+    - Is there room for creativity within the interaction?
+    - Did I avoid overly rigid instructions that hinder flexibility?
+    - Can the interaction adapt to user responses dynamically?
+    - Does the prompt ensure a smooth flow of conversation?
+    - Could this interaction keep the user engaged over multiple turns?
+    ```
+  - prompt_improvement_questions_comparative: quality control questions for comparative prompts. The default value is:
+    ```
+    - Have I clearly stated what is being compared?
+    - Did I specify the criteria for comparison?
+    - Is the comparison limited to relevant aspects?
+    - Have I avoided bias in framing the comparison?
+    - Does the prompt require a balanced perspective?
+    - Is the purpose of the comparison clearly explained?
+    - Are there examples to illustrate the comparison?
+    - Have I asked for similarities, differences, or both?
+    - Is the scope of the comparison manageable and focused?
+    - Does the prompt encourage analytical reasoning?
+    ```
+  - prompt_improvement_questions_problem-solving: quality control questions for problem-solving prompts. The default value is:
+    ```
+    - Is the problem clearly defined and unambiguous?
+    - Have I included all relevant details or constraints?
+    - Did I specify the type of solution I’m looking for?
+    - Is the problem statement concise but comprehensive?
+    - Have I ruled out unnecessary complexity?
+    - Does the prompt encourage logical reasoning or creativity?
+    - Have I provided examples or context if needed?
+    - Is the problem solvable with the given information?
+    - Did I specify the format of the solution (e.g., steps, code, summary)?
+    - Does the prompt avoid leading to a single expected answer?
+    ```
+  - prompt_improvement_questions_exploratory: quality control questions for exploratory prompts. The default value is:
+    ```
+    - Does the prompt invite open-ended exploration?
+    - Have I made the topic or idea clear?
+    - Is the scope broad enough for diverse responses?
+    - Have I avoided narrowing the focus too early?
+    - Does the prompt encourage creativity or brainstorming?
+    - Are there examples or hints to spark ideas?
+    - Have I clarified the type of output desired (list, narrative, etc.)?
+    - Is the prompt free of restrictive assumptions?
+    - Did I specify whether the exploration should be speculative or factual?
+    - Could this prompt lead to innovative or unique ideas?
+    ```
+  - prompt_improvement_questions_evaluation: quality control questions for evaluation prompts. The default value is:
+    ```
+    - Is the content being evaluated clearly defined?
+    - Have I explained the criteria for evaluation?
+    - Is the evaluation prompt free of bias?
+    - Did I specify the depth of feedback needed?
+    - Have I asked for constructive and actionable feedback?
+    - Is the purpose of the evaluation clear?
+    - Does the prompt include examples for reference?
+    - Have I limited the scope to avoid overwhelming responses?
+    - Is the tone neutral and objective?
+    - Could the evaluation lead to measurable improvements?
+    ```
 
 ### 3\. LLM endpoint selection and configuration
-**Graphical user interface**
-- Display the graphical user interface for LLM endpoint selection and configuration on the side bar. The whole LLM endpoint selection and configuration can be collapsed and is expanded by default.
-- Get the list of supported LLM platforms from llm_platform.
-- User will be able to configure the main LLM platform and the alternative LLM platform for purposes such as performance comparision.
-- For configuring the main LLM platform, first follow the default values for LLM endpoint and check if a connection with the default endpoint can be made. If not, follow the common steps for configuring LLM endpoint.
-- Common steps for configuring LLM endpoint
-  - Can be applied to configure both the main and the alternative LLM platforms
-  - First, ask user to select a platform from a list of supported platforms.
-  - For a selected platform, present the user with options to properly configure the platform API.
-  - Once connection is successfully established with the selected LLM endpoint, fetch a list of LLMs supported by the platform, allow the user to select which supported LLM model to use.
-- At anytime, user can use the interface to change the LLM platform and/or LLMs.
-- Use proper mechanisms to sustain/persist user-selected values and configurations until user decide to change them.
+- **Graphical user interface**
+  - Display the graphical user interface for LLM endpoint selection and configuration on the side bar. The whole LLM endpoint selection and configuration can be collapsed and is expanded by default.
+  - Get the list of supported LLM platforms from llm_platform.
+  - User will be able to configure the main LLM platform and the alternative LLM platform for purposes such as performance comparision.
+  - For configuring the main LLM platform, first follow the default values for LLM endpoint and check if a connection with the default endpoint can be made. If not, follow the common steps for configuring LLM endpoint.
+  - Common steps for configuring LLM endpoint
+    - Can be applied to configure both the main and the alternative LLM platforms
+    - First, ask user to select a platform from a list of supported platforms.
+    - For a selected platform, present the user with options to properly configure the platform API.
+    - Once connection is successfully established with the selected LLM endpoint, fetch a list of LLMs supported by the platform, allow the user to select which supported LLM model to use.
+  - At anytime, user can use the interface to change the LLM platform and/or LLMs.
+  - Use proper mechanisms to sustain/persist user-selected values and configurations until user decide to change them.
 
-**Configuring Ollama**
-- The default endpoint is "Localhost": "http://127.0.0.1:11434"
-- An alternative endpoint is "Docker Internal": "http://host.docker.internal:8000"
-- User also has nother option to input custom Ollama endpoint.
-- Once endpoint is configured and confirmed, connect to the endpoint and provide error message if connection is unsuccessful
-- Upon successful connection, fetch available models in Olllama. If there is no model available, instruct the user to load at least an LLM in Ollama.
-- Upon successfully fetch model, ask the user to select a model.
-- Test the model by submiting a prompt. If the model does not respond, display an error message.
+- **Configuring Ollama**
+  - The default endpoint is "Localhost": "http://127.0.0.1:11434"
+  - An alternative endpoint is "Docker Internal": "http://host.docker.internal:8000"
+  - User also has nother option to input custom Ollama endpoint.
+  - Once endpoint is configured and confirmed, connect to the endpoint and provide error message if connection is unsuccessful
+  - Upon successful connection, fetch available models in Olllama. If there is no model available, instruct the user to load at least an LLM in Ollama.
+  - Upon successfully fetch model, ask the user to select a model.
+  - Test the model by submiting a prompt. If the model does not respond, display an error message.
 
-**Configuring OpenAI**
-- Get openAI API key from the user.
-- Load a list of allowed openAI models (allowed_openai_models).
-- Fetch available openAI models and only allow the models that are in allowed_openai_models.
-- Upon successfully fetch model, ask the user to select a model.
-- Test the model by submiting a prompt. If the model does not respond, display an error message.
+- **Configuring OpenAI**
+  - Get openAI API key from the user.
+  - Load a list of allowed openAI models (allowed_openai_models).
+  - Fetch available openAI models and only allow the models that are in allowed_openai_models.
+  - Upon successfully fetch model, ask the user to select a model.
+  - Test the model by submiting a prompt. If the model does not respond, display an error message.
 
-**Configuring Anthropic**
-- Ask the user to input  Anthropic API Key
-- Load a list of allowed Anthropic models (allowed_anthropic_models)
-- Fetch available openAI models and only allow the models that are in allowed_anthropic_models.
-- Upon successfully fetch model, ask the user to select a model.
-- Test the model by submiting a prompt. If the model does not respond, display an error message.
+- **Configuring Anthropic**
+  - Ask the user to input  Anthropic API Key
+  - Load a list of allowed Anthropic models (allowed_anthropic_models)
+  - Fetch available openAI models and only allow the models that are in allowed_anthropic_models.
+  - Upon successfully fetch model, ask the user to select a model.
+  - Test the model by submiting a prompt. If the model does not respond, display an error message.
 
-**Configuring Google Vertex AI**
-- Ask user to input Google Cloud Project ID
-- Ask user to input cloud location
-- Ask user to upload Service Account JSON Key File
-- Initialize the AI platform
-- Try to fetch available models from the platform
-- Only allow the models that are in allowed_vertex_models
-- Upon successfully fetch model, ask the user to select a model.
-- Test the model by submiting a prompt. If the model does not respond, display an error message.
+- **Configuring Google Vertex AI**
+  - Ask user to input Google Cloud Project ID
+  - Ask user to input cloud location
+  - Ask user to upload Service Account JSON Key File
+  - Initialize the AI platform
+  - Try to fetch available models from the platform
+  - Only allow the models that are in allowed_vertex_models
+  - Upon successfully fetch model, ask the user to select a model.
+  - Test the model by submiting a prompt. If the model does not respond, display an error message.
 
-**Configuring Amazon Bedrock**
-- Ask user to input AWS Access Key ID
-- Ask user to input AWS Secret Access Key
-- Ask user to input AWS Session Token (optional)
-- Ask user to input AWS Region
-- Initialize boto3 client
-- Fetch available models that are allowed in allowed_bedrock_models
-- Upon successfully fetch model, ask the user to select a model.
-- Test the model by submiting a prompt. If the model does not respond, display an error message.
+- **Configuring Amazon Bedrock**
+  - Ask user to input AWS Access Key ID
+  - Ask user to input AWS Secret Access Key
+  - Ask user to input AWS Session Token (optional)
+  - Ask user to input AWS Region
+  - Initialize boto3 client
+  - Fetch available models that are allowed in allowed_bedrock_models
+  - Upon successfully fetch model, ask the user to select a model.
+  - Test the model by submiting a prompt. If the model does not respond, display an error message.
 
 ### 4\. The main application graphical user interface
-The Simple Chat application graphical user interface contains the side bar and the main application graphical user interfaces. The main application graphical user interface can be described as follows:
+The PEM application graphical user interface contains the side bar and the main application graphical user interfaces. The main application graphical user interface can be described as follows:
 
 #### 4a\. The Prompt Composer section
 - The Promp Composer section is in the same row with the Prompt Variable Management section and occupies 60% of the row width.
@@ -334,339 +644,1453 @@ The Simple Chat application graphical user interface contains the side bar and t
 - Integrate the form and display it.
 
 ### 5\. Promp Variable File Management
-**Create new prompt variable file**:
-- Ask user to put in the prompt variable file name.
-- If the file already exists, ask the user for another name.
-- Ask the user to set a custom namespace (optional). The default namespace is a combination of `prompt variable file name` and `local user name`.
-- User will then be able to choose whether to create a new blank file or from an existing prompt variable file.
-- If user chose to create a new file from an existing prompt variable file, allow the user to chose which file.
-- A prompt variable file begins with the namespace information (namespace key) to be followed by prompt variable details.
-- Save the file to the prompt variable folder (promptvariable_filepath)
-**Load and save prompt variable files**:
-- User selects a prompt variable file name (json file)
-- Load the file from the prompt variable folder (promptvariable_filepath)
-- When saveing a prompt varible file, saves the file as a json with indent=4 to the prompt variable folder (promptvariable_filepath)
+- **Create new prompt variable file**:
+  - Ask user to put in the prompt variable file name.
+  - If the file already exists, ask the user for another name.
+  - Ask the user to set a custom namespace (optional). The default namespace is a combination of `prompt variable file name` and `local user name`.
+  - User will then be able to choose whether to create a new blank file or from an existing prompt variable file.
+  - If user chose to create a new file from an existing prompt variable file, allow the user to chose which file.
+  - A prompt variable file begins with the namespace information (namespace key) to be followed by prompt variable details.
+  - Save the file to the prompt variable folder (promptvariable_filepath)
+- **Load and save prompt variable files**:
+  - User selects a prompt variable file name (json file)
+  - Load the file from the prompt variable folder (promptvariable_filepath)
+  - When saveing a prompt varible file, saves the file as a json with indent=4 to the prompt variable folder (promptvariable_filepath)
 
 ### 6\. Promp Variable Management
-**Components of a prompt variable**
-- Variable name: the name of the variable, must be all lower case with no space, must have no special character. Except for variables of type "File", variable names must not have leading numbers and must not be more than 12 characters.
-- Variable author: the user who created the variable (local_user_name)
-- Variable type: the variable's type
-- Variable content: the value to of the variable with one or more of the following sub values
-  - Texts: the textual content assigned to the variable.
-  - Size: the number of tokens from the Texts.
-  - Source: the source of the Texts. For the "Question" type, this value is the local_user_name. For the "Answer" type, this value is the user selected LLM model within the user selected LLM platform. For the "File" type, this value is the path to a folder or a file. For the "Web" type, this value is a url. For the "API" type, this value is the API endpoint.
-- Creation time: The time when the prompt variable was first created.
-- Latest time: The time when the prompt variable was last updated. The default value is the Creation time.
-- Hash: The hash of the content of Variable value - Texts and Salt.
-- Update logs: A comma-separated list of time values. The default value is the Creation time. 
-**Prompt variable types**
-- Question: the variable of this type was created from user's question. It should contain an inquiry.
-- Answer: the variable of this type was created from an LLM's answer. It should not contain an inquiry.
-- File: variables of this type was automatically created by crawlwing a user-specified local directory.
-- Web: the variable of this type was created from extracting content from a user-specified website. 
-- API: the variable of this type was created from extracting content from a user-specified API request.
-**Prompt variable naming and renaming**
-- Namespace is used to make sure there is no collision in prompt variable names.
-- A user can manually set a custom namespace. In this case, few prompt variable files may share the same custom namespace.
-- A user can only rename the prompt variables that s/he authored, within the namespace that the variable resides.
-- Once a renaming is confirmed, the variable name will be changed and updated in all places where other variables referenced the variable within the same namespace.
-**Create prompt variables of "File" type**
-- Variable name:
-  - The variable name is based on the file name without the file extension.
-  - If the file name is more than 11 characters, the variable name is `first 5 characters of the file name`_`last 2 characters of the file name`.`the file extension`
-  - If the file name is less than 12 characters, the variable name is `the file name`.`the file extension`
-- The process is initiated automatically when user opens the application and is independent from the user's selected prompt variable file.
-- Read and traverse all folders and files including shortcuts or symbolic links within data_filepath.
-- Create a prompt variable for each folder follwing the format of `folder level`_`folder name`_folder. The folder level number starts with 1 (top level) and reflects the folder level in the overall folder hierarchy within data_filepath.
-- Create a prompt variable for each file follwing the format of `folder level`_`file name`. The folder level value is the same folder level value of the folder hosting the files.
-- Supported file types are txt, rtf, wps, pdf, doc, docx, xls, tiff, xml, htm, html, .msg, .wpd.
-- The variables are saved to memory, not to any prompt variable file.
-- Save the variable with the following additional values:
-  - Variable value:
-    - Texts: 
-      - If it is a folder, the texts include the variables representing the folders and/or files within the folder.
-      - If it is a file, the texts include the textual content of the file following this template:
-        ```
-        My current `file name` is:
-        `extracted textual content of the file`
-        ```
-      - If it is a file, the textual content is extracted only when the variable was referenced by a user prompt or by another variable at run time. Before that, the default value is "pending extraction"
-    - Source: The path to the folder or the file
-  - Creation time: The time right before the variable was first saved to a variable file.
-  - Latest time: The time right after the Texts were successfuly extracted and the variable is successfully updated. The default value is the Creation time.
+- **Components of a prompt variable**
+  - Variable name: the name of the variable, must be all lower case with no space, must have no special character. Except for variables of type "File", variable names must not have leading numbers and must not be more than 12 characters.
+  - Variable author: the user who created the variable (local_user_name)
+  - Variable type: the variable's type
+  - Variable content: the value to of the variable with one or more of the following sub values
+    - Texts: the textual content assigned to the variable.
+    - Size: the number of tokens from the Texts.
+    - Source: the source of the Texts. For the "Question" type, this value is the local_user_name. For the "Answer" type, this value is the user selected LLM model within the user selected LLM platform. For the "File" type, this value is the path to a folder or a file. For the "Web" type, this value is a url. For the "API" type, this value is the API endpoint.
+  - Creation time: The time when the prompt variable was first created.
+  - Latest time: The time when the prompt variable was last updated. The default value is the Creation time.
   - Hash: The hash of the content of Variable value - Texts and Salt.
-  - Update logs: when there is a new "Latest time" value, append the value to this updated logs comma-separated list.
-**Create prompt variables of "Web" type**
-- Ask user to put in the name of the variable.
-- User can optionally provide multiple div tags.
-- Crawl and extract a website content using user-provided url and the optional div tags. If div tags are provided, only extract html content within the div tags.
-- Clean up the extracted texts.
-- Create a Source object that contains the  user-provided url and the optional div tags. The program can later use this Source object to revisit the website and extract the contents again.
-- Create a prompt variable of type "Web" with the user-provided variable name.
-- Save the variable with the following additional values
-  - Variable value:
-    - Texts: the cleaned up extracted texts
-    - Source: the Source object
-  - Creation time: The time right before the variable was first saved to a variable file.
-  - Latest time: The time when the url was last visited, its content was successfully extracted, and the variable is successfully updated. The default value is the Creation time.
-  - Hash: The hash of the content of Variable value - Texts and Salt.
-  - Update logs: when there is a new "Latest time" value, append the value to this updated logs comma-separated list.
-- Upon successful saving, append the variable name enclosed within {{ and }} to the user's current text area if promptvariable_autoinclusion is True.
-**Create prompt variables of "API" type**
-- Ask user to put in the name of the variable.
-- Present the user with the options to establish the API connection and query per further details provided in section 7\. External API Integration. 
-- A successful API query should return a query object and a result object.
-- The query object contains all details needed to repeat the same API call again.
-- The result object will be parsed and converted to API texts.
-- Save the variable with the following additional values
-  - Variable value:
-    - Texts: the cleaned up API texts
-    - Source: the API query object
-  - Creation time: The time right before the variable was first saved to a variable file.
-  - Latest time: The time when the API query object was last executed. The default value is the Creation time.
-  - Hash: The hash of the content of Variable value - Texts and Salt.
-  - Update logs: when there is a new "Latest time" value, append the value to this updated logs comma-separated list.
+  - Update logs: A comma-separated list of time values. The default value is the Creation time. 
+- **Prompt variable types**
+  - Question: the variable of this type was created from user's question. It should contain an inquiry.
+  - Answer: the variable of this type was created from an LLM's answer. It should not contain an inquiry.
+  - File: variables of this type was automatically created by crawlwing a user-specified local directory.
+  - Web: the variable of this type was created from extracting content from a user-specified website. 
+  - API: the variable of this type was created from extracting content from a user-specified API request.
+- **Prompt variable naming and renaming**
+  - Namespace is used to make sure there is no collision in prompt variable names.
+  - A user can manually set a custom namespace. In this case, few prompt variable files may share the same custom namespace.
+  - A user can only rename the prompt variables that s/he authored, within the namespace that the variable resides.
+  - Once a renaming is confirmed, the variable name will be changed and updated in all places where other variables referenced the variable within the same namespace.
+- **Create prompt variables of "File" type**
+  - Variable name:
+    - The variable name is based on the file name without the file extension.
+    - If the file name is more than 11 characters, the variable name is `first 5 characters of the file name`_`last 2 characters of the file name`.`the file extension`
+    - If the file name is less than 12 characters, the variable name is `the file name`.`the file extension`
+  - The process is initiated automatically when user opens the application and is independent from the user's selected prompt variable file.
+  - Read and traverse all folders and files including shortcuts or symbolic links within data_filepath.
+  - Create a prompt variable for each folder follwing the format of `folder level`_`folder name`_folder. The folder level number starts with 1 (top level) and reflects the folder level in the overall folder hierarchy within data_filepath.
+  - Create a prompt variable for each file follwing the format of `folder level`_`file name`. The folder level value is the same folder level value of the folder hosting the files.
+  - Supported file types are txt, rtf, wps, pdf, doc, docx, xls, tiff, xml, htm, html, .msg, .wpd.
+  - The variables are saved to memory, not to any prompt variable file.
+  - Save the variable with the following additional values:
+    - Variable value:
+      - Texts: 
+        - If it is a folder, the texts include the variables representing the folders and/or files within the folder.
+        - If it is a file, the texts include the textual content of the file following this template:
+          ```
+          My current `file name` is:
+          `extracted textual content of the file`
+          ```
+        - If it is a file, the textual content is extracted only when the variable was referenced by a user prompt or by another variable at run time. Before that, the default value is "pending extraction"
+      - Source: The path to the folder or the file
+    - Creation time: The time right before the variable was first saved to a variable file.
+    - Latest time: The time right after the Texts were successfuly extracted and the variable is successfully updated. The default value is the Creation time.
+    - Hash: The hash of the content of Variable value - Texts and Salt.
+    - Update logs: when there is a new "Latest time" value, append the value to this updated logs comma-separated list.
+- **Create prompt variables of "Web" type**
+  - Ask user to put in the name of the variable.
+  - User can optionally provide multiple div tags.
+  - Crawl and extract a website content using user-provided url and the optional div tags. If div tags are provided, only extract html content within the div tags.
+  - Clean up the extracted texts.
+  - Create a Source object that contains the  user-provided url and the optional div tags. The program can later use this Source object to revisit the website and extract the contents again.
+  - Create a prompt variable of type "Web" with the user-provided variable name.
+  - Save the variable with the following additional values
+    - Variable value:
+      - Texts: the cleaned up extracted texts
+      - Source: the Source object
+    - Creation time: The time right before the variable was first saved to a variable file.
+    - Latest time: The time when the url was last visited, its content was successfully extracted, and the variable is successfully updated. The default value is the Creation time.
+    - Hash: The hash of the content of Variable value - Texts and Salt.
+    - Update logs: when there is a new "Latest time" value, append the value to this updated logs comma-separated list.
   - Upon successful saving, append the variable name enclosed within {{ and }} to the user's current text area if promptvariable_autoinclusion is True.
-**Create prompt variables of Question or Answer types**
-- Ask user to put in the name of the variable.
-- Save the variable with the following additional values
+- **Create prompt variables of "API" type**
+  - Ask user to put in the name of the variable.
+  - Present the user with the options to establish the API connection and query per further details provided in section 7\. External API Integration. 
+  - A successful API query should return a query object and a result object.
+  - The query object contains all details needed to repeat the same API call again.
+  - The result object will be parsed and converted to API texts.
+  - Save the variable with the following additional values
+    - Variable value:
+      - Texts: the cleaned up API texts
+      - Source: the API query object
+    - Creation time: The time right before the variable was first saved to a variable file.
+    - Latest time: The time when the API query object was last executed. The default value is the Creation time.
+    - Hash: The hash of the content of Variable value - Texts and Salt.
+    - Update logs: when there is a new "Latest time" value, append the value to this updated logs comma-separated list.
+    - Upon successful saving, append the variable name enclosed within {{ and }} to the user's current text area if promptvariable_autoinclusion is True.
+- **Create prompt variables of Question or Answer types**
+  - Ask user to put in the name of the variable.
+  - Save the variable with the following additional values
+    - Variable value:
+      - Texts: This text is copied over from the user prompt text area (if creating a Question prompt variable) or from the LLM response texts (if creating an Answer prompt variable). The user is able to make correction and/or addition to the texts.
+      - Source: the user (if creating a Question prompt variable) or the selected LLM model (if creating an Answer prompt variable)
+    - Creation time: The time right before the variable was first saved to a variable file.
+    - Latest time: The last time the variable was saved to a variable file. The default value is the Creation time.
+    - Hash: The hash of the content of Variable value - Texts and Salt.
+    - Update logs: when there is a new "Latest time" value, append the value to this updated logs comma-separated list.
+  - Upon successful saving of "Answer" type variable, append the variable name enclosed within {{ and }} to the user's current text area if promptvariable_autoinclusion is True.
+- **Integrity check**
+  - Can only be performed by the author of the variables. Assuming the salt is well-kept in secret by each user, each user can verify if the user indeed authored a variable and if the content of the variable was changed.
+  - Read the Variable value - Texts of a selected variable within a prompt variable file.
+  - Append the user's salt to the Texts.
+  - Hash the appended result.
+  - Compare the hash result with the prompt variable's hash.
+  - Integrity check is passed if the two hash values are the same.
+- **Dependency check**
+  - To be performed when a prompt variable is referenced by the user. The prompt variable can be referenced by other parent prompt variables and/or referencing other child prompt variables in its Variable value - Texts.
+  - The Dependency Check will check and report any identified issues with both parent and child prompt variables.
+  - The potential issues to be checked are:
+    - The parent/child variables do not exist.
+    - The parent/child variables are empty.
+    - The parent/child variables reference prompt variables that are either empty or do not exist. 
+- **Update prompt variables of "File" type**
+  - This process is done automatically each time a prompt variable of "File" type is referenced by the user's prompt.
+  - The "File" type variable value is updated following the same process in Create prompt variables of "File" type.
+  - Only update the variable and its child variables when there are changes in folder structures, folder/file names, folder/file contents.
+- **Update prompt variables of "Web" type**
+  - In the View/update prompt variable interface, when user click the "Update" button, the Variable value - Source object will be parsed. The application will visit the website and perform proper content extraction of either the whole website or the content within the div tags.
+  - If there are issues, report the issues to user and do not update the Variable value - Texts.
+  - Potential issues are:
+    - Website refuses to serve the expected content.
+    - Website requires bot verification.
+    - Website is temporarily unavailable.
+    - Website takes too long to load.
+    - The specified div tags are no longer available.
+  - If there is no issue, update the variable with the following:
+    - Variable value:
+      - Texts: will be updated if the extracted texts are different from the existing texts.
+      - Source: the Source object should remain the same.
+    - Creation time: remain the same
+    - Latest time: The time immediately before the variable was updated on the variable file.
+    - Hash: The hash of the content of newly extracted Variable value - Texts and Salt.
+    - Update logs: Append the Latest time
+- **Update prompt variables of "API" type**
+  - In the View/update prompt variable interface, when user click the "Update" button, the Variable value - Source object (the API query object) will be parsed. Based on the parsed result, the application will properly connect to the API endpoint and query the endpoint to gather a result object.
+  - If there are issues, report the issues to user and do not update the Variable value - Texts.
+  - Potential issues are:
+    - Authentication and authorization issues.
+    - Request formating errors which can happen due to changes/upgrades on the API host.
+    - Network issues such as connnection timeout.
+    - Exceeded API rate limit.
+    - API deprecation or changes.
+    - Data related issues such as requesting too much data in a single query.
+  - If there is no issue, update the variable with the following:
   - Variable value:
-    - Texts: This text is copied over from the user prompt text area (if creating a Question prompt variable) or from the LLM response texts (if creating an Answer prompt variable). The user is able to make correction and/or addition to the texts.
-    - Source: the user (if creating a Question prompt variable) or the selected LLM model (if creating an Answer prompt variable)
-  - Creation time: The time right before the variable was first saved to a variable file.
-  - Latest time: The last time the variable was saved to a variable file. The default value is the Creation time.
-  - Hash: The hash of the content of Variable value - Texts and Salt.
-  - Update logs: when there is a new "Latest time" value, append the value to this updated logs comma-separated list.
-- Upon successful saving of "Answer" type variable, append the variable name enclosed within {{ and }} to the user's current text area if promptvariable_autoinclusion is True.
-**Integrity check**
-- Can only be performed by the author of the variables. Assuming the salt is well-kept in secret by each user, each user can verify if the user indeed authored a variable and if the content of the variable was changed.
-- Read the Variable value - Texts of a selected variable within a prompt variable file.
-- Append the user's salt to the Texts.
-- Hash the appended result.
-- Compare the hash result with the prompt variable's hash.
-- Integrity check is passed if the two hash values are the same.
-**Dependency check**
-- To be performed when a prompt variable is referenced by the user. The prompt variable can be referenced by other parent prompt variables and/or referencing other child prompt variables in its Variable value - Texts.
-- The Dependency Check will check and report any identified issues with both parent and child prompt variables.
-- The potential issues to be checked are:
-  - The parent/child variables do not exist.
-  - The parent/child variables are empty.
-  - The parent/child variables reference prompt variables that are either empty or do not exist. 
-**Update prompt variables of "File" type**
-- This process is done automatically each time a prompt variable of "File" type is referenced by the user's prompt.
-- The "File" type variable value is updated following the same process in Create prompt variables of "File" type.
-- Only update the variable and its child variables when there are changes in folder structures, folder/file names, folder/file contents.
-**Update prompt variables of "Web" type**
-- In the View/update prompt variable interface, when user click the "Update" button, the Variable value - Source object will be parsed. The application will visit the website and perform proper content extraction of either the whole website or the content within the div tags.
-- If there are issues, report the issues to user and do not update the Variable value - Texts.
-- Potential issues are:
-  - Website refuses to serve the expected content.
-  - Website requires bot verification.
-  - Website is temporarily unavailable.
-  - Website takes too long to load.
-  - The specified div tags are no longer available.
-- If there is no issue, update the variable with the following:
-  - Variable value:
-    - Texts: will be updated if the extracted texts are different from the existing texts.
-    - Source: the Source object should remain the same.
-  - Creation time: remain the same
-  - Latest time: The time immediately before the variable was updated on the variable file.
-  - Hash: The hash of the content of newly extracted Variable value - Texts and Salt.
-  - Update logs: Append the Latest time
-**Update prompt variables of "API" type**
-- In the View/update prompt variable interface, when user click the "Update" button, the Variable value - Source object (the API query object) will be parsed. Based on the parsed result, the application will properly connect to the API endpoint and query the endpoint to gather a result object.
-- If there are issues, report the issues to user and do not update the Variable value - Texts.
-- Potential issues are:
-  - Authentication and authorization issues.
-  - Request formating errors which can happen due to changes/upgrades on the API host.
-  - Network issues such as connnection timeout.
-  - Exceeded API rate limit.
-  - API deprecation or changes.
-  - Data related issues such as requesting too much data in a single query.
-- If there is no issue, update the variable with the following:
-- Variable value:
-  - Texts: the updated cleaned up API texts
-  - Source: remain the same
-- Creation time: remain the same
-- Latest time: The time immediately before the variable was updated on the variable file.
-- Hash: The hash of the content of newly extracted Variable value - Texts and Salt.
-- Update logs: Append the Latest time
-**Update prompt variables of Question or Answer types**
-- In the View/update prompt variable interface, the user is able to make changes to the variable Value - Texts box.
-- After the user made the changes and when user click the "Update" button, update the variable with the following values
-  - Variable value:
-    - Texts: the user updated texts
+    - Texts: the updated cleaned up API texts
     - Source: remain the same
   - Creation time: remain the same
   - Latest time: The time immediately before the variable was updated on the variable file.
   - Hash: The hash of the content of newly extracted Variable value - Texts and Salt.
   - Update logs: Append the Latest time
+- **Update prompt variables of Question or Answer types**
+  - In the View/update prompt variable interface, the user is able to make changes to the variable Value - Texts box.
+  - After the user made the changes and when user click the "Update" button, update the variable with the following values
+    - Variable value:
+      - Texts: the user updated texts
+      - Source: remain the same
+    - Creation time: remain the same
+    - Latest time: The time immediately before the variable was updated on the variable file.
+    - Hash: The hash of the content of newly extracted Variable value - Texts and Salt.
+    - Update logs: Append the Latest time
 
-### 7\. External API Integration
-- tba
+### 7\. API Integration
 #### 7a\. Threat Intelligence
 - **Government Sources**
-  - National Vulnerability Database 	U.S. National Vulnerability Database https://nvd.nist.gov/vuln/Data-Feeds/JSON-feed-changelog
-  - 
+  - **National Vulnerability Database**
+    - **API Endpoint URL:** `https://services.nvd.nist.gov/rest/json/`
+    - **HTTP Method:** Primarily `GET` for retrieving vulnerability data.
+    - **Authentication Credentials:** No authentication required for basic access; higher rate limits may require an API key.
+    - **Headers:** 
+      - `Accept: application/json`
+    - **Query Parameters:** Supports parameters like `cveId`, `pubStartDate`, `pubEndDate`, etc., to filter vulnerability data.
+    - **Response Handling:** Returns JSON-formatted vulnerability information with appropriate HTTP status codes.
+    - **Rate Limiting Awareness:** Adheres to NVD's usage policies; monitor for any rate limit headers.
+  - **CISA (Cybersecurity and Infrastructure Security Agency) APIs**
+    - **API Endpoint URL:** Varies by specific API; refer to [CISA APIs](https://www.cisa.gov/developer-resources) for details.
+    - **HTTP Method:** Supports multiple methods including `GET`, `POST`, depending on the API.
+    - **Authentication Credentials:** Typically requires API keys or OAuth tokens.
+    - **Headers:** 
+      - `Authorization: Bearer {token}`
+      - `Content-Type: application/json`
+    - **Query Parameters:** Depends on the specific API functionalities, such as filtering security advisories.
+    - **Response Handling:** JSON responses with relevant cybersecurity data and status codes.
+    - **Error Handling:** Implements standard HTTP error handling mechanisms; refer to specific API docs for details.
+  - **NIST (National Institute of Standards and Technology) APIs**
+    - **API Endpoint URL:** Access via [NIST API Portal](https://www.nist.gov/data-feeds)
+    - **HTTP Method:** Primarily `GET` for data retrieval; some APIs may support `POST`.
+    - **Authentication Credentials:** May require API keys for enhanced access.
+    - **Headers:** 
+      - `Accept: application/json`
+    - **Query Parameters:** Varies by API; commonly used for specifying data ranges and types.
+    - **Response Handling:** Returns data in JSON or XML formats with appropriate status codes.
+    - **Rate Limiting Awareness:** Follow NIST's API usage guidelines to avoid exceeding limits.
+  - **CERT/CC (Computer Emergency Response Team Coordination Center) APIs**
+    - **API Endpoint URL:** Available through [CERT/CC Resources](https://www.cert.org/resources/)
+    - **HTTP Method:** Primarily `GET` for accessing advisories and reports.
+    - **Authentication Credentials:** May require registration and API keys for access.
+    - **Headers:** 
+      - `Authorization: Bearer {API_KEY}`
+      - `Accept: application/json`
+    - **Query Parameters:** Include filters like `alertID`, `date`, and `severity`.
+    - **Response Handling:** JSON responses containing advisories, incident reports, and related data.
+    - **Error Handling:** Utilize HTTP status codes and error messages to manage issues.
 - **Industry Sources**
-  - AlienVault Open Threat Exchange (OTX) 	https://otx.alienvault.com/api 	IP/domain/URL reputation 	FREE
-  - FullHunt 	Searchable attack surface database of the entire internet https://api-docs.fullhunt.io/#introduction
-  - PhishStats 	Phishing database https://phishstats.info/#apidoc
-  - Spamhaus https://www.spamhaus.com/product/intelligence-api/
-  - Cisco PSIRT https://developer.cisco.com/psirt/
+  - **OWASP (Open Web Application Security Project) APIs**
+    - API Endpoint URL: Accessible via [OWASP API Listings](https://owasp.org/www-project-api/)
+    - HTTP Method: Varies; commonly `GET`, `POST`, `PUT`, `DELETE` based on the API.
+    - Authentication Credentials: Depends on the specific API; may use API keys or OAuth.
+    - Headers: 
+      - `Content-Type: application/json`
+      - `Accept: application/json`
+    - Query Parameters: Used for accessing specific security guidelines or best practices.
+    - Response Handling: Provides structured data on security practices and guidelines in JSON format.
+    - Rate Limiting Awareness: Adhere to OWASP’s usage policies to maintain access.
+  - **AlienVault Open Threat Exchange (OTX):**
+    - API Endpoint URL: `https://otx.alienvault.com/api/v1/`
+    - HTTP Methods: `GET`, `POST`
+    - Authentication Credentials: Requires an API Key provided by AlienVault
+    - Headers:
+      - `X-OTX-API-KEY`: Your API Key
+      - `Content-Type`: `application/json` (for `POST` requests)
+      - `Accept`: `application/json`
+    - Query Parameters: Used for filtering data (e.g., `limit`, `page`)
+    - Path Variables: Resource identifiers like `/indicators/{indicator_type}/{indicator_value}`
+    - Request Body: JSON-formatted data for `POST` requests
+    - Response Handling: JSON responses with HTTP status codes indicating success or errors
+    - Error Handling: Check for HTTP errors and handle exceptions accordingly
+    - Rate Limiting Awareness: Be mindful of API rate limits to avoid throttling
+    - API Documentation: Available at `https://otx.alienvault.com/api`
+    - Python Libraries: Utilize `requests` for making API calls
+    - Environment Configuration: Store API Key securely, such as in environment variables
+    - Testing and Debugging Tools: Use Postman to test endpoints and `logging` for debugging
+  - **FullHunt:**
+    - API Endpoint URL: `https://fullhunt.io/api/v1/`
+    - HTTP Methods: `GET`
+    - Authentication Credentials: Requires an API Key obtained from FullHunt
+    - Headers:
+      - `X-API-KEY`: Your API Key
+      - `Accept`: `application/json`
+    - Query Parameters: Parameters for search queries and filtering results
+    - Path Variables: May include specific resource identifiers
+    - Request Body: Not typically used with `GET` requests
+    - Response Handling: JSON responses containing search results or data
+    - Error Handling: Monitor HTTP status codes and handle errors
+    - Rate Limiting Awareness: Adhere to rate limits specified by FullHunt
+    - API Documentation: Found at `https://api-docs.fullhunt.io/#introduction`
+    - Python Libraries: Use `requests` to interact with the API
+    - Environment Configuration: Keep your API Key secure using environment variables
+    - Testing and Debugging Tools: Test queries with Postman and implement logging for troubleshooting
+
+  - **PhishStats:**
+    - API Endpoint URL: `https://phishstats.info/api/phishing`
+    - HTTP Methods: `GET`
+    - Authentication Credentials: No authentication required; the API is free to use
+    - Headers:
+      - `Accept`: `application/json`
+    - Query Parameters: Use parameters like `status`, `limit`, or `page` for filtering
+    - Path Variables: Not applicable for this API
+    - Request Body: Not used with `GET` requests
+    - Response Handling: JSON responses containing phishing data
+    - Error Handling: Check HTTP status codes and handle any errors
+    - Rate Limiting Awareness: Be cautious of any implicit rate limits to prevent being blocked
+    - API Documentation: Available at `https://phishstats.info/#apidoc`
+    - Python Libraries: Utilize `requests` for making HTTP requests
+    - Environment Configuration: Not applicable since no credentials are needed
+    - Testing and Debugging Tools: Use Postman to test the API and `logging` for debug information
+
+  - **Spamhaus Intelligence API:**
+    - API Endpoint URL: `https://api.spamhaus.com/intelligence/v1/`
+    - HTTP Methods: `GET`
+    - Authentication Credentials: Requires an API Key from Spamhaus (subscription-based)
+    - Headers:
+      - `Authorization`: `Bearer {API Key}`
+      - `Accept`: `application/json`
+    - Query Parameters: Include parameters such as `query` to specify the IP or domain
+    - Path Variables: May be used to specify the type of lookup
+    - Request Body: Not used with `GET` requests
+    - Response Handling: JSON responses with detailed threat intelligence
+    - Error Handling: Handle HTTP errors and interpret error messages from the API
+    - Rate Limiting Awareness: Follow the rate limits provided to avoid service interruptions
+    - API Documentation: Accessible at `https://www.spamhaus.com/product/intelligence-api/`
+    - Python Libraries: Use `requests` for API communication
+    - Environment Configuration: Securely store your API Key outside of your script
+    - Testing and Debugging Tools: Test endpoints with Postman and employ `logging` for monitoring
+
+  - **Cisco PSIRT:**
+    - API Endpoint URL: `https://api.cisco.com/security/advisories`
+    - HTTP Methods: `GET`
+    - Authentication Credentials: Requires OAuth 2.0 authentication
+    - Headers:
+      - `Authorization`: `Bearer {Access Token}`
+      - `Accept`: `application/json`
+    - Query Parameters: Use parameters like `last_published`, `advisory_id` to filter advisories
+    - Path Variables: May include specific advisory IDs
+    - Request Body: Not applicable for `GET` requests
+    - Response Handling: JSON responses containing security advisory information
+    - Error Handling: Check for HTTP errors and manage exceptions
+    - Rate Limiting Awareness: Observe any rate limits to maintain access
+    - API Documentation: Found at `https://developer.cisco.com/psirt/`
+    - Python Libraries: Use `requests` and possibly `requests_oauthlib` for OAuth support
+    - Environment Configuration: Store client credentials securely for OAuth 2.0 flow
+    - Testing and Debugging Tools: Utilize Postman for testing with OAuth and `logging` for debugging
 - **Community Sources**
-  - [Bugcrowd](https://docs.bugcrowd.com/api/getting-started/) 	Bugcrowd API for interacting and tracking the reported issues programmatically
-  - HackerNews 	https://github.com/HackerNews/API 	Social news for CS and entrepreneurship 	FREE
-  - Bing Web Search API 	https://www.microsoft.com/en-us/bing/apis/bing-web-search-api 	Search in Bing (+instant answers and location) 	1000 transactions per month FREE
-  - Google Custom Search JSON API 	https://developers.google.com/custom-search/v1/overview 	Search in Google 	100 requests FREE
+  - **Bugcrowd API:**
+    - API Endpoint URL: `https://tracker.bugcrowd.com/api/v2/`
+    - HTTP Methods: Supports `GET`, `POST`, `PUT`, `DELETE`
+    - Authentication Credentials: Uses API keys for authentication
+    - Headers: Requires `Authorization` header with API key, `Content-Type: application/json`
+    - Query Parameters: Available for filtering issues and pagination
+    - Path Variables: Uses variables like `/issues/{issue_id}`
+    - Request Body: Accepts JSON data for `POST` and `PUT` requests
+    - Response Handling: Returns JSON responses; success indicated by 2xx status codes
+    - Error Handling: Handle errors using HTTP status codes and error messages
+    - Rate Limiting Awareness: Observe rate limits as specified in the API documentation
+    - API Documentation: [Bugcrowd API Documentation](https://docs.bugcrowd.com/api/getting-started/)
+    - Python Libraries: Use `requests` library for making HTTP requests
+    - Environment Configuration: Store API keys securely with environment variables
+    - Testing and Debugging Tools: Utilize Postman for testing endpoints before scripting
+
+  - **HackerNews API:**
+    - API Endpoint URL: `https://hacker-news.firebaseio.com/v0/`
+    - HTTP Methods: Uses `GET` requests
+    - Authentication Credentials: No authentication required (public API)
+    - Headers: Include `Accept: application/json` if needed
+    - Query Parameters: Minimal; data accessed via specific endpoints
+    - Path Variables: Access items with `/item/{item_id}.json`, users with `/user/{user_id}.json`
+    - Request Body: Not applicable for `GET` requests
+    - Response Handling: Returns JSON data; parse to extract information
+    - Error Handling: Check for non-200 HTTP status codes
+    - Rate Limiting Awareness: Be considerate of usage limits; refer to API guidelines
+    - API Documentation: [HackerNews API on GitHub](https://github.com/HackerNews/API)
+    - Python Libraries: Use `requests` or `urllib` for HTTP requests
+    - Environment Configuration: Not required due to open access
+    - Testing and Debugging Tools: Test endpoints using Postman or similar tools
+
+  - **Bing Web Search API:**
+    - API Endpoint URL: `https://api.bing.microsoft.com/v7.0/search`
+    - HTTP Methods: Uses `GET` requests
+    - Authentication Credentials: Requires API key provided by Microsoft
+    - Headers: Set `Ocp-Apim-Subscription-Key` header with your API key
+    - Query Parameters: Use `q` for search queries, additional parameters for filters
+    - Path Variables: Not typically used in this API
+    - Request Body: Not used with `GET` requests
+    - Response Handling: Receives JSON responses with search results and metadata
+    - Error Handling: Handle errors based on HTTP status codes and error details in the response
+    - Rate Limiting Awareness: Limited to 1,000 free transactions per month
+    - API Documentation: [Bing Web Search API Overview](https://www.microsoft.com/en-us/bing/apis/bing-web-search-api)
+    - Python Libraries: Use `requests` for sending HTTP requests
+    - Environment Configuration: Store API keys securely using environment variables
+    - Testing and Debugging Tools: Utilize Postman to test queries and examine responses
+
+  - **Google Custom Search JSON API:**
+    - API Endpoint URL: `https://www.googleapis.com/customsearch/v1`
+    - HTTP Methods: Uses `GET` requests
+    - Authentication Credentials: Requires API key and Custom Search Engine ID (`cx`)
+    - Headers: May include `Accept: application/json` header
+    - Query Parameters: Use `q` for the search term, include `key` and `cx` parameters
+    - Path Variables: Not applicable; all parameters are query parameters
+    - Request Body: Not used with `GET` requests
+    - Response Handling: Returns JSON responses with search results and metadata
+    - Error Handling: Check HTTP status codes and error messages in responses
+    - Rate Limiting Awareness: Limited to 100 free requests per day
+    - API Documentation: [Google Custom Search API Overview](https://developers.google.com/custom-search/v1/overview)
+    - Python Libraries: Use `requests` or the Google API Client Library for Python
+    - Environment Configuration: Securely manage API key and `cx` using environment variables
+    - Testing and Debugging Tools: Test API requests and parameters using Postman
 
 #### 7b\. Malware
 - VirusTotal 	https://developers.virustotal.com/reference 	files and urls analyze 	Public API is FREE
 - Malpedia - https://malpedia.caad.fkie.fraunhofer.de/usage/api
+GreyNoise Community API:
+    Endpoint: https://api.greynoise.io/v3/
+RiskIQ Community API:
+    Endpoint: (varies depending on specific features)
+BinaryEdge (limited free tier):
+    Endpoint: https://api.binaryedge.io/v1/
+Emerging Threats:
+    Endpoint: https://api.emergingthreats.net/v2/
+
 #### 7c\. Network Intelligence
 - **Network Operations**
-  - Shodan 	Search engine for Internet connected devices
-  - Cloudflare Trace 	https://github.com/fawazahmed0/cloudflare-trace-api 	Get IP Address, Timestamp, User Agent, Country Code, IATA, HTTP Version, TLS/SSL Version & More 	FREE
-  - Shodan 	https://developer.shodan.io 
-  - Censys.io 	https://censys.io/api
-  - Host.io 	https://host.io/ 	Get info about domain 	FREE
-  - BeVigil OSINT API 	https://bevigil.com/osint-api 	provides access to millions of asset footprint data points including domain intel, cloud services, API information, and third party assets extracted from millions of mobile apps being continuously uploaded and scanned by users on bevigil.com 	50 credits free/1000 credits/$50
-  - EVA 	https://eva.pingutil.com/ 	Measuring email deliverability & quality 	FREE
-  - Kickbox 	https://open.kickbox.com/ 	Email verification API 	FREE
-  - FachaAPI 	https://api.facha.dev/ 	Allows checking if an email domain is a temporary email domain 	FREE
+  - **Shodan API (https://developer.shodan.io)**
+    - Endpoint URL: https://api.shodan.io
+    - HTTP Methods: GET, POST (depending on the endpoint)
+    - Authentication: Requires an API Key provided upon registration
+    - Headers: May include `Content-Type: application/json` and `Accept: application/json`
+    - Query Parameters: API key passed as `key`; other parameters vary by endpoint
+    - Path Variables: Used in endpoints like `/shodan/host/{ip}`
+    - Request Body: JSON-formatted data for POST requests
+    - Responses: JSON format; handle based on HTTP status codes
+    - Error Handling: Check status codes; errors returned in JSON
+    - Rate Limiting: Enforced based on subscription level; monitor usage
+    - Documentation: https://developer.shodan.io/api
+    - Libraries: Official Python library `shodan`; can also use `requests`
+    - Environment Configuration: Store API Key securely (e.g., environment variables)
+    - Testing Tools: Use Postman; implement logging for debugging
+
+  - **Cloudflare Trace API (https://github.com/fawazahmed0/cloudflare-trace-api)**
+    - Endpoint URL: https://www.cloudflare.com/cdn-cgi/trace
+    - HTTP Method: GET
+    - Authentication: None required (Free)
+    - Headers: Standard HTTP headers
+    - Query Parameters: None
+    - Path Variables: None
+    - Request Body: Not applicable
+    - Responses: Plain text with key-value pairs
+    - Error Handling: Handle standard HTTP status codes
+    - Rate Limiting: Not specified; use responsibly
+    - Documentation: https://github.com/fawazahmed0/cloudflare-trace-api
+    - Libraries: Use `requests`
+    - Environment Configuration: Not applicable
+    - Testing Tools: Test via browser or scripts; use logging for debugging
+
+  - **Censys.io API (https://censys.io/api)**
+    - Endpoint URL: https://search.censys.io/api
+    - HTTP Methods: GET, POST (depending on the endpoint)
+    - Authentication: Requires API ID and Secret obtained after registration
+    - Headers: Include `Content-Type: application/json` and `Accept: application/json`
+    - Query Parameters: Vary by endpoint
+    - Path Variables: Used in endpoints like `/hosts/{ip}`
+    - Request Body: JSON-formatted data for POST requests
+    - Responses: JSON format; handle based on HTTP status codes
+    - Error Handling: Check status codes; errors returned in JSON
+    - Rate Limiting: Based on account type; monitor usage
+    - Documentation: https://search.censys.io/api
+    - Libraries: Official Python library `censys`; can also use `requests`
+    - Environment Configuration: Store API credentials securely
+    - Testing Tools: Use Postman; implement logging for debugging
+
+  - **Host.io API (https://host.io/)**
+    - Endpoint URL: https://host.io/api
+    - HTTP Method: GET
+    - Authentication: Requires an API Key (Free tier available)
+    - Headers: Include `Accept: application/json`
+    - Query Parameters: Include `key` for API Key; others vary by request
+    - Path Variables: Used in endpoints like `/domains/{domain}`
+    - Request Body: Not applicable
+    - Responses: JSON format; handle based on HTTP status codes
+    - Error Handling: Check status codes; errors returned in JSON
+    - Rate Limiting: Usage limits apply; monitor response headers
+    - Documentation: https://host.io/docs
+    - Libraries: Use `requests`
+    - Environment Configuration: Store API Key securely
+    - Testing Tools: Use Postman; implement logging for debugging
+
+  - **BeVigil OSINT API (https://bevigil.com/osint-api)**
+    - Endpoint URL: https://osint.bevigil.com/api
+    - HTTP Method: GET
+    - Authentication: Requires API Token (50 free credits; paid plans available)
+    - Headers: Include `X-Access-Token` for authentication and `Accept: application/json`
+    - Query Parameters: Vary by endpoint
+    - Path Variables: Used for specifying resources
+    - Request Body: Not applicable
+    - Responses: JSON format; handle based on HTTP status codes
+    - Error Handling: Check status codes; errors returned in JSON
+    - Rate Limiting: Credits-based; monitor usage
+    - Documentation: https://bevigil.com/docs
+    - Libraries: Use `requests`
+    - Environment Configuration: Store API Token securely
+    - Testing Tools: Use Postman; implement logging for debugging
+
+  - **EVA API (https://eva.pingutil.com/)**
+    - Endpoint URL: https://api.eva.pingutil.com/email
+    - HTTP Method: GET
+    - Authentication: None required (Free)
+    - Headers: Include `Accept: application/json`
+    - Query Parameters: Include `email` parameter to validate
+    - Path Variables: None
+    - Request Body: Not applicable
+    - Responses: JSON format; handle based on HTTP status codes
+    - Error Handling: Check status codes
+    - Rate Limiting: Not specified; use responsibly
+    - Documentation: https://eva.pingutil.com/
+    - Libraries: Use `requests`
+    - Environment Configuration: Not applicable
+    - Testing Tools: Use Postman; implement logging for debugging
+
+  - **Kickbox Open API (https://open.kickbox.com/)**
+    - Endpoint URL: https://open.kickbox.com/v1/disposable/{domain_or_email}
+    - HTTP Method: GET
+    - Authentication: None required (Free)
+    - Headers: Include `Accept: application/json`
+    - Query Parameters: None
+    - Path Variables: `{domain_or_email}` to check
+    - Request Body: Not applicable
+    - Responses: JSON format (e.g., `{"disposable": true/false}`)
+    - Error Handling: Check status codes
+    - Rate Limiting: Not specified; use responsibly
+    - Documentation: https://open.kickbox.com
+    - Libraries: Use `requests`
+    - Environment Configuration: Not applicable
+    - Testing Tools: Use Postman; implement logging for debugging
+
+  - **FachaAPI (https://api.facha.dev/)**
+    - Endpoint URL: https://api.facha.dev/email/{email}
+    - HTTP Method: GET
+    - Authentication: None required (Free)
+    - Headers: Include `Accept: application/json`
+    - Query Parameters: None
+    - Path Variables: `{email}` address to check
+    - Request Body: Not applicable
+    - Responses: JSON format indicating if the domain is temporary
+    - Error Handling: Check status codes
+    - Rate Limiting: Not specified; use responsibly
+    - Documentation: https://api.facha.dev/
+    - Libraries: Use `requests`
+    - Environment Configuration: Not applicable
+    - Testing Tools: Use Postman; implement logging for debugging
 - **Network Archive**
-  - Wayback Machine API (Memento API, CDX Server API, Wayback Availability JSON API) 	https://archive.org/help/wayback_api.php 	Retrieve information about Wayback capture data 	FREE
-  - TROVE (Australian Web Archive) API 	https://trove.nla.gov.au/about/create-something/using-api 	Retrieve information about TROVE capture data 	FREE
-  - UK Web Archive API 	https://ukwa-manage.readthedocs.io/en/latest/#api-reference 	Retrieve information about UK Web Archive capture data 	FREE
-  - Library Of Congress archive API 	https://www.loc.gov/apis/ 	Provides structured data about Library of Congress collections 	FREE
-  - BotsArchive 	https://botsarchive.com/docs.html 	JSON formatted details about Telegram Bots available in database 	FREE
+  - **Wayback Machine API**
+    - API Endpoint URL:
+      - Memento API: `http://web.archive.org/web/timemap/link/{URI}`
+      - CDX Server API: `http://web.archive.org/cdx/search/cdx`
+      - Wayback Availability JSON API: `http://archive.org/wayback/available`
+    - HTTP Method: `GET`
+    - Authentication Credentials: None required
+    - Headers:
+      - `Accept`: `application/json` or `application/link-format`
+    - Query Parameters:
+      - `url`: The target URL to query archival data for
+      - `timestamp`: Specific date and time for the capture
+      - Additional parameters as specified in the API documentation
+    - Path Variables:
+      - `{URI}`: The URL-encoded address of the webpage
+    - Request Body: Not applicable
+    - Response Handling:
+      - Responses in JSON or link format containing archival data
+      - Status codes: `200` for success
+    - Error Handling:
+      - Check for HTTP errors like `404` or `500`
+      - Validate response content to handle empty or malformed data
+    - Rate Limiting Awareness:
+      - No strict rate limits documented, but excessive requests may be throttled
+    - API Documentation:
+      - Available at `https://archive.org/help/wayback_api.php`
+    - Python Libraries:
+      - Use `requests` for making HTTP requests
+    - Environment Configuration:
+      - No sensitive credentials; straightforward configuration
+    - Testing and Debugging Tools:
+      - Utilize Postman for testing endpoints
+      - Implement logging to monitor requests and responses
+  - **TROVE API**
+    - API Endpoint URL: `https://api.trove.nla.gov.au/v2/`
+    - HTTP Method: `GET`
+    - Authentication Credentials:
+      - Requires an API Key obtained from TROVE
+    - Headers:
+      - `Accept`: `application/json`
+    - Query Parameters:
+      - `q`: The search query term
+      - `zone`: Specific content zone (e.g., `newspaper`, `book`)
+      - `key`: Your personal API key
+      - Other parameters for result filtering and pagination
+    - Path Variables:
+      - Endpoints like `/result`, `/work`, `/collection`
+    - Request Body: Not used; parameters are included in the URL
+    - Response Handling:
+      - JSON responses containing search results and metadata
+      - Status codes: `200` for success
+    - Error Handling:
+      - Monitor for HTTP errors and API-specific error messages
+      - Handle authentication errors like `403` Forbidden
+    - Rate Limiting Awareness:
+      - Rate limits may apply; refer to API terms of use
+    - API Documentation:
+      - Accessible at `https://trove.nla.gov.au/about/create-something/using-api`
+    - Python Libraries:
+      - Use `requests` to interact with the API
+    - Environment Configuration:
+      - Store the API key securely using environment variables
+    - Testing and Debugging Tools:
+      - Test queries with Postman or similar tools
+      - Use Python's `logging` library for debugging
+  - **UK Web Archive API**
+    - API Endpoint URL: As per documentation, examples include `https://www.webarchive.org.uk/wayback/api`
+    - HTTP Method: `GET`
+    - Authentication Credentials:
+      - May require authentication; check the specific API guidelines
+    - Headers:
+      - `Accept`: `application/json`
+    - Query Parameters:
+      - Parameters such as `url`, `timestamp`, `output` for specifying requests
+    - Path Variables:
+      - Defined by specific endpoints, possibly including resource identifiers
+    - Request Body: Generally not applicable; uses query parameters
+    - Response Handling:
+      - JSON responses with archival information
+      - Status codes: `200` for success
+    - Error Handling:
+      - Handle HTTP errors like `404` Not Found
+      - Check for API-specific error messages in the response
+    - Rate Limiting Awareness:
+      - Adhere to any rate limits specified in the API policy
+    - API Documentation:
+      - Detailed at `https://ukwa-manage.readthedocs.io/en/latest/#api-reference`
+    - Python Libraries:
+      - Utilize `requests` for API calls
+    - Environment Configuration:
+      - Secure any credentials if authentication is required
+    - Testing and Debugging Tools:
+      - Use Postman to test API endpoints
+      - Implement logging to capture request and response details
+  - **Library of Congress API**
+    - API Endpoint URL: `https://www.loc.gov/{endpoint}/`
+    - HTTP Method: `GET`
+    - Authentication Credentials: None required
+    - Headers:
+      - `Accept`: `application/json` to receive JSON responses
+    - Query Parameters:
+      - `q`: Search query terms
+      - Filters like `fa`, `sb`, `fo` for advanced search options
+      - Pagination parameters like `sp` (start page)
+    - Path Variables:
+      - `{endpoint}` specifies the collection, such as `photos`, `maps`, `audio`
+    - Request Body: Not applicable
+    - Response Handling:
+      - JSON-formatted data containing collection items and metadata
+      - Status codes: `200` for successful requests
+    - Error Handling:
+      - Watch for HTTP errors such as `400` Bad Request
+      - Check the `error` field in the response for issues
+    - Rate Limiting Awareness:
+      - Follow any usage guidelines; heavy use may be throttled
+    - API Documentation:
+      - Found at `https://www.loc.gov/apis/`
+    - Python Libraries:
+      - Use `requests` to interact with the API
+    - Environment Configuration:
+      - No special configuration needed due to lack of authentication
+    - Testing and Debugging Tools:
+      - Test queries with Postman
+      - Leverage logging for troubleshooting
+  - **BotsArchive API**
+    - API Endpoint URL: `https://botsarchive.com/api/{endpoint}`
+    - HTTP Method: Likely `GET` for retrieval operations
+    - Authentication Credentials:
+      - Verify if an API key is necessary; consult the documentation
+    - Headers:
+      - `Accept`: `application/json` to specify response format
+    - Query Parameters:
+      - Parameters to filter bots, such as `category`, `language`, `rating`
+    - Path Variables:
+      - `{endpoint}` defines the specific resource, like `bots`, `categories`
+    - Request Body: Not used; data is sent via query parameters
+    - Response Handling:
+      - Receives JSON-formatted details about Telegram bots
+      - Status codes: `200` for success
+    - Error Handling:
+      - Handle HTTP errors and check for error messages in response
+    - Rate Limiting Awareness:
+      - Be mindful of any specified rate limits to avoid throttling
+    - API Documentation:
+      - Documentation available at `https://botsarchive.com/docs.html`
+    - Python Libraries:
+      - Use `requests` for making API calls
+    - Environment Configuration:
+      - Securely store any required API keys or tokens
+    - Testing and Debugging Tools:
+      - Utilize Postman to test and understand API responses
+      - Implement logging to capture and analyze errors
 - **Crypto Networks**
-  - BTC.com 	https://btc.com/btc/adapter?type=api-doc 	get information about addresses and transanctions 	FREE
-  - Bitcointabyse 	https://www.bitcoinabuse.com/api-docs 	Lookup bitcoin addresses that have been linked to criminal activity 	FREE
-  - Bitcoinwhoswho 	https://www.bitcoinwhoswho.com/api 	Scam reports on the Bitcoin Address 	FREE
-  - Etherscan 	https://etherscan.io/apis 	Ethereum explorer API 	FREE
-  - BlockFacts 	https://blockfacts.io/ 	Real-time crypto data from multiple exchanges via a single unified API, and much more 	FREE
-  - Brave NewCoin 	https://bravenewcoin.com/developers 	Real-time and historic crypto data from more than 200+ exchanges 	FREE
-  - WalletLabels 	https://www.walletlabels.xyz/docs 	Labels for 7,5 million Ethereum wallets 	FREE
+  - **BTC.com**
+    - API Endpoint URL: `https://btc.com/btc/adapter`
+    - HTTP Method: Supports `GET` requests
+    - Authentication Credentials: May require an API key for certain endpoints
+    - Headers: Use `Content-Type: application/json` and include `Authorization` if needed
+    - Query Parameters: Parameters to specify addresses, transactions, limits, etc.
+    - Path Variables: Include specific addresses or transaction hashes in the URL
+    - Request Body: Not typically required for `GET` requests
+    - Response Handling: Returns JSON data with information about Bitcoin addresses and transactions
+    - Error Handling: Check HTTP status codes and handle error messages appropriately
+    - Rate Limiting Awareness: Be mindful of request limits to avoid throttling
+    - API Documentation: Available at `https://btc.com/btc/adapter?type=api-doc`
+    - Python Libraries: Utilize `requests` for making HTTP requests
+    - Environment Configuration: Store any API keys securely using environment variables
+    - Testing and Debugging Tools: Use Postman to test endpoints before scripting
+
+  - **BitcoinAbuse**
+    - API Endpoint URL: `https://www.bitcoinabuse.com/api`
+    - HTTP Method: Supports `GET` requests
+    - Authentication Credentials: Requires a free API key obtainable from the provider
+    - Headers: Include `Content-Type: application/json` and `Accept: application/json`
+    - Query Parameters: Use parameters like `address` to look up specific Bitcoin addresses
+    - Request Body: Not required for `GET` requests
+    - Response Handling: Returns JSON data about reports linked to Bitcoin addresses associated with abuse
+    - Error Handling: Check for HTTP errors and handle exceptions accordingly
+    - Rate Limiting Awareness: Be aware of any rate limits specified in the documentation
+    - API Documentation: Accessible at `https://www.bitcoinabuse.com/api-docs`
+    - Python Libraries: Use `requests` to interact with the API
+    - Environment Configuration: Securely store the API key using environment variables
+    - Testing and Debugging Tools: Test API endpoints using Postman or similar tools
+
+  - **BitcoinWhosWho**
+    - API Endpoint URL: `https://www.bitcoinwhoswho.com/api`
+    - HTTP Method: Supports `GET` requests
+    - Authentication Credentials: Requires an API key for access
+    - Headers: Use `Content-Type: application/json`, `Accept: application/json`, and include `Authorization` with the API key
+    - Query Parameters: Include parameters like `address` to query specific Bitcoin addresses
+    - Request Body: Not required for `GET` requests
+    - Response Handling: Provides JSON data with scam reports and information on Bitcoin addresses
+    - Error Handling: Check HTTP status and handle errors as per API response
+    - Rate Limiting Awareness: Respect any rate limits to ensure continuous access
+    - API Documentation: Found at `https://www.bitcoinwhoswho.com/api`
+    - Python Libraries: Utilize `requests` for HTTP requests
+    - Environment Configuration: Store API keys securely, avoiding hardcoding
+    - Testing and Debugging Tools: Use tools like Postman for initial API testing
+
+  - **Etherscan**
+    - API Endpoint URL: `https://api.etherscan.io/api`
+    - HTTP Method: Primarily `GET` requests with required parameters
+    - Authentication Credentials: Requires a free API key obtainable from Etherscan
+    - Headers: Standard headers; may include `Content-Type` if necessary
+    - Query Parameters: Use parameters such as `module`, `action`, `address`, and `apiKey` to specify requests
+    - Request Body: Not required for `GET` requests
+    - Response Handling: Returns JSON-formatted data related to Ethereum blockchain information
+    - Error Handling: Check the `status` and `message` fields in the response for errors
+    - Rate Limiting Awareness: Adhere to rate limits specified in the documentation to prevent being blocked
+    - API Documentation: Available at `https://etherscan.io/apis`
+    - Python Libraries: Use `requests` to perform API calls
+    - Environment Configuration: Keep the API key secure using environment variables
+    - Testing and Debugging Tools: Test queries using Postman or similar applications
+
+  - **BlockFacts**
+    - API Endpoint URL: Accessible through `https://blockfacts.io/api/`
+    - HTTP Method: Supports various methods, commonly `GET` for data retrieval
+    - Authentication Credentials: May require an API key; check documentation for details
+    - Headers: Include `Content-Type` and `Authorization` if needed
+    - Query Parameters: Parameters to specify data such as cryptocurrency symbols, exchanges, or time frames
+    - Request Body: Depends on the endpoint; not required for `GET` requests
+    - Response Handling: Provides real-time JSON data from multiple crypto exchanges
+    - Error Handling: Monitor HTTP status codes and handle errors based on response messages
+    - Rate Limiting Awareness: Be conscious of any request limits to maintain uninterrupted service
+    - API Documentation: Found at `https://blockfacts.io/`
+    - Python Libraries: Utilize `requests` for interaction with the API
+    - Environment Configuration: Secure any API keys using environment variables or configuration files
+    - Testing and Debugging Tools: Use Postman to explore and test API endpoints
+
+  - **Brave NewCoin**
+    - API Endpoint URL: API endpoints provided through `https://bravenewcoin.com/developers`
+    - HTTP Method: Supports `GET` and `POST` methods depending on the endpoint
+    - Authentication Credentials: Requires an API key and may use OAuth 2.0 for authentication
+    - Headers: Include `Authorization: Bearer {access_token}` and `Content-Type: application/json`
+    - Query Parameters: Use to specify data such as assets, markets, and historical time frames
+    - Request Body: Required for certain endpoints, especially those needing detailed queries
+    - Response Handling: Returns JSON data with real-time and historical crypto information
+    - Error Handling: Handle HTTP errors and check for error messages within the response body
+    - Rate Limiting Awareness: Follow the rate limits outlined in the API documentation
+    - API Documentation: Accessible at `https://bravenewcoin.com/developers`
+    - Python Libraries: Use `requests` and potentially `requests-oauthlib` for OAuth handling
+    - Environment Configuration: Store API credentials securely to prevent unauthorized access
+    - Testing and Debugging Tools: Test API calls using Postman before integrating into scripts
+
+  - **WalletLabels**
+    - API Endpoint URL: `https://www.walletlabels.xyz/api`
+    - HTTP Method: Supports `GET` requests for retrieving wallet labels
+    - Authentication Credentials: May offer free access; check if API key is required
+    - Headers: Standard headers; include `Content-Type: application/json` if necessary
+    - Query Parameters: Use parameters like `address` to query specific Ethereum wallets
+    - Request Body: Not needed for `GET` requests
+    - Response Handling: Provides JSON data containing labels and information for Ethereum wallets
+    - Error Handling: Check response status and handle any error messages appropriately
+    - Rate Limiting Awareness: Be aware of any limits on API requests to avoid service interruption
+    - API Documentation: Documentation available at `https://www.walletlabels.xyz/docs`
+    - Python Libraries: Utilize `requests` for making HTTP requests
+    - Environment Configuration: Secure any necessary credentials using environment variables
+    - Testing and Debugging Tools: Employ tools like Postman to test and understand API responses
 
 #### 7d\. News and Geo-Political Intelligence
-- **Cybersecurity News**
-  - tba
-- **US Government News**
-  - tba
-  - sources on policies and legislation?
-  - FDIC Bank Data API 	https://banks.data.fdic.gov/docs/ 	institutions, locations and history events 	FREE
+- **US News**
+  - **Data.gov API**
+    - Endpoint URL: `https://api.data.gov/`
+    - Description: Central hub for accessing a wide variety of datasets and APIs from across the US government.
+    - Authentication: Requires an API key obtainable from `https://api.data.gov/signup/`.
+    - HTTP Method: Primarily `GET` requests to retrieve data.
+    - Headers: Include `Accept: application/json`; use `Authorization` header with the API key.
+    - Query Parameters: Vary depending on the specific dataset; used for filtering and modifying requests.
+    - Rate Limiting: Yes; default rate limits apply per API key.
+    - Documentation: Available at `https://api.data.gov/docs/`.
+  - **GPO govinfo API**
+    - Endpoint URL: `https://api.govinfo.gov/`
+    - Description: Provides access to publications from all three branches of the federal government, including bills, laws, regulations, and historical documents.
+    - Authentication: Requires an API key obtainable from `https://api.govinfo.gov/`.
+    - HTTP Method: `GET` requests to access documents and metadata.
+    - Headers: Include `Accept: application/json`; use `X-Api-Key` header with the API key.
+    - Query Parameters: Used to specify collections, dates, and other filters.
+    - Rate Limiting: Yes; enforced per API key.
+    - Documentation: Available at `https://api.govinfo.gov/docs/`.
+  - **Federal Register API**
+    - Endpoint URL: `https://www.federalregister.gov/api/v1`
+    - Description: Access to the Federal Register, containing daily publications of rules, proposed rules, and notices from federal agencies.
+    - Authentication: No API key required for basic access.
+    - HTTP Method: Primarily `GET` requests to retrieve information.
+    - Headers: Include `Accept: application/json`.
+    - Query Parameters: Used for filtering by agency, date, topic, etc.
+    - Rate Limiting: Not strictly enforced but considerate usage is encouraged.
+    - Documentation: Available at `https://www.federalregister.gov/developers/api/v1`.
+  - **Congress.gov API**
+    - Endpoint URL: Public API not available through `https://gpo.congress.gov/`; legislative data can be accessed via govinfo API or other services.
+    - Description: Provides access to legislative information, including bills, resolutions, amendments, and votes.
+    - Authentication: Access may be limited; consult official sources for availability.
+    - Alternative Access: Use the govinfo API or other official channels for legislative data.
+    - Documentation: Check `https://www.congress.gov/` for updates and resources.
+  - **Library of Congress APIs**
+    - Endpoint URL: `https://www.loc.gov/apis/`
+    - Description: Offers access to a vast collection of digital materials, including historical documents and legislative records.
+    - Authentication: Most APIs are open and do not require an API key.
+    - HTTP Method: `GET` requests to retrieve data.
+    - Headers: Include `Accept: application/json`.
+    - Query Parameters: Used to search and filter collections.
+    - Documentation: Detailed information available at `https://www.loc.gov/apis/`.
+  - **Securities and Exchange Commission (SEC) EDGAR API**
+    - Endpoint URL: `https://www.sec.gov/edgar/sec-api-documentation`
+    - Description: Access to filings by publicly traded companies, including financial statements and reports.
+    - Authentication: No API key required, but include a user agent string with contact information.
+    - HTTP Method: `GET` requests to retrieve filings.
+    - Headers: Include `User-Agent` with your contact information; `Accept: application/json`.
+    - Rate Limiting: Yes; excessive requests may result in IP blocking.
+    - Documentation: Available at `https://www.sec.gov/edgar/sec-api-documentation`.
+  - **Environmental Protection Agency (EPA) API**
+    - Endpoint URL: `https://www.epa.gov/developer`
+    - Description: Access to environmental data, including air quality, water quality, and chemical information.
+    - Authentication: Some services require an API key obtainable through registration.
+    - HTTP Method: `GET` requests to access data.
+    - Headers: Include `Accept: application/json`; use `Authorization` header if required.
+    - Documentation: Detailed API guides available at `https://www.epa.gov/developer`.
+  - **Department of Labor (DOL) API**
+    - Endpoint URL: `https://developer.dol.gov/`
+    - Description: Provides access to labor statistics, employment data, and wage information.
+    - Authentication: Requires an API key obtainable by registering.
+    - HTTP Method: `GET` requests to retrieve data.
+    - Headers: Include `Accept: application/json`; use `Authorization` header with the API key.
+    - Query Parameters: Used for filtering data based on criteria like dates and locations.
+    - Documentation: Available at `https://developer.dol.gov/`.
+  - **Department of Health and Human Services (HHS) API**
+    - Endpoint URL: `https://healthdata.gov/developers`
+    - Description: Access to health data, including disease outbreaks, clinical trials, and healthcare utilization.
+    - Authentication: Some datasets may require an API key.
+    - HTTP Method: `GET` requests to access health data.
+    - Headers: Include `Accept: application/json`.
+    - Documentation: API resources and guidelines available at `https://healthdata.gov/developers`.
+  - **National Aeronautics and Space Administration (NASA) API**
+    - Endpoint URL: `https://api.nasa.gov/`
+    - Description: Access to space-related data, including images, videos, and scientific publications.
+    - Authentication: Requires an API key obtainable from `https://api.nasa.gov/`.
+    - HTTP Method: `GET` requests to retrieve data.
+    - Headers: Include `Accept: application/json`.
+    - Rate Limiting: Yes; limits apply per API key.
+    - Documentation: Detailed API information at `https://api.nasa.gov/`.
+  - **National Oceanic and Atmospheric Administration (NOAA) API**
+    - Endpoint URL: `https://www.ncdc.noaa.gov/cdo-web/webservices/v2`
+    - Description: Access to weather data, climate information, and oceanographic data.
+    - Authentication: Requires an API token obtainable from `https://www.ncdc.noaa.gov/cdo-web/token`.
+    - HTTP Method: `GET` requests to access weather and climate data.
+    - Headers: Include `Token` header with your API token; `Accept: application/json`.
+    - Query Parameters: Used to specify datasets, dates, locations, etc.
+    - Documentation: Available at `https://www.ncdc.noaa.gov/cdo-web/webservices/v2`.
+  - **Bureau of Economic Analysis (BEA) API**
+    - Endpoint URL: `https://apps.bea.gov/api/signup/`
+    - Description: Access to economic data, including GDP, personal income, and international trade statistics.
+    - Authentication: Requires an API key obtainable upon signup.
+    - HTTP Method: `GET` requests to retrieve economic data.
+    - Headers: Include `Accept: application/json`.
+    - Query Parameters: Used to specify statistical areas, time periods, and data types.
+    - Documentation: API details at `https://apps.bea.gov/api/docs/xls/BEAAPI_User_Guide.docx`.
+  - **US Census Bureau API**
+    - Endpoint URL: `https://api.census.gov/`
+    - Description: Access to census data, including population demographics, housing characteristics, and economic indicators.
+    - Authentication: Requires an API key available from `https://api.census.gov/data/key_signup.html`.
+    - HTTP Method: `GET` requests to access data.
+    - Headers: Include `Accept: application/json`.
+    - Query Parameters: Used to specify variables, geographies, and datasets.
+    - Rate Limiting: Yes; limits apply per API key.
+    - Documentation: User guide available at `https://www.census.gov/data/developers/guidance/api-user-guide.html`.
+  - **The New York Times API**
+    - Endpoint URL: `https://developer.nytimes.com/`
+    - Description: Access to articles, multimedia content, and best-seller lists from The New York Times.
+    - Authentication: Requires an API key obtainable upon registration.
+    - HTTP Method: `GET` requests to retrieve content.
+    - Headers: Include `Accept: application/json`; use `api-key` as a query parameter.
+    - Rate Limiting: Yes; limits vary per API endpoint.
+    - Documentation: Comprehensive guides available at `https://developer.nytimes.com/apis`.
+  - **Associated Press News (limited access)**
+    - Endpoint URL: `https://developer.ap.org/`
+    - Description: Access to AP news content; may have limited free access.
+    - Authentication: Requires a subscription and API key.
+    - HTTP Method: `GET` requests for news content.
+    - Headers: Include `Accept: application/json`; use `Authorization` header with credentials.
+    - Documentation: Available upon subscription.
+  - **NPR One API**
+    - Endpoint URL: `https://dev.npr.org/api/`
+    - Description: Access to NPR content and podcasts; may have limited free access.
+    - Authentication: Requires an API key obtainable through application.
+    - HTTP Method: `GET` requests to access content.
+    - Headers: Include `Accept: application/json`; use `Authorization` header with the API key.
+    - Rate Limiting: Yes; limits apply per API key.
+    - Documentation: Available at `https://dev.npr.org/api/`.
+  - **Financial Times API**
+    - Endpoint URL: `https://developer.ft.com/portal/docs-api-reference`
+    - Description: Access to Financial Times content; limited free tier available.
+    - Authentication: Requires an API key obtained through registration.
+    - HTTP Method: `GET` requests for content retrieval.
+    - Headers: Include `Accept: application/json`; use `X-API-KEY` header.
+    - Rate Limiting: Yes; depends on subscription level.
+    - Documentation: Detailed API reference at `https://developer.ft.com/portal/docs-api-reference`.
+  - **Contextual Web Search API**
+    - Endpoint URL: `https://contextualwebsearch.com/`
+    - Description: Provides access to news search and web search functionalities.
+    - Authentication: Requires an API key obtainable upon signup.
+    - HTTP Method: `GET` requests to perform searches.
+    - Headers: Include `Accept: application/json`; use `X-RapidAPI-Key` header if using RapidAPI.
+    - Query Parameters: Used to specify search terms, filters, and pagination.
+    - Documentation: Available at `https://contextualwebsearch.com/documentation`.
+
 - **World News**
-  - tba
+  - **News API (newsapi.org)**
+    - API Endpoint URL: `https://newsapi.org/v2/`
+    - HTTP Method: `GET`
+    - Authentication Credentials: API key passed as a query parameter `apiKey=YOUR_API_KEY`
+    - Headers:
+      - `Accept`: `application/json`
+    - Query Parameters:
+      - `q`: Keywords or phrases to search for
+      - `sources`: Comma-separated list of news sources
+      - `language`, `country`, `category`, `pageSize`, `page`
+    - Response Handling:
+      - JSON format with status codes (`200` success)
+    - Rate Limiting Awareness:
+      - Free plan: Up to 500 requests per day
+    - API Documentation:
+      - Available at `https://newsapi.org/docs`
+  - **GNews (gnews.io)**
+    - API Endpoint URL: `https://gnews.io/api/v4/`
+    - HTTP Method: `GET`
+    - Authentication Credentials: API key passed as a query parameter `apikey=YOUR_API_KEY`
+    - Query Parameters:
+      - `q`: Search query
+      - `lang`: Language code
+      - `country`: Country code
+      - `max`: Maximum number of articles
+    - Response Handling:
+      - JSON format with status codes
+    - Rate Limiting Awareness:
+      - Free plan: 100 requests per day
+    - API Documentation:
+      - Available at `https://gnews.io/docs/v4`
+  - **MediaStack (mediastack.com)**
+    - API Endpoint URL: `http://api.mediastack.com/v1/`
+    - HTTP Method: `GET`
+    - Authentication Credentials: Access key passed as query parameter `access_key=YOUR_ACCESS_KEY`
+    - Query Parameters:
+      - `keywords`: Search terms
+      - `countries`, `languages`, `sources`, `categories`, `sort`, `limit`, `offset`
+    - Response Handling:
+      - JSON format with status codes
+    - Rate Limiting Awareness:
+      - Free plan: Limited monthly requests
+    - API Documentation:
+      - Available at `https://mediastack.com/documentation`
+  - **Newscatcher API (newscatcherapi.com)**
+    - API Endpoint URL: `https://api.newscatcherapi.com/v2/`
+    - HTTP Method: `GET`
+    - Authentication Credentials: API key passed in header `X-API-KEY: YOUR_API_KEY`
+    - Headers:
+      - `X-API-KEY`: Your API key
+      - `Accept`: `application/json`
+    - Query Parameters:
+      - `q`: Search keywords
+      - `lang`, `countries`, `sources`, `topic`, `when`, `page_size`, `page`
+    - Response Handling:
+      - JSON format with status codes
+    - Rate Limiting Awareness:
+      - Depends on subscription plan
+    - API Documentation:
+      - Available at `https://newscatcherapi.com/documentation`
+  - **Newsdata.io (newsdata.io)**
+    - API Endpoint URL: `https://newsdata.io/api/1/`
+    - HTTP Method: `GET`
+    - Authentication Credentials: API key passed as query parameter `apikey=YOUR_API_KEY`
+    - Query Parameters:
+      - `q`: Search terms
+      - `language`, `country`, `category`, `page`
+    - Response Handling:
+      - JSON format with status codes
+    - Rate Limiting Awareness:
+      - Free plan: Limited daily requests
+    - API Documentation:
+      - Available at `https://newsdata.io/docs`
+  - **The Guardian Open Platform (open-platform.theguardian.com)**
+    - API Endpoint URL: `https://content.guardianapis.com/`
+    - HTTP Method: `GET`
+    - Authentication Credentials: API key passed as query parameter `api-key=YOUR_API_KEY`
+    - Query Parameters:
+      - `q`: Search query
+      - `section`, `tag`, `type`, `from-date`, `to-date`
+    - Response Handling:
+      - JSON format with status codes
+    - Rate Limiting Awareness:
+      - Free access with rate limits for non-commercial use
+    - API Documentation:
+      - Available at `https://open-platform.theguardian.com/documentation/`
+      
 - **Geo-Social-Intelligence**
-  - Linkedin company search API 	https://docs.microsoft.com/en-us/linkedin/marketing/integrations/community-management/organizations/company-search?context=linkedin%2Fcompliance%2Fcontext&tabs=http 	Find companies using keywords, industry, location, and other criteria 	FREE
-  - US Street Address 	https://smartystreets.com/docs/cloud/us-street-api 	Validate and append data for any US postal address 	FREE
-  - Zipcodebase 	https://zipcodebase.com 	Lookup postal codes, calculate distances and much more 	5000 requests FREE
-  - Veriphone 	https://veriphone.io/ 	Phone number validation & carrier lookup 	1000 requests/month FREE
-  - Twillo 	https://www.twilio.com/docs/lookup/api 	Provides a way to retrieve additional information about a phone number 	Free or $0.01 per request (for caller lookup)
-  - Ipstack 	https://ipstack.com 	Detect country, region, city and zip code 	FREE
-  - Alpaca 	https://alpaca.markets/docs/api-documentation/api-v2/market-data/alpaca-data-api-v2/ 	Realtime and historical market data on all US equities and ETFs 	FREE
-  - Genderize.io 	https://genderize.io 	Instantly answers the question of how likely a certain name is to be male or female and shows the popularity of the name. 	1000 names/day free
-  - Nataonalize.io 	https://nationalize.io 	Predicts the nationality of a person given their name 	1000 names/day free
+  - **LinkedIn Company Search API**
+    - API Endpoint URL: `https://api.linkedin.com/v2/organizationSearch`
+    - HTTP Method: `GET`
+    - Authentication: OAuth 2.0 access token required
+    - Headers: Include `Authorization: Bearer {access_token}`, `Content-Type: application/json`
+    - Query Parameters: Use `keywords`, `facet`, `q` to filter search results
+    - Response: JSON format with company data
+    - Rate Limiting: Enforced by LinkedIn; monitor usage to adhere to limits
+    - Documentation: [LinkedIn Company Search API Documentation](https://docs.microsoft.com/en-us/linkedin/marketing/integrations/community-management/organizations/company-search)
+  - **US Street Address API**
+    - API Endpoint URL: `https://us-street.api.smartystreets.com/street-address`
+    - HTTP Method: `GET` or `POST` (`GET` for single, `POST` for bulk lookups)
+    - Authentication: `auth-id` and `auth-token` required in query parameters
+    - Headers: Set `Content-Type: application/json` for `POST` requests
+    - Query Parameters: Include address fields like `street`, `city`, `state`, `zipcode`
+    - Request Body: JSON array of addresses for `POST` requests
+    - Response: JSON with validated and standardized address data
+    - Rate Limiting: Free plan with usage limits; monitor to avoid exceeding
+    - Documentation: [SmartyStreets US Street API Documentation](https://smartystreets.com/docs/cloud/us-street-api)
+  - **Zipcodebase API**
+    - API Endpoint URL: `https://api.zipcodebase.com/v1/search`, `distance`, etc.
+    - HTTP Method: `GET`
+    - Authentication: API key provided in request headers (`apikey: YOUR_API_KEY`)
+    - Headers: Include `apikey: YOUR_API_KEY`
+    - Query Parameters: Vary by endpoint, e.g., `codes`, `country`, `distance`
+    - Response: JSON with postal code information and calculations
+    - Rate Limiting: 5,000 requests/month free; ensure compliance with limits
+    - Documentation: [Zipcodebase API Documentation](https://zipcodebase.com/documentation)
+  - **Veriphone API**
+    - API Endpoint URL: `https://api.veriphone.io/v2/verify`
+    - HTTP Method: `GET`
+    - Authentication: API key passed as query parameter (`key=YOUR_API_KEY`)
+    - Query Parameters: Include `phone` number and `key`
+    - Response: JSON with phone validation and carrier details
+    - Rate Limiting: 1,000 requests/month free; monitor usage
+    - Documentation: [Veriphone API Documentation](https://veriphone.io/docs)
+  - **Twilio Lookup API**
+    - API Endpoint URL: `https://lookups.twilio.com/v1/PhoneNumbers/{PhoneNumber}`
+    - HTTP Method: `GET`
+    - Authentication: Basic Auth using Account SID and Auth Token
+    - Headers: `Authorization: Basic {Base64EncodedCredentials}`
+    - Query Parameters: Optional `Type` parameter (`carrier`, `caller-name`)
+    - Response: JSON with detailed phone number information
+    - Rate Limiting: Usage costs may apply; monitor for charges and limits
+    - Documentation: [Twilio Lookup API Documentation](https://www.twilio.com/docs/lookup/api)
+  - **ipstack API**
+    - API Endpoint URL: `http://api.ipstack.com/{ip_address}`
+    - HTTP Method: `GET`
+    - Authentication: Access key provided as query parameter (`access_key=YOUR_ACCESS_KEY`)
+    - Query Parameters: Include `access_key`; target `ip_address` in the URL
+    - Response: JSON with geolocation data (country, region, city, zip code)
+    - Rate Limiting: Free tier limits; track usage to prevent overages
+    - Documentation: [ipstack API Documentation](https://ipstack.com/documentation)
+  - **Alpaca Market Data API**
+    - API Endpoint URL: `https://data.alpaca.markets/v2/{endpoint}`
+    - HTTP Method: `GET`
+    - Authentication: API Key ID and Secret Key passed in headers
+    - Headers: Include `APCA-API-KEY-ID: YOUR_API_KEY_ID`, `APCA-API-SECRET-KEY: YOUR_SECRET_KEY`
+    - Query Parameters: Depends on endpoint; examples include `symbols`, `start`, `end`
+    - Response: JSON with real-time and historical market data
+    - Rate Limiting: Free access with rate limits; monitor to maintain access
+    - Documentation: [Alpaca Data API v2 Documentation](https://alpaca.markets/docs/api-documentation/api-v2/market-data/alpaca-data-api-v2/)
+  - **Genderize.io API**
+    - API Endpoint URL: `https://api.genderize.io`
+    - HTTP Method: `GET`
+    - Authentication: No authentication required for free tier (optional API key for higher limits)
+    - Query Parameters: Include `name` (e.g., `?name=peter`); optional `apikey`
+    - Response: JSON with gender prediction, probability, and count
+    - Rate Limiting: 1,000 names/day free; consider API key for increased limits
+    - Documentation: [Genderize.io API Documentation](https://genderize.io)
+  - **Nationalize.io API**
+    - API Endpoint URL: `https://api.nationalize.io`
+    - HTTP Method: `GET`
+    - Authentication: No authentication required for free tier (optional API key for higher limits)
+    - Query Parameters: Include `name` (e.g., `?name=michael`); optional `apikey`
+    - Response: JSON with nationality predictions and probabilities
+    - Rate Limiting: 1,000 names/day free; monitor usage accordingly
+    - Documentation: [Nationalize.io API Documentation](https://nationalize.io)
 
 #### 7e\. Social Networks
-- Twitter API 	https://developer.twitter.com/en 		
-- Linkedin API 	https://docs.microsoft.com/en-us/linkedin/ 		
-- All Facebook and Instagram API 	https://developers.facebook.com/docs/
-- Reddit 	https://www.reddit.com/dev/api/
-- Telegram and Telegram Bot API 	https://core.telegram.org 		
-- Weibo API 	https://open.weibo.com/wiki/API文档/en 		
-- XING 	https://dev.xing.com/partners/job_integration/api_docs 		
-- Viber 	https://developers.viber.com/docs/api/rest-bot-api/ 		
-- Discord 	https://discord.com/developers/docs
-- Blogger 	https://developers.google.com/blogger/ 	The Blogger APIs allows client applications to view and update Blogger content 	FREE
-- Disqus 	https://disqus.com/api/docs/auth/ 	Communicate with Disqus data 	FREE
-- Foursquare 	https://developer.foursquare.com/ 	Interact with Foursquare users and places (geolocation-based checkins, photos, tips, events, etc) 	FREE
-- Kakao 	https://developers.kakao.com/ 	Kakao Login, Share on KakaoTalk, Social Plugins and more 	FREE
-- Line 	https://developers.line.biz/ 	Line Login, Share on Line, Social Plugins and more 	FRE
-- Social Links 	https://sociallinks.io/products/sl-api (paid)
+- **Twitter API**
+  - Base URL: `https://api.twitter.com/2/`
+  - HTTP Methods: `GET`, `POST`, `DELETE`
+  - Authentication: OAuth 2.0 Bearer Tokens, OAuth 1.0a User Context
+  - Headers: `Authorization`, `Content-Type`, `Accept`
+  - Query Parameters: Filtering tweets, pagination, specifying fields
+  - Path Variables: User IDs, tweet IDs (e.g., `/tweets/{id}`)
+  - Request Body: JSON format for creating content
+  - Response: JSON with data and HTTP status codes
+  - Rate Limits: Varies by endpoint and authentication method
+  - Documentation: Detailed API guides and references available
+- **LinkedIn API**
+  - Base URL: `https://api.linkedin.com/v2/`
+  - HTTP Methods: `GET`, `POST`, `PUT`, `DELETE`
+  - Authentication: OAuth 2.0 Access Tokens
+  - Headers: `Authorization`, `Content-Type`, `Accept`
+  - Query Parameters: Filtering, pagination, field selection
+  - Path Variables: Resource identifiers (e.g., `/me`, `/companies/{id}`)
+  - Request Body: JSON for sharing content or profile updates
+  - Response: JSON responses with professional data
+  - Rate Limits: Applied per application and user, detailed in docs
+  - Documentation: Comprehensive developer guides and resources
+- **Facebook and Instagram API**
+  - Base URL: `https://graph.facebook.com/` and `https://graph.instagram.com/`
+  - HTTP Methods: `GET`, `POST`
+  - Authentication: OAuth 2.0 Access Tokens
+  - Headers: `Authorization`, `Content-Type`, `Accept`
+  - Query Parameters: Fields selection, pagination controls
+  - Path Variables: Object IDs (e.g., `/v12.0/{user-id}/media`)
+  - Request Body: JSON for publishing posts or media
+  - Response: JSON with social data and metadata
+  - Rate Limits: Governed by app type and usage patterns
+  - Documentation: Developer portals with tutorials and references
+- **Reddit API**
+  - Base URL: `https://www.reddit.com/api/` and `https://oauth.reddit.com/`
+  - HTTP Methods: `GET`, `POST`
+  - Authentication: OAuth 2.0 for user-specific actions
+  - Headers: `Authorization`, `User-Agent`
+  - Query Parameters: Sorting, time frames, pagination
+  - Path Variables: Subreddit names, post IDs (e.g., `/r/{subreddit}/comments/{id}`)
+  - Request Body: Form data for submitting posts or comments
+  - Response: JSON with community content and status codes
+  - Rate Limits: Limited to 60 requests per minute per IP
+  - Documentation: API guidelines and endpoint descriptions provided
+- **Telegram and Telegram Bot API**
+  - Base URL: `https://api.telegram.org/bot{token}/`
+  - HTTP Methods: `GET`, `POST`
+  - Authentication: Bot Token obtained from BotFather
+  - Headers: `Content-Type`, `Accept`
+  - Query Parameters: Method-specific parameters in URL
+  - Path Variables: Bot token included in the URL path
+  - Request Body: JSON or multipart/form-data for messages
+  - Response: JSON indicating success and returned data
+  - Rate Limits: Messages per second per chat restrictions
+  - Documentation: Detailed method descriptions and examples
+- **Weibo API**
+  - Base URL: `https://api.weibo.com/2/`
+  - HTTP Methods: `GET`, `POST`
+  - Authentication: OAuth 2.0 Access Tokens
+  - Headers: `Authorization`, `Content-Type`
+  - Query Parameters: Access tokens and method parameters
+  - Path Variables: User IDs, statuses IDs
+  - Request Body: Form data for posting statuses
+  - Response: JSON with user-generated content
+  - Rate Limits: Vary based on user level and app permissions
+  - Documentation: API references and usage notes available
+- **XING API**
+  - Base URL: `https://api.xing.com/`
+  - HTTP Methods: `GET`, `POST`, `PUT`, `DELETE`
+  - Authentication: OAuth 1.0a Tokens
+  - Headers: `Authorization`, `Content-Type`, `Accept`
+  - Query Parameters: Filtering options and pagination
+  - Path Variables: Resource IDs such as user or job IDs
+  - Request Body: JSON for updating profiles or posting jobs
+  - Response: JSON containing professional networking data
+  - Rate Limits: Enforced per application; specifics in documentation
+  - Documentation: Developer guidelines and endpoint details provided
+- **Viber API**
+  - Base URL: `https://chatapi.viber.com/pa/`
+  - HTTP Methods: `POST`
+  - Authentication: Unique Auth Token from Viber
+  - Headers: `X-Viber-Auth-Token`, `Content-Type`
+  - Request Body: JSON for sending messages or rich media
+  - Response: JSON with status and message IDs
+  - Rate Limits: Restrictions on the number of API calls per minute
+  - Documentation: API references with message types and examples
+- **Discord API**
+  - Base URL: `https://discord.com/api/`
+  - HTTP Methods: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`
+  - Authentication: Bot Tokens via OAuth 2.0
+  - Headers: `Authorization`, `Content-Type`, `User-Agent`
+  - Query Parameters: Filtering and pagination options
+  - Path Variables: IDs for guilds, channels, messages (e.g., `/channels/{channel.id}/messages`)
+  - Request Body: JSON for sending messages or managing guilds
+  - Response: JSON with Discord objects and status information
+  - Rate Limits: Global and per-route rate limits enforced
+  - Documentation: Extensive API documentation and developer resources
+- **Blogger API**
+  - Base URL: `https://www.googleapis.com/blogger/v3/`
+  - HTTP Methods: `GET`, `POST`, `PUT`, `DELETE`
+  - Authentication: OAuth 2.0 Tokens or API Keys
+  - Headers: `Authorization`, `Content-Type`, `Accept`
+  - Query Parameters: Blog and post IDs, pagination controls
+  - Path Variables: Identifiers for blogs and posts
+  - Request Body: JSON for creating or updating posts
+  - Response: JSON with blog content and metadata
+  - Rate Limits: Governed by Google API quotas per project
+  - Documentation: Developer guides with examples and API explorer
+- **Disqus API**
+  - Base URL: `https://disqus.com/api/3.0/`
+  - HTTP Methods: `GET`, `POST`
+  - Authentication: API Key and OAuth 2.0 for user actions
+  - Headers: `Content-Type`, `Accept`
+  - Query Parameters: Includes API key, access token, and method parameters
+  - Path Variables: Forum short names, thread or post IDs
+  - Request Body: Form data for posting comments or threads
+  - Response: JSON with discussion data and status
+  - Rate Limits: Applied per application; details in documentation
+  - Documentation: API reference with methods and authentication flow
+- **Foursquare API**
+  - Base URL: `https://api.foursquare.com/v2/`
+  - HTTP Methods: `GET`, `POST`
+  - Authentication: OAuth 2.0 Tokens or Client ID/Secret for public data
+  - Headers: `Content-Type`, `Accept`
+  - Query Parameters: Client credentials, search parameters
+  - Path Variables: Venue or user IDs
+  - Request Body: JSON for check-ins or user updates
+  - Response: JSON containing location data and recommendations
+  - Rate Limits: 950 Regular API Calls per day per app
+  - Documentation: Developer portal with endpoint details and best practices
+- **Kakao API**
+  - Base URL: `https://kapi.kakao.com/`
+  - HTTP Methods: `GET`, `POST`
+  - Authentication: Access Tokens via OAuth 2.0 Authorization
+  - Headers: `Authorization`, `Content-Type`, `Accept`
+  - Query Parameters: Service-specific parameters
+  - Request Body: JSON or form data for messaging or social features
+  - Response: JSON with content or confirmation messages
+  - Rate Limits: Defined per API; outlined in documentation
+  - Documentation: Developer guides including tutorials and API references
+- **LINE API**
+  - Base URL: `https://api.line.me/`
+  - HTTP Methods: `GET`, `POST`
+  - Authentication: Channel Access Tokens for messaging APIs
+  - Headers: `Authorization`, `Content-Type`
+  - Request Body: JSON payloads for sending messages or performing actions
+  - Response: JSON with status and result codes
+  - Rate Limits: Specified per API type; messaging APIs have limits per day
+  - Documentation: Comprehensive resources with API specs and sample code
 
 #### 7f\. Research & Development
-- tba
+- **Semantic Scholar API**
+  - API Endpoint URL: `https://api.semanticscholar.org/`
+  - HTTP Method: `GET`
+  - Authentication Credentials: Requires API Key; pass via `x-api-key` header
+  - Headers: `Accept: application/json`, `x-api-key: YOUR_API_KEY`
+  - Query Parameters: Used for search queries and filters
+  - Path Variables: Access specific papers/authors via IDs, e.g., `/v1/paper/{paper_id}`
+  - Response Handling: JSON responses with metadata; check status codes
+  - Rate Limiting Awareness: Respect rate limits specified in documentation
+  - API Documentation: Detailed guidelines available
+  - Python Libraries: Use `requests` for HTTP requests
+  - Environment Configuration: Store API key securely (e.g., environment variables)
+  - Testing and Debugging Tools: Use Postman to test endpoints
+  - Best Practices: Secure credentials; handle exceptions; respect usage policies
+- **Crossref REST API**
+  - API Endpoint URL: `https://api.crossref.org/`
+  - HTTP Method: `GET`
+  - Authentication Credentials: No API key required; include `mailto` parameter for polite usage
+  - Headers: `Accept: application/json`
+  - Query Parameters: Use `query`, `filter`, `rows`, `offset` for searches
+  - Path Variables: Access works via DOI, e.g., `/works/{doi}`
+  - Response Handling: JSON responses with bibliographic metadata
+  - Rate Limiting Awareness: Be polite; include contact email; avoid excessive requests
+  - API Documentation: Comprehensive documentation provided
+  - Python Libraries: Utilize `requests` library
+  - Environment Configuration: Include email securely if used
+  - Testing and Debugging Tools: Test API in browser or with tools
+  - Best Practices: Efficient querying; handle large datasets; cache where appropriate
+- **DataCite API**
+  - API Endpoint URL: `https://api.datacite.org/`
+  - HTTP Methods: `GET`, `POST`, `PUT`, `DELETE` (write operations require authentication)
+  - Authentication Credentials: API token required for write access; pass via `Authorization` header
+  - Headers: `Content-Type: application/vnd.api+json`, `Accept: application/vnd.api+json`
+  - Query Parameters: For filtering, paging, and sorting
+  - Path Variables: Access resources like DOIs via `/dois/{doi}`
+  - Request Body: JSON format for `POST`, `PUT`, `PATCH` requests
+  - Response Handling: JSON responses adhering to JSON:API specification
+  - Rate Limiting Awareness: Follow guidelines in documentation
+  - API Documentation: Detailed specs and examples available
+  - Python Libraries: Use `requests`
+  - Environment Configuration: Securely store API tokens
+  - Testing and Debugging Tools: Use Postman or similar tools
+  - Best Practices: Adhere to JSON:API standards; handle errors gracefully
+- **OpenCitations API**
+  - API Endpoint URL: `https://opencitations.net/index/api/v1`
+  - HTTP Method: `GET`
+  - Authentication Credentials: None required
+  - Headers: `Accept: application/json`
+  - Query Parameters: Specify citation data queries
+  - Path Variables: Access citations via IDs, e.g., `/citation/{citation_id}`
+  - Response Handling: JSON responses with citation information
+  - Rate Limiting Awareness: Use responsibly; no specific limits stated
+  - API Documentation: Provides endpoint and parameter details
+  - Python Libraries: Utilize `requests` for API calls
+  - Testing and Debugging Tools: Test endpoints with tools like Postman
+  - Best Practices: Handle missing data; check response status codes
+- **Unpaywall REST API**
+  - API Endpoint URL: `https://api.unpaywall.org/`
+  - HTTP Method: `GET`
+  - Authentication Credentials: Include your email via `?email=YOUR_EMAIL` for polite usage
+  - Headers: `Accept: application/json`
+  - Path Variables: Access articles by DOI, e.g., `/v2/{doi}`
+  - Response Handling: JSON responses indicating open access status
+  - Rate Limiting Awareness: Limit of 100,000 requests per day
+  - API Documentation: Detailed usage instructions provided
+  - Python Libraries: Use `requests`
+  - Environment Configuration: Securely store your email if automated
+  - Testing and Debugging Tools: Test with sample DOIs
+  - Best Practices: Include contact email; respect rate limits; handle exceptions
+- **OpenAlex API**
+  - API Endpoint URL: `https://api.openalex.org/`
+  - HTTP Method: `GET`
+  - Authentication Credentials: No API key required for standard usage
+  - Headers: `Accept: application/json`
+  - Query Parameters: Filters for entities like works, authors, venues
+  - Path Variables: Access entities via IDs, e.g., `/works/{id}`
+  - Response Handling: JSON responses with rich metadata
+  - Rate Limiting Awareness: Heavy users should contact for higher limits
+  - API Documentation: Extensive documentation and examples
+  - Python Libraries: Utilize `requests`
+  - Environment Configuration: None required unless using a key
+  - Testing and Debugging Tools: Experiment with queries to understand data structure
+  - Best Practices: Efficient data handling; paginate results; cache frequent queries
+- **PubMed API**
+  - API Endpoint URL: `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/`
+  - HTTP Methods: `GET`, `POST`
+  - Authentication Credentials: API key optional but increases rate limits
+  - Headers: `Accept: application/json` or `application/xml`
+  - Query Parameters: Use parameters like `db`, `term`, `retmode`, `api_key`
+  - Path Variables: Access different utilities like `esearch.fcgi`, `efetch.fcgi`
+  - Response Handling: JSON or XML responses with biomedical data
+  - Rate Limiting Awareness: 3 requests/second without API key; 10 requests/second with API key
+  - API Documentation: Detailed E-utilities documentation available
+  - Python Libraries: Use `requests`; consider `Bio.Entrez` from Biopython
+  - Environment Configuration: Securely store API key if used
+  - Testing and Debugging Tools: Test queries to refine search terms
+  - Best Practices: Use API key for increased limits; respect usage policies
+- **Google Scholar API**
+  - API Endpoint URL: Provided by third-party services like SerpApi
+  - HTTP Method: `GET`
+  - Authentication Credentials: Requires API key from the service provider
+  - Headers: `Accept: application/json`
+  - Query Parameters: Include `q` for query term, `api_key`, and other optional parameters
+  - Response Handling: JSON responses with search results
+  - Rate Limiting Awareness: Varies by provider; check service terms
+  - API Documentation: Provided by the third-party service
+  - Python Libraries: Use `requests`
+  - Environment Configuration: Securely store third-party API keys
+  - Best Practices: Ensure compliance with Google policies; understand third-party terms
+- **CORE API**
+  - API Endpoint URL: `https://api.core.ac.uk/v3/`
+  - HTTP Methods: `GET`, `POST`, `PUT`, `DELETE` (authentication required)
+  - Authentication Credentials: API key required; pass via `Authorization` header
+  - Headers: `Accept: application/json`, `Authorization: Bearer YOUR_API_KEY`
+  - Query Parameters: For searching and filtering scholarly articles
+  - Path Variables: Access articles via IDs, e.g., `/articles/{article_id}`
+  - Response Handling: JSON responses with open access content
+  - Rate Limiting Awareness: Defined in terms; adhere to avoid restrictions
+  - API Documentation: Detailed guides and examples available
+  - Python Libraries: Use `requests`
+  - Environment Configuration: Store API key securely
+  - Testing and Debugging Tools: Utilize Postman for testing requests
+  - Best Practices: Handle errors; respect usage limits; secure credentials
+- **arXiv API**
+  - API Endpoint URL: `http://export.arxiv.org/api/query`
+  - HTTP Method: `GET`
+  - Authentication Credentials: None required
+  - Headers: `Accept: application/atom+xml`
+  - Query Parameters: Use `search_query`, `start`, `max_results`, `sortBy`
+  - Response Handling: Atom XML format; requires XML parsing
+  - Rate Limiting Awareness: No more than one request every three seconds
+  - API Documentation: Guidelines and examples provided
+  - Python Libraries: Use `requests`; parse XML with `xml.etree.ElementTree`
+  - Environment Configuration: Not applicable
+  - Testing and Debugging Tools: Test queries to refine results
+  - Best Practices: Respect rate limits; parse XML carefully; manage exceptions
+- **DBLP Computer Science Bibliography**
+  - API Endpoint URL: `https://dblp.org/search/`
+  - HTTP Method: `GET`
+  - Authentication Credentials: None required
+  - Headers: `Accept: application/xml` or `application/json` (for select endpoints)
+  - Query Parameters: Parameters like `q` for query term, `format`
+  - Response Handling: XML or limited JSON responses; requires appropriate parsing
+  - Rate Limiting Awareness: Be considerate; avoid excessive automated requests
+  - API Documentation: Detailed usage instructions available
+  - Python Libraries: Use `requests`; parse responses accordingly
+  - Environment Configuration: Not applicable
+  - Testing and Debugging Tools: Experiment with different queries
+  - Best Practices: Implement caching; handle data parsing carefully
+- **PubMed Central API**
+  - API Endpoint URL: Access via NCBI E-utilities
+  - HTTP Methods: `GET`, `POST`
+  - Authentication Credentials: API key optional for higher rates
+  - Headers: `Accept: application/xml`, `application/pdf` (for full texts)
+  - Query Parameters: Use `db=pmc` along with other E-utilities parameters
+  - Path Variables: Utilize E-utilities like `esearch.fcgi`, `efetch.fcgi` for PMC
+  - Response Handling: XML responses; full-text articles in certain formats
+  - Rate Limiting Awareness: Same as PubMed API; follow NCBI guidelines
+  - API Documentation: Available through NCBI resources
+  - Python Libraries: Use `requests`; consider `Bio.Entrez` for convenience
+  - Environment Configuration: Secure API key if used
+  - Testing and Debugging Tools: Test specific queries to PMC database
+  - Best Practices: Respect rate limits; properly parse and handle responses
+- **ScienceDirect API**
+  - API Endpoint URL: `https://api.elsevier.com/content/`
+  - HTTP Method: `GET`
+  - Authentication Credentials: Requires API key; possible institutional authentication
+  - Headers: `Accept: application/json`, `X-ELS-APIKey: YOUR_API_KEY`
+  - Query Parameters: Use `query`, `date`, `count`, `start`
+  - Response Handling: JSON responses with article metadata and abstracts
+  - Rate Limiting Awareness: Defined by Elsevier; ensure compliance
+  - API Documentation: Detailed requirements and examples provided
+  - Python Libraries: Utilize `requests`
+  - Environment Configuration: Store API key and credentials securely
+  - Testing and Debugging Tools: Use API Explorer or Postman
+  - Best Practices: Follow Elsevier's terms of use; handle exceptions; secure data
+- **Scopus API**
+  - API Endpoint URL: `https://api.elsevier.com/content/`
+  - HTTP Method: `GET`
+  - Authentication Credentials: Requires API key and possibly institutional credentials
+  - Headers: `Accept: application/json`, `X-ELS-APIKey: YOUR_API_KEY`
+  - Query Parameters: Various parameters for searching the Scopus database
+  - Response Handling: JSON responses with comprehensive bibliographic data
+  - Rate Limiting Awareness: Governed by subscription level; adhere to usage policies
+  - API Documentation: Provided through Elsevier's developer portal
+  - Python Libraries: Use `requests`
+  - Environment Configuration: Securely manage API keys and institutional credentials
+  - Testing and Debugging Tools: Test queries using provided tools or Postman
+  - Best Practices: Comply with licensing agreements; ensure data security; handle errors
 
 ### 8\. LLM Monitoring and Guard
 - >>>>>>>tba - decorator based
 
-### 9\. Supports for API Interface
-- The python code must support the building of a robust API interface based on FastAPI and Kong Gateway.
-- The API will be RESTful.
-- The API can be divided into service categories.
-- The API uses OpenAPI specification.
-- >>>>>>>tba
-
-### 10\. Supports for Apache AirFlow
-- >>>>>>>tba
-
-### 11\. Supports for Cybersecurity Continuous Monitoring
+### 9\. Supports for Cybersecurity Continuous Monitoring
 #### a\. Continuous Penetration testing of AI features
-**Executable benchmarks**
-- >>>>>>>tba - benchmark datasets (including benchmarking guard and security features) for both local and cloud based LLMs
-**Agent-based penetration testing**
-- >>>>>>>tba - API for continuous automatic agent-based penetration testing
+- **Executable benchmarks**
+  - >>>>>>>tba - benchmark datasets (including benchmarking guard and security features) for both local and cloud based LLMs
+- **Agent-based penetration testing**
+  - >>>>>>>tba - API for continuous automatic agent-based penetration testing
 #### b\. Continuous Penetration testing of non-AI features
-**Unit Testing**
-- Develop unit tests for each function and component.
-- Use test-driven development practices where feasible.
-**Performance Testing**
-- Evaluate performance with datasets of varying sizes and complexities.
-- Optimize algorithms based on profiling results.
-- >>>>>>>tba - test cases, web-based pen-test, etc.
+- **Unit Testing**
+  - Develop unit tests for each function and component.
+  - Use test-driven development practices where feasible.
+- **Performance Testing**
+  - Evaluate performance with datasets of varying sizes and complexities.
+  - Optimize algorithms based on profiling results.
+  - >>>>>>>tba - test cases, web-based pen-test, etc.
 #### c\. Compliance checks
 - >>>>>>>tba - how to generate structured compliance details from program codes and documentations
-
-### 12\. User Interface and Experience Improvements
-- Organize UI elements logically, using tabs, accordions, or multi-step forms to manage complexity.
-- Progress Indicators:
-  - Display progress bars or status updates during lengthy operations.
-- Undo and Revert Options:
-  - Allow users to undo recent actions or revert to previous steps without restarting.
-- Help and Guidance:
-  - Provide tooltips, FAQs, and a help section within the interface.
-  - Offer examples and suggestions during field selection and parameter settings.
-- Error Handling:
-  - Present clear, actionable error messages.
-  - Guide users on how to resolve issues when they occur.
-
-### 13\. Testing, Validation, Documentation, and Extensibility
-**To ensure reliability and future-proofing:**
-- Extensibility:
-  - Design the system to handle multiple datasets beyond just two.
-  - Support additional data formats (e.g., JSON, XML) and database connections.
-  - Modularize components to allow for easy updates and feature additions.
-
-**To aid users and developers:**
-- Comprehensive Documentation:
-  - Provide professional github md files.
-  - Provide a detailed user manual with step-by-step instructions.
-  - Include technical documentation for developers, outlining system architecture and codebase.
-  - Use Swagger UI for API documentation.
-  - >>>>>>>>>>>>> TBA
-- Logging and Auditability:
-  - Implement detailed logging of user actions and system processes.
-  - Store logs securely and provide access for audit purposes if needed.
-  - Provide robust undo and revert options can be challenging to implement effectively.
-- Support Resources:
-  - Offer support channels such as email, chat, or forums.
-  - Regularly update documentation with FAQs and troubleshooting tips.
-
-### 14\. Other Considerations
-**Performance Considerations**
-Processing large datasets, especially in a web-based application like Streamlit, can lead to performance bottlenecks.
-
-Recommendations:
-- Data Chunking: Process data in chunks to manage memory usage efficiently.
-- Asynchronous Processing: Use asynchronous programming to prevent the UI from freezing during long operations.
-- Resource Limits: Set limits on the size of files that can be uploaded or provide warnings for large files.
-
-**Streamlit Execution Flow Optimization**
-Reruns are a central part of every Streamlit app. When users interact with widgets, our script reruns from top to bottom, and our app's frontend is updated. Streamlit provides several features to help us develop our app within this execution model. Streamlit version 1.37.0 introduced fragments to allow rerunning a portion of our code instead of our full script. As our app grows larger and more complex, these fragment reruns help our app be efficient and performant. Fragments give us finer, easy-to-understand control over our app's execution flow.
-
-Streamlit provides a decorator (st.fragment) to turn any function into a fragment function. When we call a fragment function that contains a widget function, a user triggers a fragment rerun instead of a full rerun when they interact with that fragment's widget. During a fragment rerun, only our fragment function is re-executed. Anything within the main body of our fragment is updated on the frontend, while the rest of our app remains the same. 
-
-Please use the decorator "@st.fragment", st.session_state variables, "Refresh" and "Reset" buttons properly on and within UI component functions to optimize the application's execution flow.
