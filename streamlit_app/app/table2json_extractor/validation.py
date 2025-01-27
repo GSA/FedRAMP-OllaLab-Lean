@@ -24,13 +24,16 @@ import logging
 # Initialize logger
 logger = logging.getLogger(__name__)
 
-def validate_user_inputs(user_inputs: Dict[str, Any]) -> None:
+def validate_user_inputs(user_inputs: Dict[str, Any], is_preview: bool = False) -> None:
     """
     Validates user inputs to ensure they meet required criteria.
 
     Parameters:
         user_inputs (Dict[str, Any]): 
             The inputs provided by the user.
+        is_preview (bool):
+            Specifies if the validation is for the preview phase.
+            If True, certain validations are relaxed.
 
     Returns:
         None
@@ -48,7 +51,10 @@ def validate_user_inputs(user_inputs: Dict[str, Any]) -> None:
     logger.debug("Validating user inputs.")
 
     # Required fields
-    required_fields = ['table_selection', 'extraction_parameters']
+    required_fields = ['source_documents', 'table_selection']
+    if not is_preview:
+        required_fields.append('extraction_parameters')
+
     for field in required_fields:
         if field not in user_inputs:
             logger.error(f"Missing required input: {field}")
@@ -65,11 +71,19 @@ def validate_user_inputs(user_inputs: Dict[str, Any]) -> None:
             raise ValidationError(f"Invalid file path: {file_path}")
 
     # Validate table_selection
-    table_selection = user_inputs.get('table_selection')
+    table_selection = user_inputs.get('table_selection', {})
     if not isinstance(table_selection, dict):
         logger.error("table_selection must be a dictionary.")
         raise ValidationError("table_selection must be a dictionary.")
     validate_table_selection_criteria(table_selection)
+
+    if not is_preview:
+        # Validate extraction_parameters
+        extraction_parameters = user_inputs.get('extraction_parameters')
+        if not isinstance(extraction_parameters, dict):
+            logger.error("extraction_parameters must be a dictionary.")
+            raise ValidationError("extraction_parameters must be a dictionary.")
+        validate_extraction_parameters(extraction_parameters)
 
     # Validate extraction_parameters
     extraction_parameters = user_inputs.get('extraction_parameters')

@@ -14,9 +14,9 @@ Includes functions for:
 
 import datetime
 import logging
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Tuple
+import pandas as pd
 
-from .accessibility import AccessibilityManager
 from .exceptions import (
     InvalidUserInputError,
     ProcessingError,
@@ -34,7 +34,7 @@ from .extraction_parameters import (
     StructureInterpretationRules
 )
 from .validation import validate_user_inputs, validate_extracted_data
-from .data_processing import parse_documents, Table, Cell, Document
+from .data_processing import parse_documents, Table, Cell, ParsedDocument
 from .structure_interpretation import interpret_table_structure
 import json
 import re
@@ -43,15 +43,13 @@ import re
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-# Initialize AccessibilityManager
-accessibility_manager = AccessibilityManager(locale_dir='locales', default_language='en')
 
-def process_user_input(user_inputs: Dict[str, Any]) -> (List[str], ExtractionParameters):
+def process_user_input(user_inputs: Dict[str, Any]) -> Tuple[List[str], ExtractionParameters]:
     """
     Processes user inputs from the web or command-line interface.
 
     Parameters:
-        user_inputs (Dict[str, Any]): 
+        user_inputs (Dict[str, Any]):
             A dictionary containing inputs provided by the user.
 
     Returns:
@@ -109,7 +107,7 @@ def process_user_input(user_inputs: Dict[str, Any]) -> (List[str], ExtractionPar
         )
 
         # Convert data type strings to actual Python types
-        data_types_input = user_inputs.get('extraction_parameters', {}).get('data_types', {})
+        data_types_input = extraction_parameters_input.get('data_types', {})
         valid_types_map = {'int': int, 'float': float, 'str': str, 'bool': bool, 'date': datetime.datetime}
         data_types = {}
         for column, type_str in data_types_input.items():
@@ -165,15 +163,31 @@ def process_user_input(user_inputs: Dict[str, Any]) -> (List[str], ExtractionPar
         logger.exception(f"An error occurred while processing user input: {e}")
         raise InvalidUserInputError(f"An error occurred while processing user input: {e}")
 
-def process_documents(file_paths: List[str], parameters: ExtractionParameters) -> List[Dict]:
+
+def process_documents(
+    file_paths: List[str],
+    parameters: ExtractionParameters,
+    selected_tables: List[int],
+    documents: List[ParsedDocument],
+    extracted_tables: List[Table],
+    document_table_mapping: List[Tuple[int, Table]]
+) -> List[Dict]:
     """
-    Orchestrates the processing of documents based on user parameters.
+    Orchestrates the processing of selected tables from documents based on user parameters.
 
     Parameters:
-        file_paths (List[str]): 
-            List of file paths to the documents to be processed.
-        parameters (ExtractionParameters): 
+        file_paths (List[str]):
+            List of file paths to the documents (provided for compatibility).
+        parameters (ExtractionParameters):
             Parameters guiding the extraction process.
+        selected_tables (List[int]):
+            Indices of the tables selected by the user.
+        documents (List[ParsedDocument]):
+            Parsed documents.
+        extracted_tables (List[Table]):
+            List of all extracted tables.
+        document_table_mapping (List[Tuple[int, Table]]):
+            Mapping of document indices to tables.
 
     Returns:
         List[Dict]:
@@ -182,72 +196,59 @@ def process_documents(file_paths: List[str], parameters: ExtractionParameters) -
     Raises:
         ProcessingError:
             If an error occurs during document processing.
-
-    Dependencies:
-        - Depends on several modules for parsing, interpreting, and validating data.
     """
     try:
-        # Parse the documents to extract raw tables
-        documents = parse_documents(file_paths)
-        logger.info(f"Parsed {len(documents)} documents.")
-
         extracted_data = []
+        for idx in selected_tables:
+            doc_idx, table = document_table_mapping[idx]
+            logger.info(f"Processing Table {idx+1} from Document {os.path.basename(documents[doc_idx].file_path)}")
+            # Interpret the table structure
+            interpreted_table = interpret_table_structure(table, parameters)
 
-        for document in documents:
-            logger.info(f"Processing document: {document.file_path}")
+            # Convert the table to a JSON-friendly format
+            table_data = table_to_dict(interpreted_table, parameters)
 
-            # Filter tables based on selection criteria in parameters.table_selection
-            selected_tables = select_tables(document.tables, parameters.table_selection)
+            # Validate the extracted data
+            try:
+                validate_extracted_data(table_data['data'], parameters)
+            except DataValidationError as e:
+                # Handle invalid data as per error_handling rules
+                action = parameters.error_handling.on_validation_error
+                if action == 'omit':
+                    logger.warning(f"Omitting invalid data for table due to validation error: {e}")
+                    continue
+                elif action == 'abort':
+                    logger.error(f"Aborting processing due to validation error: {e}")
+                    raise ProcessingError(f"Aborting processing due to validation error: {e}")
+                elif action == 'correct':
+                    # Implement error correction logic if applicable
+                    logger.info("Attempting to correct invalid data.")
+                    table_data = correct_data(table_data, parameters)
+                elif action == 'prompt':
+                    # Implement prompt logic (not applicable in backend code)
+                    logger.warning("Prompt action not supported in this context.")
+                    pass
+            else:
+                # If validation passes, proceed
+                extracted_data.append(table_data)
 
-            logger.info(f"Selected {len(selected_tables)} tables from document.")
-
-            for table in selected_tables:
-                # Interpret the table structure
-                interpreted_table = interpret_table_structure(table, parameters)
-
-                # Convert the table to a JSON-friendly format
-                table_data = table_to_dict(interpreted_table, parameters)
-
-                # Validate the extracted data
-                try:
-                    validate_extracted_data(table_data['data'], parameters)
-                except DataValidationError as e:
-                    # Handle invalid data as per error_handling rules
-                    action = parameters.error_handling.on_validation_error
-                    if action == 'omit':
-                        logger.warning(f"Omitting invalid data for table due to validation error: {e}")
-                        continue
-                    elif action == 'abort':
-                        logger.error(f"Aborting processing due to validation error: {e}")
-                        raise ProcessingError(f"Aborting processing due to validation error: {e}")
-                    elif action == 'correct':
-                        # Implement error correction logic if applicable
-                        logger.info("Attempting to correct invalid data.")
-                        table_data = correct_data(table_data)
-                    elif action == 'prompt':
-                        # Implement prompt logic (not applicable in backend code)
-                        logger.warning("Prompt action not supported in this context.")
-                        pass
-                else:
-                    # If validation passes, proceed
-                    extracted_data.append(table_data)
-
-        logger.info("Document processing completed successfully.")
+        logger.info("Table processing completed successfully.")
 
         return extracted_data
 
     except Exception as e:
-        logger.exception(f"An error occurred during document processing: {e}")
-        raise ProcessingError(f"An error occurred during document processing: {e}")
+        logger.exception(f"An error occurred during table processing: {e}")
+        raise ProcessingError(f"An error occurred during table processing: {e}")
+
 
 def render_results(data: List[Dict], output_format: str) -> str:
     """
     Renders the extracted data in the desired output format (e.g., JSON, Markdown).
 
     Parameters:
-        data (List[Dict]): 
+        data (List[Dict]):
             The data extracted from the documents.
-        output_format (str): 
+        output_format (str):
             The format in which to render the results ('json', 'markdown').
 
     Returns:
@@ -278,51 +279,21 @@ def render_results(data: List[Dict], output_format: str) -> str:
         logger.exception(f"An error occurred during data rendering: {e}")
         raise RenderingError(f"An error occurred during data rendering: {e}")
 
-def select_tables(tables: List[Table], selection_criteria: TableSelectionCriteria) -> List[Table]:
+
+def select_table_by_criteria(table: Table, selection_criteria: TableSelectionCriteria) -> bool:
     """
-    Selects tables from the list based on the provided selection criteria.
-
-    Parameters:
-        tables (List[Table]): 
-            List of Table objects extracted from the document.
-        selection_criteria (TableSelectionCriteria): 
-            Criteria for selecting which tables to extract.
-
-    Returns:
-        List[Table]:
-            List of tables that match the selection criteria.
+    Determines if a table should be selected based on the given selection criteria.
     """
-    selected_tables = []
-    logger.debug(f"Selecting tables using method: {selection_criteria.method}")
-
-    if selection_criteria.method == 'indexing':
-        indices = selection_criteria.indices or []
-        for index in indices:
-            if index < 0 or index >= len(tables):
-                logger.warning(f"Table index {index} is out of range.")
-                continue
-            selected_tables.append(tables[index])
-    elif selection_criteria.method == 'keyword':
-        keywords = selection_criteria.keywords or []
-        for table in tables:
-            if table_contains_keywords(table, keywords):
-                selected_tables.append(table)
+    if selection_criteria.method == 'keyword':
+        return table_contains_keywords(table, selection_criteria.keywords)
     elif selection_criteria.method == 'regex':
-        patterns = selection_criteria.regex_patterns or []
-        for table in tables:
-            if table_matches_regex(table, patterns):
-                selected_tables.append(table)
+        return table_matches_regex(table, selection_criteria.regex_patterns)
     elif selection_criteria.method == 'criteria':
-        for table in tables:
-            if table_matches_conditions(table, selection_criteria.row_conditions, selection_criteria.column_conditions):
-                selected_tables.append(table)
-    elif selection_criteria.method == 'saved_profile':
-        # Implement logic for loading and applying saved profiles
-        logger.warning("Saved profile selection method is not yet implemented.")
+        return table_matches_conditions(table, selection_criteria.row_conditions, selection_criteria.column_conditions)
     else:
-        logger.warning(f"Unknown selection method: {selection_criteria.method}")
+        # Other methods handled separately (e.g., indexing)
+        return False
 
-    return selected_tables
 
 def table_contains_keywords(table: Table, keywords: List[str]) -> bool:
     """
@@ -343,6 +314,7 @@ def table_contains_keywords(table: Table, keywords: List[str]) -> bool:
             if any(keyword.lower() in str(cell.content).lower() for keyword in keywords):
                 return True
     return False
+
 
 def table_matches_regex(table: Table, patterns: List[str]) -> bool:
     """
@@ -366,6 +338,7 @@ def table_matches_regex(table: Table, patterns: List[str]) -> bool:
                     return True
     return False
 
+
 def table_matches_conditions(table: Table, row_conditions: Dict[str, Any], column_conditions: Dict[str, Any]) -> bool:
     """
     Checks if the table meets the specified row and column conditions.
@@ -382,29 +355,56 @@ def table_matches_conditions(table: Table, row_conditions: Dict[str, Any], colum
         bool:
             True if the table meets the conditions, False otherwise.
     """
-    # Placeholder implementation
-    # TODO: Implement evaluation logic based on the specified conditions
     logger.debug("Evaluating table against row and column conditions.")
     if row_conditions:
-        # Evaluate row conditions
-        # Example: Check if the table has a specific number of rows
+        # Evaluate row count conditions
         if 'min_rows' in row_conditions:
             min_rows = row_conditions['min_rows']
             if len(table.data) < min_rows:
                 return False
-        # Add more condition evaluations as needed
+        if 'max_rows' in row_conditions:
+            max_rows = row_conditions['max_rows']
+            if len(table.data) > max_rows:
+                return False
+        # Evaluate content conditions
+        if 'contains_value' in row_conditions:
+            value = row_conditions['contains_value']
+            found = any(value in str(cell.content) for row in table.data for cell in row)
+            if not found:
+                return False
+        if 'contains_regex' in row_conditions:
+            pattern = row_conditions['contains_regex']
+            regex = re.compile(pattern)
+            found = any(regex.search(str(cell.content)) for row in table.data for cell in row)
+            if not found:
+                return False
 
     if column_conditions:
-        # Evaluate column conditions
-        # Example: Check if the table has a specific number of columns
+        # Evaluate column count conditions
+        max_columns = max(len(row) for row in table.data)
         if 'min_columns' in column_conditions:
             min_columns = column_conditions['min_columns']
-            max_columns = max(len(row) for row in table.data)
             if max_columns < min_columns:
                 return False
-        # Add more condition evaluations as needed
+        if 'max_columns' in column_conditions:
+            max_columns_condition = column_conditions['max_columns']
+            if max_columns > max_columns_condition:
+                return False
+        # Evaluate content conditions
+        if 'contains_value' in column_conditions:
+            value = column_conditions['contains_value']
+            found = any(value in str(cell.content) for row in table.data for cell in row)
+            if not found:
+                return False
+        if 'contains_regex' in column_conditions:
+            pattern = column_conditions['contains_regex']
+            regex = re.compile(pattern)
+            found = any(regex.search(str(cell.content)) for row in table.data for cell in row)
+            if not found:
+                return False
 
     return True  # Return True if all conditions are met
+
 
 def table_to_dict(table: Table, parameters: ExtractionParameters) -> Dict:
     """
@@ -472,6 +472,7 @@ def table_to_dict(table: Table, parameters: ExtractionParameters) -> Dict:
     table_dict['metadata'] = table.metadata
     return table_dict
 
+
 def merge_headers(headers: List[List[str]]) -> List[str]:
     column_names = []
     max_length = max(len(h) for h in headers)
@@ -488,21 +489,52 @@ def merge_headers(headers: List[List[str]]) -> List[str]:
         column_names.append(col_name)
     return column_names
 
-def correct_data(data: Dict) -> Dict:
+
+def correct_data(data: Dict, parameters: ExtractionParameters) -> Dict:
     """
-    Attempts to correct invalid data.
+    Attempts to correct invalid data by coercing values to the expected types where possible.
 
     Parameters:
         data (Dict):
             The data to be corrected.
+        parameters (ExtractionParameters):
+            The extraction parameters containing type information.
 
     Returns:
         Dict:
             The corrected data.
+
+    Notes:
+        This function assumes that data is a dictionary with a 'data' key containing a list of dictionaries (rows).
     """
-    # Implement error correction logic as needed
-    # Placeholder implementation
+    corrected_data = []
+    data_types = parameters.data_types
+    for row in data['data']:
+        corrected_row = {}
+        for column, value in row.items():
+            expected_type = data_types.get(column)
+            if expected_type:
+                try:
+                    if expected_type == datetime.datetime:
+                        # Try to parse the date with the specified format
+                        date_format = parameters.formatting_rules.date_format
+                        if isinstance(value, str):
+                            corrected_value = datetime.datetime.strptime(value, date_format)
+                        else:
+                            corrected_value = value  # Assume it's already datetime
+                    else:
+                        corrected_value = expected_type(value)
+                except (ValueError, TypeError):
+                    logger.warning(f"Could not convert value '{value}' to type {expected_type}. Using placeholder.")
+                    placeholder = parameters.formatting_rules.placeholder_for_missing or None
+                    corrected_value = placeholder
+            else:
+                corrected_value = value
+            corrected_row[column] = corrected_value
+        corrected_data.append(corrected_row)
+    data['data'] = corrected_data
     return data
+
 
 def convert_to_markdown(data: List[Dict]) -> str:
     """
@@ -538,3 +570,72 @@ def convert_to_markdown(data: List[Dict]) -> str:
         markdown_output += markdown_table + '\n\n'
 
     return markdown_output
+
+
+def process_user_input_preview(user_inputs: Dict[str, Any]) -> ExtractionParameters:
+    """
+    Processes user inputs for the preview phase.
+
+    Parameters:
+        user_inputs (Dict[str, Any]):
+            A dictionary containing inputs provided by the user.
+
+    Returns:
+        ExtractionParameters:
+            An object containing validated extraction parameters for preview.
+
+    Raises:
+        InvalidUserInputError:
+            If the user inputs fail validation checks.
+
+    """
+    # Similar to process_user_input but with minimal parameters required for preview
+    try:
+        # Validate table_selection
+        table_selection = TableSelectionCriteria(
+            method=user_inputs.get('table_selection', {}).get('method'),
+            indices=user_inputs.get('table_selection', {}).get('indices'),
+            keywords=user_inputs.get('table_selection', {}).get('keywords'),
+            regex_patterns=user_inputs.get('table_selection', {}).get('regex_patterns'),
+            row_conditions=user_inputs.get('table_selection', {}).get('row_conditions'),
+            column_conditions=user_inputs.get('table_selection', {}).get('column_conditions')
+        )
+        table_selection.validate()
+
+        # Create minimal ExtractionParameters
+        extraction_parameters = ExtractionParameters(
+            table_selection=table_selection,
+            formatting_rules=FormattingRules(),
+            data_types={},
+            error_handling=ErrorHandlingStrategy(),
+            parser_config=ParserConfiguration(),
+            structure_interpretation=StructureInterpretationRules()
+        )
+
+        return extraction_parameters
+    except ValidationError as e:
+        logger.error(f"User inputs failed validation: {e}")
+        raise InvalidUserInputError(f"User inputs failed validation: {e}")
+    except Exception as e:
+        logger.exception(f"An error occurred while processing user input: {e}")
+        raise InvalidUserInputError(f"An error occurred while processing user input: {e}")
+
+
+def table_to_dataframe(table: Table) -> pd.DataFrame:
+    """
+    Converts a Table object into a Pandas DataFrame for preview.
+
+    Parameters:
+        table (Table):
+            The Table object to convert.
+
+    Returns:
+        pd.DataFrame:
+            The DataFrame representation of the table.
+    """
+    data = []
+    for row in table.data:
+        row_data = [cell.content for cell in row]
+        data.append(row_data)
+    df = pd.DataFrame(data)
+    return df
