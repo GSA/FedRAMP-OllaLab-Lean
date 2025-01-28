@@ -3,11 +3,13 @@ from typing import List, Dict, Any, Optional, Tuple
 from pathlib import Path
 
 # For Word document parsing
+from docx.document import Document as DocxDocument
 import docx
-from docx import Document as DocxDocument
 from docx.table import _Cell, Table as DocxTable
 from docx.text.paragraph import Paragraph
 from docx.oxml.ns import qn
+from docx.oxml.table import CT_Tbl
+from docx.oxml.text.paragraph import CT_P
 
 # For PDF parsing
 import pdfplumber
@@ -60,13 +62,13 @@ class Cell:
         content: Any,
         rowspan: int = 1,
         colspan: int = 1,
-        styles: Optional[Dict[str, Any]] = None,
-        nested_table: Optional[List['Table']] = None,
+        styles: Dict[str, Any] = None,
+        nested_table: 'Table' = None
     ):
         self.content = content
         self.rowspan = rowspan
         self.colspan = colspan
-        self.styles = styles if styles is not None else {}
+        self.styles = styles or {}
         self.nested_table = nested_table
 
 class Table:
@@ -85,12 +87,12 @@ class Table:
     def __init__(
         self,
         data: List[List[Cell]],
-        position: int,
-        metadata: Optional[Dict[str, Any]] = None,
+        position: int = 0,
+        metadata: Dict[str, Any] = None
     ):
         self.data = data
         self.position = position
-        self.metadata = metadata if metadata is not None else {}
+        self.metadata = metadata or {}
 
 class ParsedDocument:
     """
@@ -111,61 +113,116 @@ class ParsedDocument:
         self,
         file_path: str,
         content: Any,
-        tables: Optional[List[Table]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        tables: List[Table],
+        metadata: Dict[str, Any] = None
     ):
         self.file_path = file_path
         self.content = content
-        self.tables = tables if tables is not None else []
-        self.metadata = metadata if metadata is not None else {}
+        self.tables = tables
+        self.metadata = metadata or {}
 
 def parse_documents(file_paths: List[str]) -> Tuple[List[ParsedDocument], List[str]]:
     """
-    Parses multiple documents and extracts raw table data.
+    Parses a list of documents and extracts tables from them.
 
     Parameters:
-        file_paths (List[str]): 
-            A list of file paths to the documents (MS Word or PDF) to be parsed.
+        file_paths (List[str]):
+            List of file paths to the documents to parse.
 
     Returns:
         Tuple[List[ParsedDocument], List[str]]:
-            A tuple containing:
-            - A list of ParsedDocument objects containing extracted table data and metadata.
-            - A list of error messages for files that failed to parse.
-
-    Dependencies:
-        - Requires access to file system to read the specified documents.
-        - Depends on libraries for reading Word and PDF documents (e.g., python-docx, pdfplumber).
+            A tuple containing a list of ParsedDocument objects and a list of any parse errors encountered.
     """
-    documents = []
-    errors = []
+
+    parsed_documents = []
+    parse_errors = []
     for file_path in file_paths:
-        logger.debug(f"Parsing document: {file_path}")
-        if not os.path.exists(file_path):
-            error_msg = f"File not found: {file_path}"
-            logger.error(error_msg)
-            errors.append(error_msg)
-            continue  # Skip to the next file
-        file_extension = Path(file_path).suffix.lower()
+        file_name = os.path.basename(file_path)
+        logger.debug(f"Parsing file: {file_name}")
         try:
-            if file_extension == '.docx':
-                document = read_word_document(file_path)
-            elif file_extension == '.pdf':
-                document = read_pdf_document(file_path)
+            if file_path.lower().endswith('.docx'):
+                # Parse DOCX file
+                docx_document = docx.Document(file_path)  # Open the document
+                tables = parse_docx_tables(docx_document)
+                parsed_document = ParsedDocument(file_path=file_path, content=docx_document, tables=tables)
+                parsed_documents.append(parsed_document)
+                logger.info(f"Parsed {len(tables)} tables from DOCX file '{file_name}'.")
+            elif file_path.lower().endswith('.pdf'):
+                # Parse PDF file
+                with pdfplumber.open(file_path) as pdf:
+                    tables = parse_pdf_tables(pdf)
+                    parsed_document = ParsedDocument(file_path=file_path, content=pdf, tables=tables)
+                    parsed_documents.append(parsed_document)
+                    logger.info(f"Parsed {len(tables)} tables from PDF file '{file_name}'.")
             else:
-                error_msg = f"Unsupported file type: {file_extension}. Please upload .docx or .pdf files."
-                logger.error(error_msg)
-                errors.append(f"{os.path.basename(file_path)}: {error_msg}")
-                continue  # Skip unsupported file types
-            logger.debug(f"Extracting tables from document: {file_path}")
-            document.tables = extract_raw_tables(document)
-            documents.append(document)
+                raise UnsupportedFileTypeError(f"Unsupported file type for file '{file_name}'.")
         except Exception as e:
-            error_msg = f"An error occurred while parsing {os.path.basename(file_path)}: {str(e)}"
-            logger.exception(error_msg)
-            errors.append(error_msg)
-            continue  # Continue processing other files
-    return (documents, errors)
+            logger.exception(f"Error parsing file '{file_name}': {e}")
+            parse_errors.append(f"Error parsing file '{file_name}': {e}")
+    return parsed_documents, parse_errors
+
+
+def parse_docx_tables(docx_document: DocxDocument) -> List[Table]:
+    """
+    Parses tables from a DOCX document.
+
+    Parameters:
+        docx_document (DocxDocument):
+            The DOCX document object to parse.
+
+    Returns:
+        List[Table]:
+            A list of Table objects extracted from the document.
+    """
+    tables = []
+    for pos, docx_table in enumerate(docx_document.tables):
+        table_data = []
+        for row in docx_table.rows:
+            row_data = []
+            for cell in row.cells:
+                # Extract text from cell paragraphs
+                cell_text = '\n'.join(paragraph.text for paragraph in cell.paragraphs).strip()
+                cell_obj = Cell(content=cell_text)
+                row_data.append(cell_obj)
+            table_data.append(row_data)
+        table = Table(data=table_data, position=pos)
+        tables.append(table)
+    return tables
+
+def parse_pdf_tables(pdf: pdfplumber.PDF) -> List[Table]:
+    """
+    Parses tables from a PDF document using pdfplumber.
+
+    Parameters:
+        pdf (pdfplumber.PDF):
+            The pdfplumber PDF object.
+
+    Returns:
+        List[Table]:
+            A list of Table objects extracted from the document.
+
+    Raises:
+        PDFFileError:
+            If an error occurs while parsing the PDF file.
+    """
+    tables = []
+    try:
+        for page_num, page in enumerate(pdf.pages):
+            page_tables = page.extract_tables()
+            for pos, table_data in enumerate(page_tables):
+                table_cells = []
+                for row in table_data:
+                    row_cells = []
+                    for cell_text in row:
+                        cell_obj = Cell(content=cell_text.strip() if cell_text else '')
+                        row_cells.append(cell_obj)
+                    table_cells.append(row_cells)
+                table = Table(data=table_cells, position=pos)
+                tables.append(table)
+        return tables
+    except Exception as e:
+        logger.exception(f"Error parsing PDF: {e}")
+        raise PDFFileError(f"Error parsing PDF: {e}") from e
 
 def read_word_document(file_path: str) -> ParsedDocument:
     """
@@ -183,19 +240,20 @@ def read_word_document(file_path: str) -> ParsedDocument:
         DocxFileError:
             If an error occurs while reading the Word document.
     """
-    try:
-        logger.debug(f"Reading Word document: {file_path}")
-        _, file_extension = os.path.splitext(file_path)
-        file_extension = file_extension.lower()
-        if file_extension == '.doc':
-            logger.error("DOC files are not supported. Please convert to DOCX.")
-            raise DocxFileError("DOC files are not supported. Please convert to DOCX.")
-        doc = DocxDocument(file_path)
-        parsed_document = ParsedDocument(file_path=file_path, content=doc)
-        return parsed_document
-    except Exception as e:
-        logger.exception(f"Error reading Word document: {file_path}")
-        raise DocxFileError(f"Error reading Word document {file_path}: {str(e)}")
+    #try:
+    logger.debug(f"Reading Word document: {file_path}")
+    _, file_extension = os.path.splitext(file_path)
+    file_extension = file_extension.lower()
+    if file_extension == '.doc':
+        logger.error("DOC files are not supported. Please convert to DOCX.")
+        raise DocxFileError("DOC files are not supported. Please convert to DOCX.")
+    # Use the docx.Document function to load the document
+    doc = docx.Document(file_path)
+    parsed_document = ParsedDocument(file_path=file_path, content=doc)
+    return parsed_document
+    #except Exception as e:
+        #logger.exception(f"Error reading Word document: {file_path}")
+        #raise DocxFileError(f"Error reading Word document {file_path}: {str(e)}")
 
 def read_pdf_document(file_path: str) -> ParsedDocument:
     """
@@ -239,18 +297,18 @@ def extract_raw_tables(document: ParsedDocument) -> List[Table]:
             If an error occurs during table extraction.
     """
     tables = []
-    try:
-        if isinstance(document.content, DocxDocument):
-            tables = extract_tables_from_word(document.content)
-        elif isinstance(document.content, pdfplumber.PDF):
-            tables = extract_tables_from_pdf(document.content)
-        else:
-            logger.error("Unsupported document content type.")
-            raise TableExtractionError("Unsupported document content type.")
-        return tables
-    except Exception as e:
-        logger.exception(f"Error extracting tables from document {document.file_path}")
-        raise TableExtractionError(f"Error extracting tables from document {document.file_path}: {str(e)}")
+    #try:
+    if isinstance(document.content, DocxDocument):
+        tables = extract_tables_from_word(document.content)
+    elif isinstance(document.content, pdfplumber.PDF):
+        tables = extract_tables_from_pdf(document.content)
+    else:
+        logger.error("Unsupported document content type.")
+        raise TableExtractionError("Unsupported document content type.")
+    return tables
+    #except Exception as e:
+        #logger.exception(f"Error extracting tables from document {document.file_path}")
+        #raise TableExtractionError(f"Error extracting tables from document {document.file_path}: {str(e)}")
 
 def extract_tables_from_word(doc: DocxDocument) -> List[Table]:
     logger.debug("Extracting tables from Word document")
@@ -271,15 +329,11 @@ def extract_tables_from_word(doc: DocxDocument) -> List[Table]:
         raise TableExtractionError(f"Error extracting tables from Word document: {str(e)}")
 
 def iter_block_items(parent):
-    if isinstance(parent, DocxDocument):
-        parent_elm = parent.element.body
-    else:
-        parent_elm = parent._element
-
+    parent_elm = parent.element.body
     for child in parent_elm.iterchildren():
-        if child.tag.endswith('}p'):
+        if isinstance(child, CT_P):
             yield Paragraph(child, parent)
-        elif child.tag.endswith('}tbl'):
+        elif isinstance(child, CT_Tbl):
             yield DocxTable(child, parent)
         else:
             pass  # Handle other elements if necessary

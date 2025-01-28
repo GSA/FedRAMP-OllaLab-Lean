@@ -520,7 +520,7 @@ if generate_response:
                         },
                     ])
                 st.session_state['full_response'] = response["message"]["content"]
-                st.write("**Response:**")
+                st.write(f"**{selected_model} Response:**")
                 st.markdown(st.session_state['full_response'])
             elif selected_provider == "OpenAI":
                 # Use OpenAI API (1.0.0 interface)
@@ -530,7 +530,7 @@ if generate_response:
                         messages=[{"role": "user", "content": user_input_resolved}],
                     )
                 st.session_state['full_response'] = response.choices[0].message.content
-                st.write("**Response:**")
+                st.write(f"**{selected_model} Response:**")
                 st.markdown(st.session_state['full_response'])
             elif selected_provider == "Anthropic":
                 # Use Anthropic API with the latest Message API
@@ -546,7 +546,7 @@ if generate_response:
                         stop_sequences=["\n\nHuman:"],
                     )
                 st.session_state['full_response'] = response.content[0].text
-                st.write("**Response:**")
+                st.write(f"**{selected_model} Response:**")
                 st.markdown(st.session_state['full_response'])
             elif selected_provider == "Google Vertex AI":
                 # Use Vertex AI SDK
@@ -557,7 +557,7 @@ if generate_response:
                         chat = chat_model.start_chat()
                         response = chat.send_message(user_input_resolved)
                         st.session_state['full_response'] = response.text
-                        st.write("**Response:**")
+                        st.write(f"**{selected_model} Response:**")
                         st.markdown(st.session_state['full_response'])
                     except Exception as e:
                         st.error(f"Error generating response with Vertex AI: {e}")
@@ -601,7 +601,7 @@ if generate_response:
                         else:
                             st.error("Unexpected response format from Bedrock.")
                             st.stop()
-                        st.write("**Response:**")
+                        st.write(f"**{selected_model} Response:**")
                         st.markdown(st.session_state['full_response'])
                     except Exception as e:
                         st.error(f"Error generating response with Amazon Bedrock: {e}")

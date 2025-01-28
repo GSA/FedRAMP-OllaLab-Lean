@@ -77,90 +77,135 @@ def main():
             st.write(f"- {file.name}")
 
         # Save uploaded files and populate file_paths
-        try:
-            # Clean up previous temp directories if any
-            for temp_dir in st.session_state['temp_dirs']:
-                try:
-                    shutil.rmtree(temp_dir)
-                    logger.debug(f"Deleted temporary directory '{temp_dir}'.")
-                except OSError as e:
-                    logger.warning(f"Error deleting temporary directory '{temp_dir}': {e}")
-            st.session_state['temp_dirs'] = []
-            st.session_state['file_paths'] = []
-
-            for uploaded_file in uploaded_files:
-                temp_dir = tempfile.mkdtemp()
-                st.session_state['temp_dirs'].append(temp_dir)
-                file_name = uploaded_file.name
-
-                # Check if file extension is '.doc'
-                if file_name.lower().endswith('.doc'):
-                    st.error(f"File '{file_name}' is a .doc file, which is not supported. Please convert it to .docx.")
-                    logger.error(f"File '{file_name}' is a .doc file, which is not supported.")
-                    continue  # Skip this file
-
-                temp_file_path = os.path.join(temp_dir, file_name)
-
-                with open(temp_file_path, 'wb') as f:
-                    f.write(uploaded_file.getbuffer())
-
-                st.session_state['file_paths'].append(temp_file_path)
-                logger.debug(f"Saved uploaded file '{uploaded_file.name}' to temporary file '{temp_file_path}'.")
-
-            # Process the documents and extract tables for preview
+        #try:
+        # Clean up previous temp directories if any
+        for temp_dir in st.session_state['temp_dirs']:
             try:
-                # Create preliminary user inputs
-                st.session_state['user_inputs']['source_documents'] = st.session_state['file_paths']
+                shutil.rmtree(temp_dir)
+                logger.debug(f"Deleted temporary directory '{temp_dir}'.")
+            except OSError as e:
+                logger.warning(f"Error deleting temporary directory '{temp_dir}': {e}")
+        st.session_state['temp_dirs'] = []
+        st.session_state['file_paths'] = []
 
-                # Process user inputs to create extraction parameters (without needing the full parameters yet)
-                extraction_parameters = process_user_input_preview(st.session_state['user_inputs'])
+        for uploaded_file in uploaded_files:
+            temp_dir = tempfile.mkdtemp()
+            st.session_state['temp_dirs'].append(temp_dir)
+            file_name = uploaded_file.name
 
-                # Parse the documents and extract tables
-                documents, parse_errors = parse_documents(st.session_state['file_paths'])
-                st.session_state['documents'] = documents
-                logger.info(f"Parsed {len(documents)} documents.")
+            # Check if file extension is '.doc'
+            if file_name.lower().endswith('.doc'):
+                st.error(f"File '{file_name}' is a .doc file, which is not supported. Please convert it to .docx.")
+                logger.error(f"File '{file_name}' is a .doc file, which is not supported.")
+                continue  # Skip this file
 
-                if parse_errors:
-                    st.subheader("Errors during parsing:")
-                    for error in parse_errors:
-                        st.error(error)
-                    if not documents:
-                        st.error("No documents were successfully parsed. Please check the errors above.")
-                        st.stop()
-                else:
-                    st.success(f"All {len(documents)} documents were successfully parsed.")
+            temp_file_path = os.path.join(temp_dir, file_name)
 
-                all_tables = []
-                document_table_mapping = []
-                total_tables = 0
-                for doc_index, document in enumerate(documents):
-                    # For preview, we'll select all tables initially
-                    selected_tables = document.tables
-                    total_tables += len(selected_tables)
-                    all_tables.extend(selected_tables)
-                    document_table_mapping.extend([(doc_index, tbl) for tbl in selected_tables])
+            with open(temp_file_path, 'wb') as f:
+                f.write(uploaded_file.getbuffer())
 
-                # Save extracted tables in session state
-                st.session_state['extracted_tables'] = all_tables
-                st.session_state['document_table_mapping'] = document_table_mapping
+            st.session_state['file_paths'].append(temp_file_path)
+            logger.debug(f"Saved uploaded file '{uploaded_file.name}' to temporary file '{temp_file_path}'.")
 
-                # Display the number of detected tables
-                st.subheader("Number of Detected Tables")
-                st.write(f"Total number of tables detected in uploaded files: {total_tables}")
+        # Process the documents and extract tables for preview
+        #try:
+        # Parse the documents and extract tables
+        documents, parse_errors = parse_documents(st.session_state['file_paths'])
+        st.session_state['documents'] = documents
+        logger.info(f"Parsed {len(documents)} documents.")
 
-                if total_tables == 0:
-                    st.error("No tables were found in the uploaded documents.")
-                    st.stop()
-
-            except Exception as e:
-                st.error(f"An error occurred during table extraction: {e}")
-                logger.exception(f"An error occurred during table extraction: {e}")
+        if parse_errors:
+            st.subheader("Errors during parsing:")
+            for error in parse_errors:
+                st.error(error)
+            if not documents:
+                st.error("No documents were successfully parsed. Please check the errors above.")
                 st.stop()
+        else:
+            st.success(f"All {len(documents)} documents were successfully parsed.")
 
-        except Exception as e:
-            st.error(f"Error saving uploaded files: {e}")
-            logger.error(f"Error saving uploaded files: {e}")
+        all_tables = []
+        document_table_mapping = []
+        total_tables = 0
+        for doc_index, document in enumerate(documents):
+            # For preview, we'll select all tables initially
+            selected_tables = document.tables
+            total_tables += len(selected_tables)
+            all_tables.extend(selected_tables)
+            document_table_mapping.extend([(doc_index, tbl) for tbl in selected_tables])
+
+        # Save extracted tables in session state
+        st.session_state['extracted_tables'] = all_tables
+        st.session_state['document_table_mapping'] = document_table_mapping
+
+        # Display the number of detected tables
+        st.subheader("Number of Detected Tables")
+        st.write(f"Total number of tables detected in uploaded files: {total_tables}")
+
+        if total_tables == 0:
+            st.error("No tables were found in the uploaded documents.")
             st.stop()
+        # Create preliminary user inputs
+        st.session_state['user_inputs']['source_documents'] = st.session_state['file_paths']
+        
+        # Now that we have tables, we can set default indices for preview
+        if 'table_selection' not in st.session_state['user_inputs']:
+            st.session_state['user_inputs']['table_selection'] = {}
+        if 'method' not in st.session_state['user_inputs']['table_selection']:
+            st.session_state['user_inputs']['table_selection']['method'] = 'indexing'
+        if 'indices' not in st.session_state['user_inputs']['table_selection']:
+            # Default to all indices in the preview
+            st.session_state['user_inputs']['table_selection']['indices'] = list(range(total_tables))
+        
+        # Process user inputs to create extraction parameters (without needing the full parameters yet)
+        extraction_parameters = process_user_input_preview(st.session_state['user_inputs'])
+
+        # Parse the documents and extract tables
+        documents, parse_errors = parse_documents(st.session_state['file_paths'])
+        st.session_state['documents'] = documents
+        logger.info(f"Parsed {len(documents)} documents.")
+
+        if parse_errors:
+            st.subheader("Errors during parsing:")
+            for error in parse_errors:
+                st.error(error)
+            if not documents:
+                st.error("No documents were successfully parsed. Please check the errors above.")
+                st.stop()
+        else:
+            st.success(f"All {len(documents)} documents were successfully parsed.")
+
+        all_tables = []
+        document_table_mapping = []
+        total_tables = 0
+        for doc_index, document in enumerate(documents):
+            # For preview, we'll select all tables initially
+            selected_tables = document.tables
+            total_tables += len(selected_tables)
+            all_tables.extend(selected_tables)
+            document_table_mapping.extend([(doc_index, tbl) for tbl in selected_tables])
+
+        # Save extracted tables in session state
+        st.session_state['extracted_tables'] = all_tables
+        st.session_state['document_table_mapping'] = document_table_mapping
+
+        # Display the number of detected tables
+        st.subheader("Number of Detected Tables")
+        st.write(f"Total number of tables detected in uploaded files: {total_tables}")
+
+        if total_tables == 0:
+            st.error("No tables were found in the uploaded documents.")
+            st.stop()
+
+        #except Exception as e:
+            #st.error(f"An error occurred during table extraction: {e}")
+            #logger.exception(f"An error occurred during table extraction: {e}")
+            #st.stop()
+
+        #except Exception as e:
+            #st.error(f"Error saving uploaded files: {e}")
+            #logger.error(f"Error saving uploaded files: {e}")
+            #st.stop()
 
     else:
         st.stop()  # Stop execution until files are uploaded
@@ -172,6 +217,17 @@ def main():
         selected_profile_name = st.selectbox("Select a saved profile", ["-- Select --"] + list(profiles.keys()))
         if selected_profile_name != "-- Select --":
             user_inputs = profiles[selected_profile_name]
+                        # Ensure 'table_selection' exists
+            if 'table_selection' not in user_inputs:
+                st.warning("Loaded profile is missing 'table_selection'. Assigning default method 'indexing'.")
+                user_inputs['table_selection'] = {'method': 'indexing'}
+            else:
+                # Ensure 'method' is set and valid
+                method = user_inputs['table_selection'].get('method')
+                if not method or method.lower() not in ['indexing', 'keyword', 'regex', 'criteria', 'saved_profile']:
+                    st.warning(f"Loaded profile has invalid or missing 'method'. Assigning default method 'indexing'.")
+                    user_inputs['table_selection']['method'] = 'indexing'
+
             st.session_state['user_inputs'] = user_inputs
             st.success(f"Loaded profile '{selected_profile_name}'")
         else:
@@ -472,6 +528,16 @@ def save_profile(profile_name, profile_data):
     profiles_dir = 'profiles'
     if not os.path.exists(profiles_dir):
         os.makedirs(profiles_dir)
+
+    # Ensure 'table_selection' exists
+    if 'table_selection' not in profile_data:
+        profile_data['table_selection'] = {'method': 'indexing'}
+    else:
+        # Ensure 'method' is set and valid
+        method = profile_data['table_selection'].get('method')
+        if not method or method.lower() not in ['indexing', 'keyword', 'regex', 'criteria', 'saved_profile']:
+            profile_data['table_selection']['method'] = 'indexing'
+
     file_path = os.path.join(profiles_dir, f"{profile_name}.json")
     with open(file_path, 'w') as f:
         json.dump(profile_data, f)

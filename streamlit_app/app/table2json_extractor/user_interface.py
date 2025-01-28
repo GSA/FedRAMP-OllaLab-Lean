@@ -591,14 +591,18 @@ def process_user_input_preview(user_inputs: Dict[str, Any]) -> ExtractionParamet
     """
     # Similar to process_user_input but with minimal parameters required for preview
     try:
-        # Validate table_selection
+        # Retrieve the method, defaulting to 'indexing' if not provided
+        method = user_inputs.get('table_selection', {}).get('method') or 'indexing'
+
+        # Validate and create TableSelectionCriteria
         table_selection = TableSelectionCriteria(
-            method=user_inputs.get('table_selection', {}).get('method'),
+            method=method.lower(),  # Ensure it's lowercase to match valid methods
             indices=user_inputs.get('table_selection', {}).get('indices'),
             keywords=user_inputs.get('table_selection', {}).get('keywords'),
             regex_patterns=user_inputs.get('table_selection', {}).get('regex_patterns'),
             row_conditions=user_inputs.get('table_selection', {}).get('row_conditions'),
-            column_conditions=user_inputs.get('table_selection', {}).get('column_conditions')
+            column_conditions=user_inputs.get('table_selection', {}).get('column_conditions'),
+            saved_profile=user_inputs.get('table_selection', {}).get('saved_profile')
         )
         table_selection.validate()
 

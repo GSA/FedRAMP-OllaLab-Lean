@@ -113,7 +113,7 @@ class ExtractionParameters:
             if not isinstance(column, str):
                 raise InvalidParameterError(f"Column names must be strings. Invalid column: {column}")
             if not isinstance(dtype, type):
-                raise InvalidParameterError(f"Data type for column '{column}' must be a type, got {type(dtype)}")
+                raise InvalidParameterError(f"Data type for column '{column}' must be a type, got {type(dtype)} ({dtype})")
 
 
 class TableSelectionCriteria:

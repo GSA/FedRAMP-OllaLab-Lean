@@ -379,5 +379,8 @@ def validate_value_type(value: Any, expected_type: Any) -> bool:
     """
     if expected_type == datetime.datetime:
         return isinstance(value, (datetime.date, datetime.datetime))
-    else:
+    elif isinstance(expected_type, type):
         return isinstance(value, expected_type)
+    else:
+        logger.error(f"Expected type '{expected_type}' is not a valid type (got {type(expected_type)}).")
+        return False
