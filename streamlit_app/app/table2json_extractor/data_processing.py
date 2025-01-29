@@ -1,3 +1,5 @@
+# data_processing.py
+
 import os
 from typing import List, Dict, Any, Optional, Tuple
 from pathlib import Path
@@ -150,7 +152,7 @@ def parse_documents(file_paths: List[str]) -> Tuple[List[ParsedDocument], List[s
             elif file_path.lower().endswith('.pdf'):
                 # Parse PDF file
                 with pdfplumber.open(file_path) as pdf:
-                    tables = parse_pdf_tables(pdf)
+                    tables =  parse_pdf_tables(pdf, pages=pages)
                     parsed_document = ParsedDocument(file_path=file_path, content=pdf, tables=tables)
                     parsed_documents.append(parsed_document)
                     logger.info(f"Parsed {len(tables)} tables from PDF file '{file_name}'.")
@@ -189,7 +191,7 @@ def parse_docx_tables(docx_document: DocxDocument) -> List[Table]:
         tables.append(table)
     return tables
 
-def parse_pdf_tables(pdf: pdfplumber.PDF) -> List[Table]:
+def parse_pdf_tables(pdf: pdfplumber.PDF, pages: Optional[List[int]] = None) -> List[Table]:
     """
     Parses tables from a PDF document using pdfplumber.
 
@@ -205,20 +207,31 @@ def parse_pdf_tables(pdf: pdfplumber.PDF) -> List[Table]:
         PDFFileError:
             If an error occurs while parsing the PDF file.
     """
+    logger.debug("Extracting tables from PDF document")
     tables = []
+    idx = 0
     try:
-        for page_num, page in enumerate(pdf.pages):
+        for page_num, page in enumerate(pdf.pages, start=1):
+            if pages and page_number not in pages:
+                continue  # Skip pages not in the specified list
+            logger.debug(f"Processing page {page_number} in PDF document")
             page_tables = page.extract_tables()
-            for pos, table_data in enumerate(page_tables):
-                table_cells = []
-                for row in table_data:
-                    row_cells = []
-                    for cell_text in row:
-                        cell_obj = Cell(content=cell_text.strip() if cell_text else '')
-                        row_cells.append(cell_obj)
-                    table_cells.append(row_cells)
-                table = Table(data=table_cells, position=pos)
-                tables.append(table)
+            for table in extracted_tables:
+                table_data = []
+                for row in table:
+                    row_data = []
+                    for cell_content in row:
+                        cell_text = cell_content.strip() if cell_content else ''
+                        cell_obj = Cell(content=cell_text)
+                        row_data.append(cell_obj)
+                    table_data.append(row_data)
+                table_obj = Table(
+                    data=table_data,
+                    position=idx,
+                    metadata={'page_number': page_number}
+                )
+                tables.append(table_obj)
+                idx += 1
         return tables
     except Exception as e:
         logger.exception(f"Error parsing PDF: {e}")
@@ -604,3 +617,21 @@ def extract_tables_from_pdf(pdf: pdfplumber.PDF) -> List[Table]:
     except Exception as e:
         logger.exception("Error extracting tables from PDF document")
         raise TableExtractionError(f"Error extracting tables from PDF document: {str(e)}")
+
+def append_tables(tables: List[Table], header_rows: int = 0) -> Table:
+    """
+    Appends multiple Table objects into one Table, optionally skipping header rows from each table.
+
+    Parameters:
+        tables (List[Table]): List of Table objects to append.
+        header_rows (int): Number of header rows to skip from each table.
+    """
+    appended_data = []
+    position = 0  # Since it's a new table, position can be arbitrary
+    metadata = {}
+    for table in tables:
+        # Skip the header rows
+        table_data = table.data[header_rows:]
+        appended_data.extend(table_data)
+    appended_table = Table(data=appended_data, position=position, metadata=metadata)
+    return appended_table

@@ -116,30 +116,10 @@ class ExtractionParameters:
                 raise InvalidParameterError(f"Data type for column '{column}' must be a type, got {type(dtype)} ({dtype})")
 
 
+# extraction_parameters.py
+
 class TableSelectionCriteria:
-    """
-    Specifies criteria for selecting tables to extract from documents.
-
-    Attributes:
-        method (str): 
-            Selection method ('indexing', 'keyword', 'regex', 'criteria', 'saved_profile').
-        indices (Optional[List[int]]): 
-            Indices of tables to extract when using indexing.
-        keywords (Optional[List[str]]): 
-            List of keywords for keyword matching.
-        regex_patterns (Optional[List[str]]): 
-            Regular expressions for pattern matching.
-        row_conditions (Optional[Dict[str, Any]]): 
-            Conditions based on the data within rows.
-        column_conditions (Optional[Dict[str, Any]]): 
-            Conditions based on the data within columns.
-        saved_profile (Optional[str]): 
-            Name of a saved selection profile to use.
-
-    Methods:
-        validate()
-    """
-    VALID_METHODS = ['indexing', 'keyword', 'regex', 'criteria', 'saved_profile']
+    VALID_METHODS = ['append tables', 'indexing', 'keyword', 'regex', 'criteria', 'saved_profile']
 
     def __init__(
         self, 
@@ -150,26 +130,8 @@ class TableSelectionCriteria:
         row_conditions: Optional[Dict[str, Any]] = None,
         column_conditions: Optional[Dict[str, Any]] = None,
         saved_profile: Optional[str] = None,
+        pages: Optional[List[int]] = None,
     ):
-        """
-        Initializes the TableSelectionCriteria object.
-
-        Parameters:
-            method (str): 
-                Selection method ('indexing', 'keyword', 'regex', 'criteria', 'saved_profile').
-            indices (Optional[List[int]]): 
-                Indices of tables to extract when using indexing.
-            keywords (Optional[List[str]]): 
-                List of keywords for keyword matching.
-            regex_patterns (Optional[List[str]]): 
-                Regular expressions for pattern matching.
-            row_conditions (Optional[Dict[str, Any]]): 
-                Conditions based on the data within rows.
-            column_conditions (Optional[Dict[str, Any]]): 
-                Conditions based on the data within columns.
-            saved_profile (Optional[str]): 
-                Name of a saved selection profile to use.
-        """
         self.method = method
         self.indices = indices
         self.keywords = keywords
@@ -177,21 +139,17 @@ class TableSelectionCriteria:
         self.row_conditions = row_conditions
         self.column_conditions = column_conditions
         self.saved_profile = saved_profile
+        self.pages = pages
 
     def validate(self):
-        """
-        Validates the selection criteria to ensure they are correctly specified.
-
-        Raises:
-            InvalidParameterError:
-                If any of the selection criteria are invalid.
-        """
         if self.method not in self.VALID_METHODS:
             raise InvalidParameterError(
                 f"Invalid selection method '{self.method}'. Valid methods are {self.VALID_METHODS}."
             )
 
-        if self.method == 'indexing':
+        if self.method == 'append tables':
+            pass  # No additional validation needed
+        elif self.method == 'indexing':
             self._validate_indices()
         elif self.method == 'keyword':
             self._validate_keywords()
@@ -203,7 +161,11 @@ class TableSelectionCriteria:
             self._validate_saved_profile()
         else:
             raise InvalidParameterError(f"Unrecognized method '{self.method}'.")
+        
+        # Validate pages
+        self._validate_pages()
 
+    # Include the validation methods for each case
     def _validate_indices(self):
         if not self.indices or not isinstance(self.indices, list):
             raise InvalidParameterError(
@@ -242,7 +204,13 @@ class TableSelectionCriteria:
             raise InvalidParameterError(
                 "A saved profile name must be provided as a string when method is 'saved_profile'."
             )
-
+    
+    def _validate_pages(self):
+        if self.pages is not None:
+            if not isinstance(self.pages, list):
+                raise InvalidParameterError("Pages must be provided as a list of integers.")
+            if not all(isinstance(p, int) and p >= 1 for p in self.pages):
+                raise InvalidParameterError("All page numbers must be positive integers.")
 
 class FormattingRules:
     """
@@ -296,13 +264,6 @@ class FormattingRules:
         self.header_rows = header_rows
 
     def validate(self):
-        """
-        Validates the formatting rules to ensure they are correctly specified.
-
-        Raises:
-            InvalidParameterError:
-                If any of the formatting rules are invalid.
-        """
         if not isinstance(self.preserve_styles, bool):
             raise InvalidParameterError("preserve_styles must be a boolean.")
 
@@ -316,7 +277,7 @@ class FormattingRules:
         if self.number_format is not None:
             if not isinstance(self.number_format, str):
                 raise InvalidParameterError("number_format must be a string.")
-            # Optionally test formatting with a sample number
+            # Test formatting with a sample number
             try:
                 (1234567890.12345).__format__(self.number_format)
             except ValueError as e:
@@ -326,8 +287,6 @@ class FormattingRules:
             raise InvalidParameterError("encoding must be a string.")
         if not isinstance(self.header_rows, int) or self.header_rows < 0:
             raise InvalidParameterError("header_rows must be a non-negative integer.")
-
-        # No specific validation for placeholder_for_missing
 
 
 class ErrorHandlingStrategy:

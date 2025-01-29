@@ -109,12 +109,14 @@ def validate_table_selection_criteria(criteria: Dict[str, Any]) -> None:
     """
     logger.debug("Validating table selection criteria.")
 
-    valid_methods = ['indexing', 'keyword', 'regex', 'criteria', 'saved_profile']
+    valid_methods = ['append tables', 'indexing', 'keyword', 'regex', 'criteria', 'saved_profile']
     method = criteria.get('method')
     if method not in valid_methods:
         logger.error(f"Invalid table selection method '{method}'. Valid methods are {valid_methods}")
         raise ValidationError(f"Invalid table selection method '{method}'. Valid methods are {valid_methods}")
 
+    if method == 'append table':
+        pass
     if method == 'indexing':
         indices = criteria.get('indices')
         if not isinstance(indices, list) or not indices:

@@ -74,6 +74,7 @@ def process_user_input(user_inputs: Dict[str, Any]) -> Tuple[List[str], Extracti
 
         # Extract parameters from user_inputs
         table_selection_input = user_inputs.get('table_selection', {})
+        pages = table_selection_input.get('pages') # get the pages where the tables will be extracted
         table_selection = TableSelectionCriteria(
             method=table_selection_input.get('method'),
             indices=table_selection_input.get('indices'),
@@ -81,7 +82,8 @@ def process_user_input(user_inputs: Dict[str, Any]) -> Tuple[List[str], Extracti
             regex_patterns=table_selection_input.get('regex_patterns'),
             row_conditions=table_selection_input.get('row_conditions'),
             column_conditions=table_selection_input.get('column_conditions'),
-            saved_profile=table_selection_input.get('saved_profile')
+            saved_profile=table_selection_input.get('saved_profile'),
+            pages=pages
         )
 
         # Extract extraction parameters
@@ -202,6 +204,12 @@ def process_documents(
         for idx in selected_tables:
             doc_idx, table = document_table_mapping[idx]
             logger.info(f"Processing Table {idx+1} from Document {os.path.basename(documents[doc_idx].file_path)}")
+            if doc_idx is not None:
+                document_name = os.path.basename(documents[doc_idx].file_path)
+                logger.info(f"Processing Table {idx+1} from Document {document_name}")
+            else:
+                document_name = "Appended Tables"
+                logger.info(f"Processing Table {idx+1} from {document_name}")
             # Interpret the table structure
             interpreted_table = interpret_table_structure(table, parameters)
 
@@ -284,6 +292,10 @@ def select_table_by_criteria(table: Table, selection_criteria: TableSelectionCri
     """
     Determines if a table should be selected based on the given selection criteria.
     """
+    if selection_criteria.pages:
+        page_number = table.metadata.get('page_number')
+        if page_number and page_number not in selection_criteria.pages:
+            return False
     if selection_criteria.method == 'keyword':
         return table_contains_keywords(table, selection_criteria.keywords)
     elif selection_criteria.method == 'regex':
@@ -592,7 +604,7 @@ def process_user_input_preview(user_inputs: Dict[str, Any]) -> ExtractionParamet
     # Similar to process_user_input but with minimal parameters required for preview
     try:
         # Retrieve the method, defaulting to 'indexing' if not provided
-        method = user_inputs.get('table_selection', {}).get('method') or 'indexing'
+        method = user_inputs.get('table_selection', {}).get('method') or 'append tables'
 
         # Validate and create TableSelectionCriteria
         table_selection = TableSelectionCriteria(
