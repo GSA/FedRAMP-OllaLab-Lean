@@ -198,7 +198,7 @@ with st.sidebar:
                 models_response = openai_client.models.list()
                 #st.write(str(models_response))
                 # Filter models to only include chat models
-                allowed_models = ['gpt-4o', 'gpt-4o-mini', 'o1-mini', 'o1-preview', 'o1', 'o3'] # o3 is not available on API yet
+                allowed_models = ['gpt-4o', 'gpt-4o-mini', 'o1-mini', 'o1-preview', 'o1', 'o3', 'o3-mini'] # o3 is not available on API yet
                 model_names = [model.id for model in models_response.data if model.id in allowed_models]
             except Exception as e:
                 st.warning(f"Error retrieving models from OpenAI: {e}")
