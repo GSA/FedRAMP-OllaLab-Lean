@@ -1,0 +1,22 @@
+# Requirements for FedRAMP OllaLab - AnyDoc to JSON
+
+# For manipulating DOCX files
+python-docx>=0.8.11
+
+# For reading and (limited) writing of PDF files
+PyPDF2>=3.0.0
+
+# For finding dates in text
+datefinder>=0.7.1
+
+# For robust date parsing and adjustments
+python-dateutil>=2.8.2
+
+# For YAML parameter files
+PyYAML>=6.0
+
+# For document conversion using Docling
+docling>=0.1.0
+
+# For the Streamlit-based web interface
+streamlit>=1.15.0
