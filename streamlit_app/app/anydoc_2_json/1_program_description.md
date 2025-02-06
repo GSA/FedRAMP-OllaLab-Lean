@@ -576,3 +576,7 @@ After resolving spanning cell issues in all tables, we need to merge tables with
 - Replace section_table, sub_section_table, and sub_sub_section_table with the corresponding JSON data
 - Save the updated JSON data to a json file in the result folder
 - The json file has the same name as the uploaded file with appended "_enriched".
+
+### 7. Wrapping up
+- Check and make sure parameters are properly saved to the specified parameter file.
+- In the GUI, offer the user the option to reset everything and start a new session. In this case, make sure sure application session state variables are properly resetted.
