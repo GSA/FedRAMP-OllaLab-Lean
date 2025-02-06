@@ -111,6 +111,7 @@ The common components of a general document are:
 ### 2. Pre-conversion processing
 Users have the option to perform the following actions, to be executed in the following order:
 - **Replacing interactive form controls**: the program will skip or replace the interactive form controls with text strings. This decision is recorded as parameter "replaceFormControls" with values of "yes" (default) or "no". 
+  - "Form controls" means both the dynamic fillable form controls and their ASCII character representation. For example, clickable check boxes, the checked-box character, and the unchecked-box character.
   - The current supported controls are check boxes and radio buttons.
   - With Streamlit GUI, this function is executed if "replaceFormControls" is "yes". The user will be informed of sucessful execution or errors. Once succesfully executed, the state and results will persist through subsequent page refreshes.
   - With CLI, the rules are in the parameter file. The program will parse the rule and execute accordingly.
@@ -196,6 +197,7 @@ Users have the option to perform the following actions, to be executed in the fo
 ### 3. Convert document to MarkDown using Docling
 - In this step, the program will convert the document to MarkDown, saved to disk a file with the same name but with a ".md" extension using Docling, and report the result status to the user. The procedure is as follows:
   - Convert the document to markdown using Docling
+  - Remove empty markdown headings (for example, lines with just the "#" characters)
   - Find how many level 1 heading (a line started with "#") in the markdown document
   - If there are more than one level 1 heading, do the following:
     - In the Streamlit GUI: Displays a text box entitled "Document title" asking the user to put in the title of the file
@@ -206,6 +208,11 @@ Users have the option to perform the following actions, to be executed in the fo
     - In the Streamlit GUI: Displays a text box entitled "Document title" asking the user to put in the title of the file
     - With CLI, use the file name without extension as the document title
     - Add the "Document title" as the level 1 heading at the beginning of the file content
+  - Markdown heading normalization by recursive execution of the following:
+    - Identify the current highest heading level exists in the document (for example, "#" is higher than "##")
+    - Search for the next highest heading level in the document
+    - If there is a gap in heading level value between the current highest heading level (for example, "#" - level 1) and the next highest heading level (for example, "###" - level 3), close the gap (for example, change "###" - level 3 to "##" - level 2)
+    - Set the current highest heading level to the current next heading level (for example, "##" - level 2) and repeat the process until the next highest heading value is not found.
   - Save the document to the result folder
   - With Streamlit GUI, the markdown content will be displayed in a collapsible expander
   - With CLI, print the full path of the .md file to screen as a way to report successful conversion
@@ -521,6 +528,10 @@ Below is a step-by-step guide for how a programmer could parse a Markdown file a
 
 ### 5. Process MarkDown tables
 This section describes how section_table, sub_section_table, and sub_sub_section_table can be further parsed into more detailed structure. The procedures to process the table raw strings are as follows:
+#### Remove empty rows and columns
+- Empty columns are columns with more than 2 rows. The first row may or may not be empty. The rest of the rows are empty.
+- Empty rows are rows with empty cells.
+- These empty rows and columns must be removed before processing further.
 #### Resolve issues with spanning cells
 When translating tables to markdown tables, Docling will remove the spanning of a cell resulting new empty cells and copy the original content of the spanned cell over to the newly created cells. Before we translate markdown tables to structured json, we need to clarify and solve the spanning problem especially spanning happens on the table header.
 1. Spanning patterns after being converted to markdown tables
