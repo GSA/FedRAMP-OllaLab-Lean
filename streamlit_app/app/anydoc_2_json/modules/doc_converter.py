@@ -148,12 +148,13 @@ class DocConverter:
 
     def adjust_headings(self, markdown_content: str, default_title: str) -> str:
         """
-        Adjust headings in the markdown content by adding a document title and
-        incrementing existing headings' levels if necessary.
+        Adjust headings in the markdown content by removing empty headings, normalizing heading levels,
+        adding a document title, and incrementing existing headings' levels if necessary.
 
         Parameters:
             markdown_content (str):
                 The original markdown content.
+
             default_title (str):
                 The default title to use if no title is provided.
 
@@ -167,6 +168,8 @@ class DocConverter:
         Dependencies:
             - `self.get_markdown_headings` to analyze headings.
             - Uses `self.param_manager` to get the document title if provided.
+            - `self.remove_empty_headings` to remove empty headings.
+            - `self.normalize_headings` to adjust heading levels.
             - `self.add_document_title` to add the title.
             - `self.increment_headings_level` to adjust headings.
 
@@ -175,18 +178,24 @@ class DocConverter:
 
         Downstream functions:
             - `self.get_markdown_headings`
+            - `self.remove_empty_headings`
+            - `self.normalize_headings`
             - `self.add_document_title`
             - `self.increment_headings_level`
 
         """
         try:
+            # Remove empty headings
+            markdown_content = self.remove_empty_headings(markdown_content)
+
+            # Normalize heading levels
+            markdown_content = self.normalize_headings(markdown_content)
+
             # Analyze headings
             headings = self.get_markdown_headings(markdown_content)
             num_level1_headings = sum(1 for h in headings if h.startswith('# '))
 
             # Determine document title
-            # In Streamlit, the user may provide a 'document_title' parameter
-            # For CLI, we use the default_title (file name without extension)
             document_title = self.param_manager.get_parameter('document_title', default_title)
 
             if num_level1_headings != 1:
@@ -305,6 +314,102 @@ class DocConverter:
                 adjusted_lines.append(line)
         return '\n'.join(adjusted_lines)
 
+    def remove_empty_headings(self, markdown_content: str) -> str:
+        """
+        Remove empty markdown headings from the content.
+
+        Empty headings are lines that contain only '#' characters without any text.
+
+        Parameters:
+            markdown_content (str):
+                The markdown content to process.
+
+        Returns:
+            str:
+                The markdown content with empty headings removed.
+
+        Raises:
+            None
+
+        Dependencies:
+            - None
+
+        Upstream functions:
+            - Called by `adjust_headings` method.
+
+        Downstream functions:
+            - None
+
+        """
+        lines = markdown_content.splitlines()
+        new_lines = []
+        for line in lines:
+            stripped_line = line.strip()
+            if stripped_line.startswith('#'):
+                heading_content = stripped_line.lstrip('#').strip()
+                if not heading_content:
+                    # This is an empty heading, skip it
+                    continue
+            new_lines.append(line)
+        return '\n'.join(new_lines)
+
+    def normalize_headings(self, markdown_content: str) -> str:
+        """
+        Normalize markdown heading levels by recursively closing gaps in heading levels.
+
+        This method adjusts the heading levels to ensure that there are no gaps between heading levels.
+        For example, if the highest heading level is '#', and the next heading level is '###', it will
+        change '###' to '##' to close the gap.
+
+        The procedure follows:
+        - Identify all the heading levels used in the document.
+        - Sort the heading levels in ascending order (e.g., [1, 3, 5]).
+        - Create a mapping from old heading levels to new levels to close the gaps, so that the levels become consecutive.
+        - Adjust the headings in the markdown content according to the new levels.
+
+        Parameters:
+            markdown_content (str):
+                The markdown content to process.
+
+        Returns:
+            str:
+                The markdown content with normalized heading levels.
+
+        Raises:
+            None
+
+        Dependencies:
+            - None
+
+        Upstream functions:
+            - Called by `adjust_headings` method.
+
+        Downstream functions:
+            - None
+
+        """
+        lines = markdown_content.splitlines()
+        heading_levels = []
+        # Collect headings and their levels
+        for idx, line in enumerate(lines):
+            stripped_line = line.strip()
+            if stripped_line.startswith('#'):
+                # Count the number of '#' characters at the start
+                num_hashes = len(stripped_line) - len(stripped_line.lstrip('#'))
+                heading_content = stripped_line.lstrip('#').strip()
+                if heading_content:
+                    heading_levels.append((idx, num_hashes))
+        # Get unique levels used
+        levels_used = sorted(set([level for idx, level in heading_levels]))
+        # Create a mapping from old levels to new consecutive levels
+        level_mapping = {old_level: new_level for new_level, old_level in enumerate(levels_used, start=1)}
+        # Update the headings in the lines
+        for idx, old_level in heading_levels:
+            new_level = level_mapping[old_level]
+            heading_content = lines[idx].lstrip('#').strip()
+            lines[idx] = '#' * new_level + ' ' + heading_content
+        return '\n'.join(lines)
+
     def save_markdown(self, markdown_content: str, input_path: Path, output_folder: Path) -> Path:
         """
         Save the markdown content to a file in the output folder.
@@ -351,3 +456,4 @@ class DocConverter:
             self.logger.exception(e)
             self.logger.error(f"An error occurred while saving markdown file: {output_file_path}")
             raise IOError(f"Failed to save markdown file: {e}")
+    

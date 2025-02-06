@@ -139,6 +139,9 @@ class TableProcessor:
             for table_str in all_tables:
                 # Convert table string to list of rows (list of lists)
                 table = self._parse_table_string(table_str)
+                
+                # Remove empty rows and columns
+                table = self.remove_empty_rows_and_columns(table)
 
                 # Resolve spanning cells
                 table = self.resolve_spanning_cells(table)
@@ -161,6 +164,140 @@ class TableProcessor:
         except Exception as e:
             self.logger_manager.log_exception(e, context_message="Error processing tables.")
             raise
+
+    def remove_empty_rows_and_columns(self, table: list) -> list:
+        """
+        Removes empty rows and columns from the table.
+
+        Empty rows are defined as rows where all cells are empty strings (after stripping whitespace).
+
+        Empty columns are defined as columns with more than 2 rows (number of rows > 2),
+        where the first cell may or may not be empty, and the rest of the cells are empty
+        (after stripping whitespace).
+
+        Parameters:
+            table (list of list of str):
+                The table represented as a list of rows, where each row is a list of cell strings.
+
+        Returns:
+            list of list of str:
+                The table after removing empty rows and columns.
+
+        Raises:
+            None
+
+        Upstream functions:
+            - `process_tables`: Calls this function to clean the table before further processing.
+
+        Downstream functions:
+            - `remove_empty_rows`: Removes empty rows from the table.
+            - `remove_empty_columns`: Removes empty columns from the table.
+
+        Dependencies:
+            - `remove_empty_rows` method must correctly remove empty rows.
+            - `remove_empty_columns` method must correctly remove empty columns.
+        """
+        # Remove empty rows
+        table = self.remove_empty_rows(table)
+        # Remove empty columns
+        table = self.remove_empty_columns(table)
+        return table
+
+    def remove_empty_rows(self, table: list) -> list:
+        """
+        Removes empty rows from the table.
+
+        A row is considered empty if all its cells are empty strings (after stripping whitespace).
+
+        Parameters:
+            table (list of list of str):
+                The table represented as a list of rows, where each row is a list of cell strings.
+
+        Returns:
+            list of list of str:
+                The table after removing empty rows.
+
+        Raises:
+            None
+
+        Upstream functions:
+            - `remove_empty_rows_and_columns`: Calls this function to remove empty rows.
+
+        Downstream functions:
+            None
+
+        Dependencies:
+            - None
+        """
+        return [row for row in table if not all(cell.strip() == '' for cell in row)]
+
+    def remove_empty_columns(self, table: list) -> list:
+        """
+        Removes empty columns from the table.
+
+        An empty column is defined as a column with more than 2 rows (number of rows > 2),
+        where the first cell may or may not be empty, and the rest of the cells are empty
+        (after stripping whitespace).
+
+        Parameters:
+            table (list of list of str):
+                The table represented as a list of rows, where each row is a list of cell strings.
+
+        Returns:
+            list of list of str:
+                The table after removing empty columns.
+
+        Raises:
+            None
+
+        Upstream functions:
+            - `remove_empty_rows_and_columns`: Calls this function to remove empty columns.
+
+        Downstream functions:
+            None
+
+        Dependencies:
+            - The table should be a list of lists, where each sub-list represents a row with cell strings.
+        """
+        num_rows = len(table)
+        if num_rows == 0:
+            return table  # Empty table
+
+        # Determine the maximum number of columns
+        max_cols = max(len(row) for row in table)
+
+        # Pad rows with empty strings to have equal length
+        padded_table = [row + [''] * (max_cols - len(row)) for row in table]
+
+        # Transpose the table to get columns
+        columns = list(map(list, zip(*padded_table)))
+
+        # Indices of columns to keep
+        columns_to_keep = []
+        for idx, col in enumerate(columns):
+            num_rows_in_col = len(col)
+            if num_rows_in_col <= 2:
+                # Keep columns with 2 or fewer rows regardless of content
+                columns_to_keep.append(idx)
+                continue
+            remaining_cells = col[1:]
+            # Check if all remaining cells are empty (after stripping whitespace)
+            if all(cell.strip() == '' for cell in remaining_cells):
+                # Empty column, do not keep
+                continue
+            else:
+                columns_to_keep.append(idx)
+
+        # Reconstruct columns by keeping only columns_to_keep
+        columns_filtered = [columns[idx] for idx in columns_to_keep]
+
+        if not columns_filtered:
+            # All columns were removed
+            return []
+
+        # Transpose back to get rows
+        cleaned_table = list(map(list, zip(*columns_filtered)))
+        return cleaned_table
 
     def resolve_spanning_cells(self, table: list) -> list:
         """
