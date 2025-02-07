@@ -12,7 +12,7 @@ class TableProcessor:
     of Markdown files.
 
     This class processes the tables found in the JSON data, resolves spanning cell issues,
-    merges multi-page tables, identifies key-value pairs based on table structure, and
+    merges multi-page tables (if applicable), identifies key-value pairs based on table structure, and
     updates the JSON data accordingly.
 
     Dependencies:
@@ -27,6 +27,7 @@ class TableProcessor:
 
     Downstream functions:
         - `process_tables`
+        - `collect_tables`
         - Other helper methods for processing tables.
 
     """
@@ -80,7 +81,7 @@ class TableProcessor:
     def process_tables(self):
         """
         Processes the tables in the JSON data by resolving spanning cells, merging multi-page
-        tables, identifying key-value pairs based on table structure, and updating the JSON data.
+        tables (if applicable), identifying key-value pairs based on table structure, and updating the JSON data.
 
         This method modifies the `json_data` in-place, and prepares it for saving.
 
@@ -95,85 +96,146 @@ class TableProcessor:
                 If an error occurs during processing, it is logged and re-raised.
 
         Dependencies:
-            - `resolve_spanning_cells` to fix cell spanning issues.
-            - `merge_multipage_tables` to merge tables with identical headers.
-            - `identify_key_value_pairs` to convert tables into key-value pairs.
-            - `update_json_data` to replace tables in `json_data` with processed data.
+            - `collect_tables` to find all tables in the json_data.
+            - For each table:
+                - `remove_empty_rows_and_columns` to clean the table.
+                - `resolve_spanning_cells` to fix cell spanning issues.
+                - `identify_key_value_pairs` to convert tables into key-value pairs.
+            - Updates the table item in `json_data`.
 
         Upstream functions:
             - Called by the main program or module to process tables.
 
         Downstream functions:
+            - `collect_tables`
+            - `remove_empty_rows_and_columns`
             - `resolve_spanning_cells`
-            - `merge_multipage_tables`
             - `identify_key_value_pairs`
-            - `update_json_data`
 
         """
         try:
-            # Extract all tables from json_data
-            table_paths = [
-                ('document', 'content', 'content_text1', 'table'),
-                ('document', 'content', 'content_text2', 'table')
-            ]
-            # Collect table paths for sections and subsections
-            if 'section' in self.json_data['document']['content']:
-                for i, section in enumerate(self.json_data['document']['content']['section']):
-                    table_paths.append(('document', 'content', 'section', i, 'section_content', 'section_table'))
-                    if 'sub_section' in section['section_content']:
-                        for j, sub_section in enumerate(section['section_content']['sub_section']):
-                            table_paths.append(('document', 'content', 'section', i, 'section_content', 'sub_section', j, 'sub_section_content', 'sub_section_table'))
-                            if 'sub_sub_section' in sub_section['sub_section_content']:
-                                for k, sub_sub_section in enumerate(sub_section['sub_section_content']['sub_sub_section']):
-                                    table_paths.append(('document', 'content', 'section', i, 'section_content', 'sub_section', j, 'sub_section_content', 'sub_sub_section', k, 'sub_sub_section_table'))
+            # Collect all tables from json_data
+            self.tables_info = []  # To store info about tables and their positions for updating
+            self.collect_tables(self.json_data['document']['content'])
 
-            # Collect all tables
-            all_tables = []
-            for path in table_paths:
-                tables = self._get_tables_at_path(self.json_data, path)
-                if tables:
-                    all_tables.extend(tables)
+            # Process each table
+            for table_info in self.tables_info:
+                table_item = table_info['table_item']
+                table_content = table_item.get('table', [])
+                # table_content is a list of table lines (strings)
 
-            # Process tables
-            processed_tables = []
-            for table_str in all_tables:
                 # Convert table string to list of rows (list of lists)
-                table = self._parse_table_string(table_str)
-                
+                table = self._parse_table_lines(table_content)
+
                 # Remove empty rows and columns
                 table = self.remove_empty_rows_and_columns(table)
 
                 # Resolve spanning cells
                 table = self.resolve_spanning_cells(table)
 
-                # Append to processed_tables
-                processed_tables.append(table)
+                # Identify key-value pairs and update table
+                enriched_table = self.identify_key_value_pairs(table)
 
-            # Merge multi-page tables
-            merged_tables = self.merge_multipage_tables(processed_tables)
-
-            # Identify key-value pairs and update tables
-            enriched_tables = []
-            for table in merged_tables:
-                key_value_table = self.identify_key_value_pairs(table)
-                enriched_tables.append(key_value_table)
-
-            # Update JSON data with enriched tables
-            self.update_json_data(enriched_tables)
+                # Replace the 'table' key in table_item with enriched data
+                table_item['table'] = enriched_table
+                # Optionally, update the 'type' to indicate it's been enriched
+                table_item['type'] = 'enriched_table'
 
         except Exception as e:
             self.logger_manager.log_exception(e, context_message="Error processing tables.")
             raise
 
+    def collect_tables(self, content_list: list):
+        """
+        Recursively traverses the content list to collect all table content items.
+
+        Parameters:
+            content_list (list):
+                A list of content items from the JSON data.
+
+        Returns:
+            None
+
+        Raises:
+            None
+
+        Dependencies:
+            - Uses recursion to traverse nested content items.
+            - Collects tables and their positions for later updating.
+
+        Upstream functions:
+            - Called by process_tables.
+
+        Downstream functions:
+            - collect_tables (recursion)
+
+        """
+        for index, item in enumerate(content_list):
+            if isinstance(item, dict):
+                if item.get('type') == 'table':
+                    table_info = {
+                        'table_item': item,
+                        'parent_list': content_list,
+                        'index': index
+                    }
+                    self.tables_info.append(table_info)
+                elif item.get('type') == 'heading':
+                    # Heading may have nested content
+                    # In this schema, we need to check if 'subcontent' exists
+                    if 'subcontent' in item:
+                        self.collect_tables(item['subcontent'])
+                else:
+                    # For other types, do nothing
+                    pass
+            else:
+                continue  # Skip non-dict items
+
+    def _parse_table_lines(self, table_lines: list) -> list:
+        """
+        Parses markdown table lines into a list of rows.
+
+        Parameters:
+            table_lines (list of str):
+                The table represented as a list of markdown table lines.
+
+        Returns:
+            list of list of str:
+                The table represented as a list of rows, where each row is a list of cell strings.
+
+        Raises:
+            None
+
+        Dependencies:
+            - Uses regular expressions and string methods.
+
+        Upstream functions:
+            - Called by process_tables.
+
+        Downstream functions:
+            - None
+
+        """
+        # Remove separator line (e.g., | --- | --- |)
+        separator_pattern = re.compile(r'^\s*\|?\s*(:?-+:?\s*\|)+\s*(:?-+:?\s*)?$')
+        cleaned_lines = []
+        for line in table_lines:
+            if separator_pattern.match(line.strip()):
+                continue
+            else:
+                cleaned_lines.append(line)
+        # Parse lines into cells
+        table = []
+        for line in cleaned_lines:
+            # Remove leading and trailing '|'
+            line = line.strip().strip('|')
+            # Split by '|'
+            cells = [cell.strip() for cell in line.split('|')]
+            table.append(cells)
+        return table
+
     def remove_empty_rows_and_columns(self, table: list) -> list:
         """
         Removes empty rows and columns from the table.
-
-        Empty rows are defined as rows where all cells are empty strings (after stripping whitespace).
-
-        Empty columns are defined as columns with more than 2 rows (number of rows > 2),
-        where the first cell may or may not be empty, and the rest of the cells are empty
-        (after stripping whitespace).
 
         Parameters:
             table (list of list of str):
@@ -207,8 +269,6 @@ class TableProcessor:
         """
         Removes empty rows from the table.
 
-        A row is considered empty if all its cells are empty strings (after stripping whitespace).
-
         Parameters:
             table (list of list of str):
                 The table represented as a list of rows, where each row is a list of cell strings.
@@ -224,20 +284,16 @@ class TableProcessor:
             - `remove_empty_rows_and_columns`: Calls this function to remove empty rows.
 
         Downstream functions:
-            None
+            - None
 
         Dependencies:
             - None
         """
-        return [row for row in table if not all(cell.strip() == '' for cell in row)]
+        return [row for row in table if any(cell.strip() != '' for cell in row)]
 
     def remove_empty_columns(self, table: list) -> list:
         """
         Removes empty columns from the table.
-
-        An empty column is defined as a column with more than 2 rows (number of rows > 2),
-        where the first cell may or may not be empty, and the rest of the cells are empty
-        (after stripping whitespace).
 
         Parameters:
             table (list of list of str):
@@ -254,58 +310,45 @@ class TableProcessor:
             - `remove_empty_rows_and_columns`: Calls this function to remove empty columns.
 
         Downstream functions:
-            None
+            - None
 
         Dependencies:
-            - The table should be a list of lists, where each sub-list represents a row with cell strings.
+            - None
         """
-        num_rows = len(table)
-        if num_rows == 0:
-            return table  # Empty table
+        if not table:
+            return table
 
-        # Determine the maximum number of columns
-        max_cols = max(len(row) for row in table)
+        num_rows = len(table)
+        num_cols = max(len(row) for row in table)
 
         # Pad rows with empty strings to have equal length
-        padded_table = [row + [''] * (max_cols - len(row)) for row in table]
+        padded_table = [row + [''] * (num_cols - len(row)) for row in table]
 
         # Transpose the table to get columns
-        columns = list(map(list, zip(*padded_table)))
+        columns = list(zip(*padded_table))
 
-        # Indices of columns to keep
+        # Identify empty columns
         columns_to_keep = []
         for idx, col in enumerate(columns):
-            num_rows_in_col = len(col)
-            if num_rows_in_col <= 2:
-                # Keep columns with 2 or fewer rows regardless of content
+            if len(col) <= 2:
                 columns_to_keep.append(idx)
-                continue
-            remaining_cells = col[1:]
-            # Check if all remaining cells are empty (after stripping whitespace)
-            if all(cell.strip() == '' for cell in remaining_cells):
-                # Empty column, do not keep
-                continue
             else:
-                columns_to_keep.append(idx)
+                # Check if first cell is empty or not
+                remaining_cells = col[1:]
+                if all(cell.strip() == '' for cell in remaining_cells):
+                    continue  # Empty column
+                else:
+                    columns_to_keep.append(idx)
 
-        # Reconstruct columns by keeping only columns_to_keep
-        columns_filtered = [columns[idx] for idx in columns_to_keep]
+        # Reconstruct table with columns to keep
+        new_columns = [columns[idx] for idx in columns_to_keep]
+        new_table = list(map(list, zip(*new_columns)))
 
-        if not columns_filtered:
-            # All columns were removed
-            return []
-
-        # Transpose back to get rows
-        cleaned_table = list(map(list, zip(*columns_filtered)))
-        return cleaned_table
+        return new_table
 
     def resolve_spanning_cells(self, table: list) -> list:
         """
         Resolves issues with cell spanning in a table.
-
-        When tables are converted to Markdown, cell spanning is lost and content is duplicated
-        across spanned cells. This method identifies such patterns and reconstructs the original
-        table structure as per the program requirements.
 
         Parameters:
             table (list of list of str):
@@ -319,7 +362,6 @@ class TableProcessor:
             None
 
         Dependencies:
-            - Uses pattern recognition to identify spanned cells.
             - Modifies the table in-place.
 
         Upstream functions:
@@ -330,7 +372,6 @@ class TableProcessor:
 
         """
         # Implement spanning cells resolution as per requirements
-        # Note: Spanned cells result in identical content across cells.
 
         # Handle headers that span multiple rows
         if len(table) < 2:
@@ -344,7 +385,15 @@ class TableProcessor:
         if second_row_part_of_header:
             merged_header = []
             for cell1, cell2 in zip(table[0], table[1]):
-                merged_cell = f"{cell1.strip()} - {cell2.strip()}".strip(' - ')
+                # Merge cells with ' - ' if both are not empty
+                if cell1.strip() and cell2.strip():
+                    merged_cell = f"{cell1.strip()} - {cell2.strip()}"
+                elif cell1.strip():
+                    merged_cell = cell1.strip()
+                elif cell2.strip():
+                    merged_cell = cell2.strip()
+                else:
+                    merged_cell = ''
                 merged_header.append(merged_cell)
             # Replace first row with merged header
             table[0] = merged_header
@@ -353,54 +402,62 @@ class TableProcessor:
         # Else, do nothing
         return table
 
-    def merge_multipage_tables(self, tables: list) -> list:
+    def _is_second_row_part_of_header(self, table):
         """
-        Merges tables with identical headers, assuming they are parts of a multi-page table.
+        Determines if the second row is part of the table header.
 
         Parameters:
-            tables (list of list of list of str):
-                A list of tables, where each table is a list of rows, and each row is a list of cell strings.
+            table (list of list of str):
+                The table represented as a list of rows.
 
         Returns:
-            list of list of list of str:
-                A list of merged tables.
+            bool:
+                True if the second row is part of the header; False otherwise.
 
         Raises:
             None
 
         Dependencies:
-            - Compares table headers for equality.
-            - Merges table bodies if headers are identical.
+            - Compares cell content across rows.
 
-        Upstream functions:
-            - Called by `process_tables` after resolving spanning cells.
+        """
+        if len(table) < 4:
+            return False  # Not enough rows to decide
 
-        Downstream functions:
+        second_row = table[1]
+        third_row = table[2]
+        fourth_row = table[3]
+        # Check if the pattern of the second row matches third and fourth
+        pattern_second = self._row_pattern(second_row)
+        pattern_third = self._row_pattern(third_row)
+        pattern_fourth = self._row_pattern(fourth_row)
+
+        return not (pattern_second == pattern_third == pattern_fourth)
+
+    def _row_pattern(self, row):
+        """
+        Creates a pattern representation of a row based on cell contents.
+
+        Parameters:
+            row (list of str):
+                A row from the table.
+
+        Returns:
+            tuple:
+                A tuple representing the pattern.
+
+        Raises:
+            None
+
+        Dependencies:
             - None
 
         """
-        merged_tables = []
-        headers_map = {}  # Header tuple to table index mapping
-        for table in tables:
-            if not table:
-                continue
-            header = tuple(table[0])  # Use header row as key
-            if header in headers_map:
-                # Append the body of this table to existing table
-                existing_table = merged_tables[headers_map[header]]
-                existing_table.extend(table[1:])
-            else:
-                # Add new table
-                merged_tables.append(table)
-                headers_map[header] = len(merged_tables) -1
-        return merged_tables
+        return tuple('CELL' if cell.strip() else 'EMPTY' for cell in row)
 
     def identify_key_value_pairs(self, table: list) -> dict:
         """
         Transforms the table into key-value pairs based on its structure.
-
-        The method processes the table according to the specified rules depending on the table's
-        structure (number of columns, header patterns, etc.)
 
         Parameters:
             table (list of list of str):
@@ -417,7 +474,7 @@ class TableProcessor:
             - Implements logic per the program's table structure rules.
 
         Upstream functions:
-            - Called by `process_tables` for each merged table.
+            - Called by `process_tables` for each table.
 
         Downstream functions:
             - None
@@ -461,7 +518,7 @@ class TableProcessor:
         else:
             # Multi-column table
             header = table[0]
-            if all(cell.strip() == header[0].strip() for cell in header):
+            if len(set([cell.strip() for cell in header])) == 1:
                 # Header spans all columns (all cells in first row are identical)
                 key = header[0].strip()
                 sub_dict = {}
@@ -483,114 +540,44 @@ class TableProcessor:
                         # row has less than 2 columns
                         continue
                 result[key] = sub_dict
-            elif len(set(header)) == len(header):
-                # Header has multiple columns (row 1 has multiple cells with different values)
-                # and table body is a single column (row 2 and below span all columns)
-                if all(len(row)==1 for row in table[1:]):
-                    merged_header = ' - '.join(cell.strip() for cell in header)
-                    sub_dict = {}
-                    for row in table[1:]:
-                        cell = row[0].strip()
-                        if ':' in cell:
-                            sub_key, sub_value = cell.split(':',1)
-                            sub_key = sub_key.strip()
-                            sub_value = sub_value.strip()
-                            sub_dict[sub_key] = sub_value
-                        elif '\n' in cell:
-                            lines = cell.split('\n')
-                            sub_key = lines[0].strip()
-                            sub_value = '\n'.join(lines[1:]).strip()
-                            sub_dict[sub_key] = sub_value
-                        else:
-                            sub_key = 'item'
-                            sub_value = cell
-                            # Ensure unique keys
-                            if sub_key in sub_dict:
-                                index =1
-                                while f"{sub_key}_{index}" in sub_dict:
-                                    index +=1
-                                sub_key = f"{sub_key}_{index}"
-                            sub_dict[sub_key] = sub_value
-                    result[merged_header] = sub_dict
-                else:
-                    # Table body has multiple columns
-                    key = ' - '.join(cell.strip() for cell in header)
-                    rows = table[1:]
-                    data_list = []
-                    for row in rows:
-                        row_dict = {header[i].strip(): row[i].strip() if i<len(row) else '' for i in range(len(header))}
-                        data_list.append(row_dict)
-                    result[key] = data_list
+            elif all(len(row)==1 for row in table[1:]):
+                # Header has multiple columns, body has single column spanning all columns
+                merged_header = ' - '.join(cell.strip() for cell in header)
+                sub_dict = {}
+                for row in table[1:]:
+                    cell = row[0].strip()
+                    if ':' in cell:
+                        sub_key, sub_value = cell.split(':',1)
+                        sub_key = sub_key.strip()
+                        sub_value = sub_value.strip()
+                        sub_dict[sub_key] = sub_value
+                    elif '\n' in cell:
+                        lines = cell.split('\n')
+                        sub_key = lines[0].strip()
+                        sub_value = '\n'.join(lines[1:]).strip()
+                        sub_dict[sub_key] = sub_value
+                    else:
+                        sub_key = 'item'
+                        sub_value = cell
+                        # Ensure unique keys
+                        if sub_key in sub_dict:
+                            index =1
+                            while f"{sub_key}_{index}" in sub_dict:
+                                index +=1
+                            sub_key = f"{sub_key}_{index}"
+                        sub_dict[sub_key] = sub_value
+                result[merged_header] = sub_dict
             else:
                 # Other cases, process as needed
-                pass  # For this implementation, we can leave it empty or log that it's unhandled
+                # For simplicity, we can convert the table into a list of dictionaries
+                # where each dictionary represents a row with keys from the header
+                data_list = []
+                for row in table[1:]:
+                    row_dict = {header[i].strip(): row[i].strip() if i<len(row) else '' for i in range(len(header))}
+                    data_list.append(row_dict)
+                result['table_data'] = data_list
+
         return result
-
-    def update_json_data(self, enriched_tables: list):
-        """
-        Updates the JSON data by replacing original table entries with enriched table data.
-
-        Parameters:
-            enriched_tables (list of dict):
-                A list of enriched table data as dictionaries.
-
-        Returns:
-            None
-
-        Raises:
-            None
-
-        Dependencies:
-            - Modifies `self.json_data` in-place.
-
-        Upstream functions:
-            - Called by `process_tables` after enriching tables.
-
-        Downstream functions:
-            - None
-
-        """
-        # Logic to replace tables in the json_data with enriched tables.
-        # This requires keeping track of where the tables were in the original json_data.
-
-        # For simplicity, we will assume that the order of enriched_tables matches the order
-        # of tables in the json_data, and we can replace them accordingly.
-
-        table_paths = []
-        idx = 0  # Index to track position in enriched_tables
-
-        # First, build list of table paths in the same order as when processing the tables
-        table_paths = [
-            ('document', 'content', 'content_text1', 'table'),
-            ('document', 'content', 'content_text2', 'table')
-        ]
-        # Collect table paths for sections and subsections
-        if 'section' in self.json_data['document']['content']:
-            for i, section in enumerate(self.json_data['document']['content']['section']):
-                table_paths.append(('document', 'content', 'section', i, 'section_content', 'section_table'))
-                if 'sub_section' in section['section_content']:
-                    for j, sub_section in enumerate(section['section_content']['sub_section']):
-                        table_paths.append(('document', 'content', 'section', i, 'section_content', 'sub_section', j, 'sub_section_content', 'sub_section_table'))
-                        if 'sub_sub_section' in sub_section['sub_section_content']:
-                            for k, sub_sub_section in enumerate(sub_section['sub_section_content']['sub_sub_section']):
-                                table_paths.append(('document', 'content', 'section', i, 'section_content', 'sub_section', j, 'sub_section_content', 'sub_sub_section', k, 'sub_sub_section_table'))
-        # Now, replace the table entries with enriched data
-        for path in table_paths:
-            parent, key = self._get_parent_and_key(self.json_data, path)
-            if key in parent:
-                table_entries = parent[key]
-                if isinstance(table_entries, list):
-                    new_entries = []
-                    for _ in table_entries:
-                        if idx < len(enriched_tables):
-                            new_entries.append(enriched_tables[idx])
-                            idx += 1
-                        else:
-                            break
-                    parent[key] = new_entries
-        # If there are any enriched tables left unprocessed, we can log a warning
-        if idx < len(enriched_tables):
-            self.logger.warning("There are unprocessed enriched tables that could not be updated in json_data.")
 
     def save_updated_json(self, output_file_name: str):
         """
@@ -628,148 +615,3 @@ class TableProcessor:
                 context_message="Error saving updated JSON file.",
                 file_name=output_path)
             raise
-
-    # Helper methods
-    def _get_tables_at_path(self, data, path):
-        """
-        Retrieves table entries at a given path in the JSON data.
-
-        Parameters:
-            data (dict):
-                The JSON data.
-            path (tuple):
-                A tuple representing the keys to traverse to reach the tables.
-
-        Returns:
-            list:
-                A list of table strings found at the specified path.
-
-        Raises:
-            None
-
-        Dependencies:
-            - Recursive dictionary traversal.
-
-        """
-        current = data
-        try:
-            for key in path:
-                current = current[key]
-            if isinstance(current, list):
-                return current
-            else:
-                return []
-        except (KeyError, IndexError, TypeError):
-            return []
-
-    def _parse_table_string(self, table_str):
-        """
-        Parses a markdown table string into a list of rows.
-
-        Parameters:
-            table_str (str):
-                The markdown table as a string.
-
-        Returns:
-            list of list of str:
-                The table represented as a list of rows, each row is a list of cell strings.
-
-        Raises:
-            None
-
-        Dependencies:
-            - Uses regular expressions and string methods.
-
-        """
-        # Split table into lines
-        lines = table_str.strip().split('\n')
-        # Remove separator line (e.g., | --- | --- |)
-        separator_pattern = re.compile(r'^\s*\|?\s*:?-+:?\s*\|')
-        cleaned_lines = []
-        for line in lines:
-            if separator_pattern.match(line.strip()):
-                continue
-            else:
-                cleaned_lines.append(line)
-        # Parse lines into cells
-        table = []
-        for line in cleaned_lines:
-            cells = [cell.strip() for cell in line.strip().strip('|').split('|')]
-            table.append(cells)
-        return table
-
-    def _is_second_row_part_of_header(self, table):
-        """
-        Determines if the second row is part of the table header.
-
-        Parameters:
-            table (list of list of str):
-                The table represented as a list of rows.
-
-        Returns:
-            bool:
-                True if the second row is part of the header; False otherwise.
-
-        Raises:
-            None
-
-        Dependencies:
-            - Compares cell content across rows.
-
-        """
-        if len(table) < 4:
-            return False  # Not enough rows to decide
-
-        second_row = table[1]
-        third_row = table[2]
-        fourth_row = table[3]
-        # Check if the pattern of the second row matches third and fourth
-        same_pattern = self._row_pattern(second_row) == self._row_pattern(third_row) == self._row_pattern(fourth_row)
-        return not same_pattern
-
-    def _row_pattern(self, row):
-        """
-        Creates a pattern representation of a row based on cell contents.
-
-        Parameters:
-            row (list of str):
-                A row from the table.
-
-        Returns:
-            tuple:
-                A tuple representing the pattern.
-
-        Raises:
-            None
-
-        Dependencies:
-            - None
-
-        """
-        return tuple(row)
-
-    def _get_parent_and_key(self, data, path):
-        """
-        Retrieves the parent dictionary and key at the end of a path.
-
-        Parameters:
-            data (dict):
-                The JSON data.
-            path (tuple):
-                A tuple representing the keys to traverse.
-
-        Returns:
-            tuple (dict, str):
-                The parent dictionary and the final key.
-
-        Raises:
-            None
-
-        Dependencies:
-            - Recursive traversal.
-
-        """
-        current = data
-        for key in path[:-1]:
-            current = current[key]
-        return current, path[-1]

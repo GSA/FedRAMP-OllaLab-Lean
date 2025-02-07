@@ -1,1 +1,10 @@
-{}
+anonymization:
+  email: redact
+  organization: redact
+  person name: redact
+document_title: SSP-Appendix-A-Moderate-FedRAMP-Security-Controls(1)
+removeTexts:
+- end: '{{unchecked box}}'
+  start: '{{unchecked box}}'
+replaceFormControls: 'yes'
+target: app_data\anydoc_2_json\SSP-Appendix-A-Moderate-FedRAMP-Security-Controls(1)_2025020711\SSP-Appendix-A-Moderate-FedRAMP-Security-Controls(1).docx
