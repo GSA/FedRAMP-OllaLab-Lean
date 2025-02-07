@@ -103,6 +103,7 @@ class MdParser:
         Dependencies:
             - Uses `self.lines` read during initialization.
             - Calls helper methods to parse different content types.
+            - Uses `self.position_counter` to keep track of element positions.
             - Uses regular expressions for parsing.
 
         Upstream functions:
@@ -111,47 +112,246 @@ class MdParser:
         Downstream functions:
             - `_parse_title`
             - `_parse_content`
-            - Logging methods from LoggerManager.
+            - Logging methods from `LoggerManager`.
 
         """
         try:
             json_data = {
                 "document": {
                     "title": "",
-                    "content": {}
+                    "content": []
                 }
             }
 
-            # Start parsing
             index = 0  # Line index
             total_lines = len(self.lines)
+
+            # Initialize position counter
+            self.position_counter = 1
 
             # Extract document title
             title, index = self._parse_title(index)
             json_data["document"]["title"] = title
 
-            # Parse content before first '##' heading (content_text1)
-            content_text1, index = self._parse_content_text1(index)
-            json_data["document"]["content"]["content_text1"] = content_text1
+            # Set initial parent and level
+            parent = "document"
+            current_level = 1
 
-            # Parse sections
-            sections, index = self._parse_sections(index)
-            json_data["document"]["content"]["section"] = sections
+            # Parse the rest of the content
+            content, index = self._parse_content(index, parent, current_level)
 
-            # Parse content after the last '##' heading (content_text2)
-            if index < total_lines:
-                content_text2, index = self._parse_content_text2(index)
-                json_data["document"]["content"]["content_text2"] = content_text2
-            else:
-                json_data["document"]["content"]["content_text2"] = {}
+            json_data["document"]["content"].extend(content)
 
             return json_data
 
         except Exception as e:
             self.logger_manager.log_exception(e, context_message="Error parsing Markdown file.",
-                                              file_name=self.md_file_path)
+                                            file_name=self.md_file_path)
             raise
 
+    def _parse_content(self, index: int, parent: str, current_level: int) -> (list, int):
+        """
+        Parses the Markdown content into a list of content items according to the specified schema.
+
+        Parameters:
+            index (int):
+                The current line index in the Markdown file.
+            parent (str):
+                The parent container type or heading text. Indicates where the current content belongs.
+            current_level (int):
+                The current heading level (e.g., 1 for H1, 2 for H2).
+
+        Returns:
+            tuple (list, int):
+                - A list of content items (dict) parsed from the Markdown file.
+                - The updated line index after parsing.
+
+        Raises:
+            None
+
+        Dependencies:
+            - Calls helper methods to parse paragraphs, lists, tables, and headings.
+            - Uses regular expressions to identify different Markdown elements.
+            - Uses `self.position_counter` to assign sequential positions to elements.
+
+        Upstream functions:
+            - Called by `parse_markdown`.
+            - Recursively called within itself when parsing sub-headings.
+
+        Downstream functions:
+            - `_is_heading_line`
+            - `_get_heading_level`
+            - `_collect_list_items`
+            - `_collect_table_lines`
+            - Other helper methods for parsing lists, tables, paragraphs.
+
+        """
+        content = []
+        total_lines = len(self.lines)
+        buffer_paragraph = []
+        while index < total_lines:
+            line = self.lines[index]
+            stripped_line = line.strip()
+            if self._is_heading_line(stripped_line):
+                heading_level = self._get_heading_level(stripped_line)
+                if heading_level <= current_level:
+                    # End of current section; higher or same level heading
+                    break
+                else:
+                    # New sub-heading
+                    heading_text = stripped_line[heading_level+1:].strip()
+                    # Create content item for heading
+                    content_item = {
+                        "type": "heading",
+                        "content": heading_text,
+                        "position": self.position_counter,
+                        "parent": parent,
+                        "level": heading_level
+                    }
+                    content.append(content_item)
+                    self.position_counter += 1
+                    # Update parent to this heading
+                    new_parent = heading_text
+                    # Recursively parse the content under this heading
+                    index += 1
+                    sub_content, index = self._parse_content(index, new_parent, heading_level)
+                    content.extend(sub_content)
+                    # Continue parsing
+                    continue
+            elif self._is_list_item(stripped_line):
+                # Parse list
+                list_items, index = self._collect_list_items(index)
+                content_item = {
+                    "type": "list",
+                    "list_items": list_items,
+                    "position": self.position_counter,
+                    "parent": parent
+                }
+                content.append(content_item)
+                self.position_counter += 1
+            elif self._is_table_line(stripped_line):
+                # Parse table
+                table_lines, index = self._collect_table_lines(index)
+                content_item = {
+                    "type": "table",
+                    "table": table_lines,
+                    "position": self.position_counter,
+                    "parent": parent
+                }
+                content.append(content_item)
+                self.position_counter += 1
+            elif stripped_line == '':
+                # Empty line, possible paragraph separator
+                if buffer_paragraph:
+                    paragraph_text = ' '.join(buffer_paragraph).strip()
+                    content_item = {
+                        "type": "paragraph",
+                        "content": paragraph_text,
+                        "position": self.position_counter,
+                        "parent": parent
+                    }
+                    content.append(content_item)
+                    self.position_counter += 1
+                    buffer_paragraph = []
+                index += 1
+            else:
+                # Collect paragraph lines
+                buffer_paragraph.append(stripped_line)
+                index += 1
+
+        # Add any remaining buffered paragraph
+        if buffer_paragraph:
+            paragraph_text = ' '.join(buffer_paragraph).strip()
+            content_item = {
+                "type": "paragraph",
+                "content": paragraph_text,
+                "position": self.position_counter,
+                "parent": parent
+            }
+            content.append(content_item)
+            self.position_counter += 1
+            buffer_paragraph = []
+
+        return content, index
+    
+    def _collect_list_items(self, index: int) -> (list, int):
+        """
+        Collects consecutive list items starting from the given index.
+
+        Parameters:
+            index (int):
+                The current line index in the Markdown file.
+
+        Returns:
+            tuple (list, int):
+                - A list of list item strings.
+                - The updated line index after parsing the list.
+
+        Raises:
+            None
+
+        Dependencies:
+            - Uses `_is_list_item` method to identify list items.
+
+        Upstream functions:
+            - Called by `_parse_content` when a list is detected.
+
+        Downstream functions:
+            - None
+
+        """
+        list_items = []
+        total_lines = len(self.lines)
+        while index < total_lines:
+            line = self.lines[index]
+            stripped_line = line.strip()
+            if self._is_list_item(stripped_line):
+                # Remove list marker
+                item_text = re.sub(r'^(\*|\-|\+|\d+\.)\s', '', stripped_line).strip()
+                list_items.append(item_text)
+                index += 1
+            else:
+                break
+        return list_items, index
+
+    def _collect_table_lines(self, index: int) -> (list, int):
+        """
+        Collects consecutive table lines starting from the given index.
+
+        Parameters:
+            index (int):
+                The current line index in the Markdown file.
+
+        Returns:
+            tuple (list, int):
+                - A list of table line strings.
+                - The updated line index after parsing the table.
+
+        Raises:
+            None
+
+        Dependencies:
+            - Uses `_is_table_line` method to identify table lines.
+            - Uses regular expressions to detect table separator lines.
+
+        Upstream functions:
+            - Called by `_parse_content` when a table is detected.
+
+        Downstream functions:
+            - None
+
+        """
+        table_lines = []
+        total_lines = len(self.lines)
+        while index < total_lines:
+            line = self.lines[index]
+            stripped_line = line.strip()
+            if self._is_table_line(stripped_line) or re.match(r'^\s*\|?(---|\:?\-+\:)\|', stripped_line):
+                table_lines.append(stripped_line)
+                index += 1
+            else:
+                break
+        return table_lines, index    
     def save_json(self, json_data: dict, output_file_name: str):
         """
         Saves the JSON data to a file in the specified output folder.
@@ -209,6 +409,7 @@ class MdParser:
 
         Dependencies:
             - Uses regular expressions to identify the '# ' heading.
+            - Uses `self.logger` to log information.
 
         Upstream functions:
             - Called by `parse_markdown`.
