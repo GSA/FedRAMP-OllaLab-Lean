@@ -23,6 +23,7 @@ from anydoc_2_json.modules.doc_converter import DocConverter
 from anydoc_2_json.modules.md_parser import MdParser
 from anydoc_2_json.modules.table_processor import TableProcessor
 
+
 def main():
     """
     Main function that orchestrates the Streamlit application steps.
@@ -315,6 +316,7 @@ def replace_form_controls_step():
     st.subheader("3.1 Replace Interactive Form Controls")
     replace_form_controls = st.radio("Replace interactive form controls?", options=["yes", "no"], index=0)
     st.session_state['param_manager'].set_parameter('replaceFormControls', replace_form_controls)
+    st.session_state['param_manager'].save_parameters()
     if replace_form_controls == 'yes':
         st.write("The program will replace interactive form controls with text strings.")
     else:
@@ -358,6 +360,7 @@ def remove_texts_step():
             if start_marker and end_marker:
                 remove_texts.append({'start': start_marker, 'end': end_marker})
         st.session_state['param_manager'].set_parameter('removeTexts', remove_texts)
+        st.session_state['param_manager'].save_parameters()
         st.success("Text removal rules added.")
     else:
         st.write("Skipping removing texts between markers.")
@@ -400,6 +403,7 @@ def find_and_replace_texts_step():
             if find_text is not None:
                 replace_texts.append({'from': find_text, 'to': replace_with})
         st.session_state['param_manager'].set_parameter('replaceText', replace_texts)
+        st.session_state['param_manager'].save_parameters()
         st.success("Text replacement rules added.")
     else:
         st.write("Skipping find and replace texts.")
@@ -438,6 +442,7 @@ def anonymize_texts_step():
             method = st.selectbox(f"Select method", methods, key=f"anonymize_{category}")
             anonymization[category] = method
         st.session_state['param_manager'].set_parameter('anonymization', anonymization)
+        st.session_state['param_manager'].save_parameters()
         st.success("Anonymization rules added.")
     else:
         st.write("Skipping anonymization.")
@@ -474,6 +479,7 @@ def adjust_dates_step():
         if days_value:
             adjust_dates = {methods[method_option]: int(days_value)}
             st.session_state['param_manager'].set_parameter('adjustDates', adjust_dates)
+            st.session_state['param_manager'].save_parameters()
             st.success("Date adjustment rule added.")
     else:
         st.write("Skipping adjust dates.")

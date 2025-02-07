@@ -128,6 +128,151 @@ class DocPreprocessor:
             self.logger.error(f"Unsupported file type for '{self.input_file}'. Only DOCX and PDF are supported.")
             raise ValueError(f"Unsupported file type for '{self.input_file}'. Only DOCX and PDF are supported.")
 
+    def replace_text_in_runs(self, element, find_text: str, replace_text: str):
+        """
+        Recursively replace all occurrences of a text string within runs in the document element.
+
+        Parameters:
+            element:
+                - Type: docx.Document | docx.text.paragraph.Paragraph | docx.table._Cell
+                - The starting element to process (can be the document itself, a table cell, or any element that contains paragraphs and tables).
+            find_text (str):
+                The text string to search for in runs.
+            replace_text (str):
+                The text string to replace the found text with.
+
+        Returns:
+            None
+
+        Raises:
+            None
+
+        Upstream functions:
+            - Called by `find_and_replace_text`.
+
+        Downstream functions:
+            - Calls `_replace_text_in_paragraph`.
+            - Recursively calls itself for cells within tables.
+
+        Dependencies:
+            - Requires the `docx` module.
+            - The element must be an object that has `paragraphs` and possibly `tables` attributes.
+
+        """
+        for paragraph in element.paragraphs:
+            self._replace_text_in_paragraph(paragraph, find_text, replace_text)
+        for table in getattr(element, 'tables', []):
+            for row in table.rows:
+                for cell in row.cells:
+                    self.replace_text_in_runs(cell, find_text, replace_text)
+
+    def _replace_text_in_paragraph(self, paragraph, find_text: str, replace_text: str):
+        """
+        Replace text in runs within a paragraph.
+
+        Parameters:
+            paragraph (docx.text.paragraph.Paragraph):
+                The paragraph whose runs will be processed.
+            find_text (str):
+                The text string to search for in runs.
+            replace_text (str):
+                The text string to replace the found text with.
+
+        Returns:
+            None
+
+        Raises:
+            None
+
+        Upstream functions:
+            - Called by `replace_text_in_runs`.
+
+        Downstream functions:
+            - None
+
+        Dependencies:
+            - Requires the `docx` module.
+
+        """
+        for run in paragraph.runs:
+            if find_text in run.text:
+                run.text = run.text.replace(find_text, replace_text)
+    
+    def remove_text_between_markers_in_runs(self, element, start_marker: str, end_marker: str):
+        """
+        Recursively remove text between start and end markers within runs in the document element.
+
+        Parameters:
+            element:
+                - Type: docx.Document | docx.text.paragraph.Paragraph | docx.table._Cell
+                - The starting element to process (can be the document itself, a table cell, or any element that contains paragraphs and tables).
+            start_marker (str):
+                The marker indicating the start of text to be removed.
+            end_marker (str):
+                The marker indicating the end of text to be removed.
+
+        Returns:
+            None
+
+        Raises:
+            None
+
+        Upstream functions:
+            - Called by `remove_texts_between_markers`.
+
+        Downstream functions:
+            - Calls `_remove_text_between_markers_in_paragraph`.
+            - Recursively calls itself for cells within tables.
+
+        Dependencies:
+            - Requires the `docx` module.
+            - Uses the `re` module for regular expressions.
+
+        """
+        for paragraph in element.paragraphs:
+            self._remove_text_between_markers_in_paragraph(paragraph, start_marker, end_marker)
+        for table in getattr(element, 'tables', []):
+            for row in table.rows:
+                for cell in row.cells:
+                    self.remove_text_between_markers_in_runs(cell, start_marker, end_marker)
+
+    def _remove_text_between_markers_in_paragraph(self, paragraph, start_marker: str, end_marker: str):
+        """
+        Remove text between markers within runs of a paragraph.
+
+        Parameters:
+            paragraph (docx.text.paragraph.Paragraph):
+                The paragraph whose runs will be processed.
+            start_marker (str):
+                The marker indicating the start of text to be removed.
+            end_marker (str):
+                The marker indicating the end of text to be removed.
+
+        Returns:
+            None
+
+        Raises:
+            None
+
+        Upstream functions:
+            - Called by `remove_text_between_markers_in_runs`.
+
+        Downstream functions:
+            - None
+
+        Dependencies:
+            - Requires the `docx` module.
+            - Uses the `re` module for regular expressions.
+
+        """
+        # Combine all run texts
+        full_text = ''.join(run.text for run in paragraph.runs)
+        pattern = re.escape(start_marker) + '(.*?)' + re.escape(end_marker)
+        regex = re.compile(pattern, flags=re.DOTALL)
+        new_text = regex.sub(' ', full_text)
+        # Clear existing runs and add new text
+        paragraph.clear()
+        paragraph.add_run(new_text)
     def replace_form_controls(self):
         """
         Replace interactive form controls in the document with specified text strings.
@@ -283,17 +428,18 @@ class DocPreprocessor:
             - Called by `process_document`.
 
         Downstream functions:
-            - Uses methods from `docx` or `PyPDF2` to manipulate the document content.
+            - Uses `remove_text_between_markers_in_runs`.
 
         Dependencies:
             - `self.param_manager` for 'removeTexts' parameter.
-            - `self.logger` for logging.
+            - `self.logger` for logging events and errors.
+            - Requires the `docx` module.
 
         Notes:
-            - Special markers such as 'end of line' are represented by '\n'.
-            - Currently, only DOCX files are fully supported for this operation.
-        """
+            - Special markers such as 'end of line' are represented by '\\n'.
+            - Processes the document in-memory without altering the overall structure.
 
+        """
         remove_texts = self.param_manager.get_parameter('removeTexts', [])
         if not remove_texts:
             self.logger.info("No text removal rules specified.")
@@ -301,28 +447,20 @@ class DocPreprocessor:
 
         if self.doc_type == 'docx':
             try:
-                full_text = '\n'.join([para.text for para in self.document.paragraphs])
                 for rule in remove_texts:
                     start_marker = rule.get('start', '')
                     end_marker = rule.get('end', '')
                     if start_marker == 'end of line':
-                        start_marker = r'\n'
+                        start_marker = '\n'
                     if end_marker == 'end of line':
-                        end_marker = r'\n'
+                        end_marker = '\n'
                     self.logger.info(f"Removing texts between '{start_marker}' and '{end_marker}'")
-                    pattern = re.escape(start_marker) + '.*?' + re.escape(end_marker)
-                    full_text = re.sub(pattern, ' ', full_text, flags=re.DOTALL)
-                # Clear existing document content and add modified text
-                for para in self.document.paragraphs:
-                    para.text = ''
-
-                self.document.add_paragraph(full_text)
+                    self.remove_text_between_markers_in_runs(self.document, start_marker, end_marker)
                 self.logger.info("Texts between markers removed successfully.")
             except Exception as e:
                 self.logger.error(f"Error removing texts between markers: {e}")
                 raise Exception(f"Error removing texts between markers: {e}")
         elif self.doc_type == 'pdf':
-            # Modifying PDFs is non-trivial; placeholder implementation
             self.logger.warning("Removing texts between markers in PDFs is not supported.")
         else:
             self.logger.error("Unsupported document type for removing texts between markers.")
@@ -347,15 +485,17 @@ class DocPreprocessor:
             - Called by `process_document`.
 
         Downstream functions:
-            - Uses methods from `docx` or `PyPDF2` to manipulate the document content.
+            - Uses `replace_text_in_runs`.
 
         Dependencies:
             - `self.param_manager` for 'replaceText' parameter.
-            - `self.logger` for logging.
+            - `self.logger` for logging events and errors.
+            - Requires the `docx` module.
 
         Notes:
-            - Supports special characters such as 'end of line' represented by '\n'.
-            - Currently, only DOCX files are fully supported for this operation.
+            - Supports special characters such as 'end of line' represented by '\\n'.
+            - Processes the document in-memory without altering the overall structure.
+
         """
         replace_texts = self.param_manager.get_parameter('replaceText', [])
         if not replace_texts:
@@ -370,24 +510,16 @@ class DocPreprocessor:
                     if not find_text:
                         continue
                     if find_text == 'end of line':
-                        find_text = r'\n'
+                        find_text = '\n'
                     if replace_text == 'end of line':
-                        replace_text = r'\n'
+                        replace_text = '\n'
                     self.logger.info(f"Replacing '{find_text}' with '{replace_text}'")
-                    for paragraph in self.document.paragraphs:
-                        if find_text in paragraph.text:
-                            paragraph.text = paragraph.text.replace(find_text, replace_text)
-                    for table in self.document.tables:
-                        for row in table.rows:
-                            for cell in row.cells:
-                                if find_text in cell.text:
-                                    cell.text = cell.text.replace(find_text, replace_text)
+                    self.replace_text_in_runs(self.document, find_text, replace_text)
                 self.logger.info("Text replacement completed successfully.")
             except Exception as e:
                 self.logger.error(f"Error during text replacement: {e}")
                 raise Exception(f"Error during text replacement: {e}")
         elif self.doc_type == 'pdf':
-            # Modifying PDFs is non-trivial; placeholder implementation
             self.logger.warning("Text replacement in PDFs is not supported.")
         else:
             self.logger.error("Unsupported document type for text replacement.")
