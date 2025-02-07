@@ -224,9 +224,9 @@ Below is a formal JSON Schema to use as the basis for converting Markdown conten
 ```
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/markdown-document.schema.json",
-  "title": "Markdown to JSON Schema",
-  "description": "A schema describing how to structure a Markdown file into JSON.",
+  "$id": "http://example.com/document-structure.json",
+  "title": "MarkDown Document Structure Schema",
+  "description": "A schema describing the structure of a MarkDown document, including relative positions of elements.",
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -236,244 +236,53 @@ Below is a formal JSON Schema to use as the basis for converting Markdown conten
       "additionalProperties": false,
       "properties": {
         "title": {
-          "type": "string",
-          "description": "Text that appears in the line marked by a single '#' (H1)."
+          "type": "string"
         },
         "content": {
-          "type": "object",
-          "description": "Main content that includes text before sections, sections themselves, and text after sections.",
-          "additionalProperties": false,
-          "properties": {
-            "content_text1": {
-              "type": "object",
-              "description": "Holds paragraphs, lists, and tables before the first '##' section heading.",
-              "additionalProperties": false,
-              "properties": {
-                "paragraph": {
-                  "type": "array",
-                  "description": "Array of paragraphs before the first '##'. Each item is one paragraph.",
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                "list": {
-                  "type": "array",
-                  "description": "Array of lists (numbered or unnumbered) that appear before the first '##'.",
-                  "items": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                      "list_item": {
-                        "type": "array",
-                        "description": "Array of items belonging to one list.",
-                        "items": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  }
-                },
-                "table": {
-                  "type": "array",
-                  "description": "Array of Markdown table texts before the first '##'.",
-                  "items": {
-                    "type": "string"
-                  }
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["paragraph", "list", "table", "heading"] // Add "heading" for headings
+              },
+              "content": {
+                "type": "string" // For simple content like paragraphs
+              },
+              "list_items": {
+                "type": "array",
+                "items": {
+                  "type": "string"
                 }
-              }
-            },
-            "section": {
-              "type": "array",
-              "description": "Array of sections introduced by '##'. Each item represents one section block.",
-              "items": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                  "section_header": {
-                    "type": "string",
-                    "description": "The text immediately following the '##' heading."
-                  },
-                  "section_content": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                      "section_paragraph": {
-                        "type": "array",
-                        "description": "Array of paragraphs within this section (not under any deeper heading).",
-                        "items": {
-                          "type": "string"
-                        }
-                      },
-                      "section_list": {
-                        "type": "array",
-                        "description": "Array of lists (numbered or unnumbered) within this section.",
-                        "items": {
-                          "type": "object",
-                          "additionalProperties": false,
-                          "properties": {
-                            "list_item": {
-                              "type": "array",
-                              "description": "Array of items belonging to one list in this section.",
-                              "items": {
-                                "type": "string"
-                              }
-                            }
-                          }
-                        }
-                      },
-                      "section_table": {
-                        "type": "array",
-                        "description": "Array of Markdown table texts in this section.",
-                        "items": {
-                          "type": "string"
-                        }
-                      },
-                      "sub_section": {
-                        "type": "array",
-                        "description": "Array of subsections introduced by '###'.",
-                        "items": {
-                          "type": "object",
-                          "additionalProperties": false,
-                          "properties": {
-                            "sub_section_header": {
-                              "type": "string",
-                              "description": "Text immediately following the '###' heading."
-                            },
-                            "sub_section_content": {
-                              "type": "object",
-                              "additionalProperties": false,
-                              "properties": {
-                                "sub_section_paragraph": {
-                                  "type": "array",
-                                  "description": "Array of paragraphs under this sub-section (not under any deeper heading).",
-                                  "items": {
-                                    "type": "string"
-                                  }
-                                },
-                                "sub_section_list": {
-                                  "type": "array",
-                                  "description": "Array of lists (numbered or unnumbered) under this sub-section.",
-                                  "items": {
-                                    "type": "object",
-                                    "additionalProperties": false,
-                                    "properties": {
-                                      "list_item": {
-                                        "type": "array",
-                                        "description": "Array of items belonging to one list in this sub-section.",
-                                        "items": {
-                                          "type": "string"
-                                        }
-                                      }
-                                    }
-                                  }
-                                },
-                                "sub_section_table": {
-                                  "type": "array",
-                                  "description": "Array of Markdown table texts in this sub-section.",
-                                  "items": {
-                                    "type": "string"
-                                  }
-                                },
-                                "sub_sub_section": {
-                                  "type": "array",
-                                  "description": "Array of sub-sub-sections introduced by '####'.",
-                                  "items": {
-                                    "type": "object",
-                                    "additionalProperties": false,
-                                    "properties": {
-                                      "sub_sub_section_header": {
-                                        "type": "string",
-                                        "description": "Text immediately following the '####' heading."
-                                      },
-                                      "sub_sub_section_paragraph": {
-                                        "type": "array",
-                                        "description": "Array of paragraphs under this sub-sub-section.",
-                                        "items": {
-                                          "type": "string"
-                                        }
-                                      },
-                                      "sub_sub_section_list": {
-                                        "type": "array",
-                                        "description": "Array of lists (numbered or unnumbered) under this sub-sub-section.",
-                                        "items": {
-                                          "type": "object",
-                                          "additionalProperties": false,
-                                          "properties": {
-                                            "list_item": {
-                                              "type": "array",
-                                              "description": "Array of items belonging to one list in this sub-sub-section.",
-                                              "items": {
-                                                "type": "string"
-                                              }
-                                            }
-                                          }
-                                        }
-                                      },
-                                      "sub_sub_section_table": {
-                                        "type": "array",
-                                        "description": "Array of Markdown table texts in this sub-sub-section.",
-                                        "items": {
-                                          "type": "string"
-                                        }
-                                      }
-                                    }
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
+              },
+              "table": {
+                "type": "array",
+                "description": "Array of MarkDown table text to be parsed later on",
+                "items": {
+                  "type": "string"
                 }
-              }
-            },
-            "content_text2": {
-              "type": "object",
-              "description": "Holds paragraphs, lists, and tables after the last '##' section.",
-              "additionalProperties": false,
-              "properties": {
-                "paragraph": {
-                  "type": "array",
-                  "description": "Array of paragraphs after the last '##'. Each item is one paragraph.",
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                "list": {
-                  "type": "array",
-                  "description": "Array of lists (numbered or unnumbered) that appear after the last '##'.",
-                  "items": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                      "list_item": {
-                        "type": "array",
-                        "description": "Array of items belonging to one list after the last '##'.",
-                        "items": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  }
-                },
-                "table": {
-                  "type": "array",
-                  "description": "Array of Markdown table texts after the last '##'.",
-                  "items": {
-                    "type": "string"
-                  }
-                }
+              },
+              "position": {
+                "type": "integer",
+                "description": "Sequential position of the element within its parent container"
+              },
+              "parent": {
+                "type": "string",
+                "description": "Type of the parent container (e.g., 'document', 'section')"
+              },
+              "level": {
+                "type": "integer",
+                "description": "Heading level (1 for H1, 2 for H2, etc.)"
               }
             }
           }
         }
-      },
-      "required": ["title", "content"]
+      }
     }
   },
-  "required": ["document"]
+  "required": ["title", "content"]
 }
 ```
 
