@@ -194,6 +194,20 @@ Users have the option to perform the following actions, to be executed in the fo
     - The "subtract days" option subtracts the "number of days" value from the date to form a new date.
     - The "days before now" option changes the date to a date that is "number of days" value before the current system date.
     - The "days after now" option changes the date to a date that is "number of days" value after the current system date.
+- **Find and Remove Rows**
+  - Remove empty rows
+    - In GUI, it's a check-box of "Remove empty rows". It is saved as pararameter "removeEmptyRows" with default value of "yes"
+    - The program will find and remove all empty rows.
+  - Remove rows with certain string
+    - In GUI, it's an input box of "Remove rows with the following string". It is saved as parameter "removeRowsWithString".
+    - The program with find and remove rows that has the user input string
+- **Find and Remove Columns**
+  - Remove empty columns
+    - In GUI, it's a check-box of "Remove empty columns". It is saved as pararameter "removeEmptyColumns" with default value of "yes"
+    - The program will find and remove all empty columns.
+- **2pass Cleanup**: This option allows the above steps to be executed again at the end of step 3
+  - Add a checked check-box of "Attempt these steps post-conversion". Once checked, the parameter "2pass_cleanup" is recorded to the parameter file with value "yes".
+  - If the parameter "2pass_cleanup" is "yes", the same steps (step 3.1 to 3.7) in "Pre-conversion processing" with corresponding set parameters will be ran again at the end of "Convert document to MarkDown using Docling". Please note that the file format changed from docx or pdf to markdown so while the tasks (step 3.1 to 3.7) are the same, the code implementation can be different.
 ### 3. Convert document to MarkDown using Docling
 - In this step, the program will convert the document to MarkDown, saved to disk a file with the same name but with a ".md" extension using Docling, and report the result status to the user. The procedure is as follows:
   - Convert the document to markdown using Docling

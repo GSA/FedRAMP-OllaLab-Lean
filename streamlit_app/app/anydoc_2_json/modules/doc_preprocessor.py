@@ -785,8 +785,11 @@ class DocPreprocessor:
                 - `find_and_replace_text`
                 - `anonymize_texts`
                 - `adjust_dates`
+                - `remove_empty_rows_in_tables`
+                - `remove_rows_with_string_in_tables`
+                - `remove_empty_columns_in_tables`
                 - `save_document`
-            - `self.logger` for logging.
+            - Uses `self.logger` for logging.
 
         Upstream functions:
             - Called externally to perform document pre-processing.
@@ -801,8 +804,181 @@ class DocPreprocessor:
             self.find_and_replace_text()
             self.anonymize_texts()
             self.adjust_dates()
+            self.remove_empty_rows_in_tables()
+            self.remove_rows_with_string_in_tables()
+            self.remove_empty_columns_in_tables()
             self.save_document()
             self.logger.info("Document processing completed successfully.")
         except Exception as e:
             self.logger.error(f"Error during document processing: {e}")
             raise Exception(f"Error during document processing: {e}")
+    
+    def remove_empty_rows_in_tables(self):
+        """
+        Remove empty rows from all tables in the document.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Raises:
+            Exception:
+                If there is an error during processing.
+
+        Upstream functions:
+            - `process_document()`
+
+        Downstream functions:
+            - None
+
+        Dependencies:
+            - Requires the `docx` module.
+            - The document must be a DOCX file, and `self.document` must be an instance of `docx.Document`.
+            - The parameter `removeEmptyRows` must be set to `'yes'` in `self.param_manager`.
+        """
+        remove_empty_rows = self.param_manager.get_parameter('removeEmptyRows', 'yes')
+        if remove_empty_rows.lower() != 'yes':
+            self.logger.info("Skipping removing empty rows from tables as per parameters.")
+            return
+
+        if self.doc_type == 'docx':
+            try:
+                for table in self.document.tables:
+                    rows_to_delete = []
+                    for row_idx, row in enumerate(table.rows):
+                        is_empty = True
+                        for cell in row.cells:
+                            if cell.text.strip():
+                                is_empty = False
+                                break
+                        if is_empty:
+                            rows_to_delete.append(row_idx)
+                    # Delete rows from the bottom up to avoid index shifting
+                    for row_idx in reversed(rows_to_delete):
+                        tbl = table._tbl
+                        tr = tbl.tr_lst[row_idx]
+                        tbl.remove(tr)
+                self.logger.info("Empty rows removed from tables successfully.")
+            except Exception as e:
+                self.logger.error(f"Error removing empty rows from tables: {e}")
+                raise Exception(f"Error removing empty rows from tables: {e}")
+        elif self.doc_type == 'pdf':
+            self.logger.warning("Removing empty rows from tables in PDFs is not supported.")
+        else:
+            self.logger.error("Unsupported document type for removing empty rows from tables.")
+            raise Exception("Unsupported document type for removing empty rows from tables.")
+    
+    def remove_rows_with_string_in_tables(self):
+        """
+        Remove rows containing a specific string from all tables in the document.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Raises:
+            Exception:
+                If there is an error during processing.
+
+        Upstream functions:
+            - `process_document()`
+
+        Downstream functions:
+            - None
+
+        Dependencies:
+            - Requires the `docx` module.
+            - The document must be a DOCX file, and `self.document` must be an instance of `docx.Document`.
+            - The parameter `removeRowsWithString` must be set in `self.param_manager`.
+        """
+        remove_rows_with_string = self.param_manager.get_parameter('removeRowsWithString', '')
+        if not remove_rows_with_string:
+            self.logger.info("No string specified for removing rows. Skipping this step.")
+            return
+
+        if self.doc_type == 'docx':
+            try:
+                for table in self.document.tables:
+                    rows_to_delete = []
+                    for row_idx, row in enumerate(table.rows):
+                        row_text = ' '.join([cell.text for cell in row.cells])
+                        if remove_rows_with_string in row_text:
+                            rows_to_delete.append(row_idx)
+                    # Delete rows from the bottom up to avoid index shifting
+                    for row_idx in reversed(rows_to_delete):
+                        tbl = table._tbl
+                        tr = tbl.tr_lst[row_idx]
+                        tbl.remove(tr)
+                self.logger.info(f"Rows containing '{remove_rows_with_string}' removed from tables successfully.")
+            except Exception as e:
+                self.logger.error(f"Error removing rows with string '{remove_rows_with_string}' from tables: {e}")
+                raise Exception(f"Error removing rows with string from tables: {e}")
+        elif self.doc_type == 'pdf':
+            self.logger.warning("Removing rows with string from tables in PDFs is not supported.")
+        else:
+            self.logger.error("Unsupported document type for removing rows with string from tables.")
+            raise Exception("Unsupported document type for removing rows with string from tables.")
+
+    def remove_empty_columns_in_tables(self):
+        """
+        Remove empty columns from all tables in the document.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Raises:
+            Exception:
+                If there is an error during processing.
+
+        Upstream functions:
+            - `process_document()`
+
+        Downstream functions:
+            - None
+
+        Dependencies:
+            - Requires the `docx` module.
+            - The document must be a DOCX file, and `self.document` must be an instance of `docx.Document`.
+            - The parameter `removeEmptyColumns` must be set to `'yes'` in `self.param_manager`.
+        """
+        remove_empty_columns = self.param_manager.get_parameter('removeEmptyColumns', 'yes')
+        if remove_empty_columns.lower() != 'yes':
+            self.logger.info("Skipping removing empty columns from tables as per parameters.")
+            return
+
+        if self.doc_type == 'docx':
+            try:
+                for table in self.document.tables:
+                    num_cols = len(table.columns)
+                    cols_to_delete = []
+                    for col_idx in range(num_cols):
+                        is_empty = True
+                        for row in table.rows:
+                            cell = row.cells[col_idx]
+                            if cell.text.strip():
+                                is_empty = False
+                                break
+                        if is_empty:
+                            cols_to_delete.append(col_idx)
+                    # Delete columns from the rightmost to avoid index shifting
+                    for col_idx in sorted(cols_to_delete, reverse=True):
+                        for row in table.rows:
+                            cell = row.cells[col_idx]
+                            cell._tc.getparent().remove(cell._tc)
+                self.logger.info("Empty columns removed from tables successfully.")
+            except Exception as e:
+                self.logger.error(f"Error removing empty columns from tables: {e}")
+                raise Exception(f"Error removing empty columns from tables: {e}")
+        elif self.doc_type == 'pdf':
+            self.logger.warning("Removing empty columns from tables in PDFs is not supported.")
+        else:
+            self.logger.error("Unsupported document type for removing empty columns from tables.")
+            raise Exception("Unsupported document type for removing empty columns from tables.")
+    

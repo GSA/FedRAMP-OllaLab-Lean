@@ -281,6 +281,24 @@ class ParamManager:
                 if not isinstance(value, int) or value <= 0:
                     raise ValueError(f"Value for '{key}' in 'adjustDates' must be an integer greater than 0.")
 
+        # Validate 'removeEmptyRows'
+        remove_empty_rows = self.parameters.get('removeEmptyRows', 'yes')
+        if remove_empty_rows not in ['yes', 'no']:
+            raise ValueError("Parameter 'removeEmptyRows' must be 'yes' or 'no'.")
+
+        # Validate 'removeRowsWithString'
+        remove_rows_with_string = self.parameters.get('removeRowsWithString', '')
+
+        # Validate 'removeEmptyColumns'
+        remove_empty_columns = self.parameters.get('removeEmptyColumns', 'yes')
+        if remove_empty_columns not in ['yes', 'no']:
+            raise ValueError("Parameter 'removeEmptyColumns' must be 'yes' or 'no'.")
+
+        # Validate '2pass_cleanup'
+        two_pass_cleanup = self.parameters.get('2pass_cleanup', 'no')
+        if two_pass_cleanup not in ['yes', 'no']:
+            raise ValueError("Parameter '2pass_cleanup' must be 'yes' or 'no'.")
+            
     def update_parameters(self, params: dict, overwrite: bool = True):
         """
         Update parameters with a dictionary of new values.

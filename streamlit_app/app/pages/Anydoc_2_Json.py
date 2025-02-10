@@ -272,6 +272,9 @@ def pre_conversion_processing():
     find_and_replace_texts_step()
     anonymize_texts_step()
     adjust_dates_step()
+    remove_rows_step()
+    remove_columns_step()
+    post_conversion_cleanup_step()
 
     # Run the pre-processing steps
     if st.button("Run Pre-processing"):
@@ -615,6 +618,33 @@ def adjust_dates_step():
             st.success("Date adjustment rule updated.")
     else:
         st.write("Skipping adjust dates.")
+
+def remove_rows_step():
+    st.subheader("3.6 Find and Remove Rows")
+    param_manager = st.session_state['param_manager']
+    # Remove empty rows
+    remove_empty_rows = st.checkbox("Remove empty rows", value=True)
+    param_manager.set_parameter('removeEmptyRows', 'yes' if remove_empty_rows else 'no')
+    # Remove rows with certain string
+    remove_rows_with_string = st.text_input("Remove rows with the following string")
+    param_manager.set_parameter('removeRowsWithString', remove_rows_with_string)
+    param_manager.save_parameters()
+    st.success("Row removal settings updated.")
+
+def remove_columns_step():
+    st.subheader("3.7 Find and Remove Columns")
+    param_manager = st.session_state['param_manager']
+    # Remove empty columns
+    remove_empty_columns = st.checkbox("Remove empty columns", value=True)
+    param_manager.set_parameter('removeEmptyColumns', 'yes' if remove_empty_columns else 'no')
+    param_manager.save_parameters()
+    st.success("Column removal settings updated.")
+
+def post_conversion_cleanup_step():
+    param_manager = st.session_state['param_manager']
+    two_pass_cleanup = st.checkbox("Attempt these steps post-conversion", value=True)
+    param_manager.set_parameter('2pass_cleanup', 'yes' if two_pass_cleanup else 'no')
+    param_manager.save_parameters()
 
 def convert_document():
     """
