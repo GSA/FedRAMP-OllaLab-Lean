@@ -927,6 +927,9 @@ class DocPreprocessor:
         """
         Remove empty columns from all tables in the document.
 
+        This method iterates over each table in the document and removes columns that are empty,
+        where "empty" means that all the cells in that column (excluding the header row) are empty or contain only whitespace.
+
         Parameters:
             None
 
@@ -938,7 +941,7 @@ class DocPreprocessor:
                 If there is an error during processing.
 
         Upstream functions:
-            - `process_document()`
+            - `process_document()`: This method is called by the `process_document` method during document pre-processing.
 
         Downstream functions:
             - None
@@ -947,6 +950,13 @@ class DocPreprocessor:
             - Requires the `docx` module.
             - The document must be a DOCX file, and `self.document` must be an instance of `docx.Document`.
             - The parameter `removeEmptyColumns` must be set to `'yes'` in `self.param_manager`.
+            - Merged cells in tables may cause rows to have different numbers of cells, so the method checks for cell existence before accessing.
+
+        Notes:
+            - This method handles tables with merged cells by checking whether each cell exists before attempting to access or remove it.
+            - It avoids `IndexError` by ensuring the column index is within the range of `row.cells`.
+            - Columns are deleted starting from the rightmost column to avoid index shifting issues during deletion.
+
         """
         remove_empty_columns = self.param_manager.get_parameter('removeEmptyColumns', 'yes')
         if remove_empty_columns.lower() != 'yes':
@@ -956,23 +966,28 @@ class DocPreprocessor:
         if self.doc_type == 'docx':
             try:
                 for table in self.document.tables:
-                    num_cols = len(table.columns)
+                    # Determine the maximum number of cells in any row to set the column range
+                    max_num_cells = max(len(row.cells) for row in table.rows)
                     cols_to_delete = []
-                    for col_idx in range(num_cols):
+                    for col_idx in range(max_num_cells):
                         is_empty = True
                         for row in table.rows:
-                            cell = row.cells[col_idx]
-                            if cell.text.strip():
-                                is_empty = False
-                                break
+                            # Check if the cell at the current column index exists in this row
+                            if col_idx < len(row.cells):
+                                cell = row.cells[col_idx]
+                                if cell.text.strip():
+                                    is_empty = False
+                                    break
                         if is_empty:
                             cols_to_delete.append(col_idx)
                     # Delete columns from the rightmost to avoid index shifting
                     for col_idx in sorted(cols_to_delete, reverse=True):
                         for row in table.rows:
-                            cell = row.cells[col_idx]
-                            cell._tc.getparent().remove(cell._tc)
-                self.logger.info("Empty columns removed from tables successfully.")
+                            if col_idx < len(row.cells):
+                                cell = row.cells[col_idx]
+                                # Remove cell's XML element
+                                cell._tc.getparent().remove(cell._tc)
+                    self.logger.info("Empty columns removed from tables successfully.")
             except Exception as e:
                 self.logger.error(f"Error removing empty columns from tables: {e}")
                 raise Exception(f"Error removing empty columns from tables: {e}")

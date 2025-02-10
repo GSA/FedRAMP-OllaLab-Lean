@@ -273,7 +273,7 @@ def pre_conversion_processing():
     anonymize_texts_step()
     adjust_dates_step()
     remove_rows_step()
-    remove_columns_step()
+    #remove_columns_step()
     post_conversion_cleanup_step()
 
     # Run the pre-processing steps
@@ -675,11 +675,8 @@ def convert_document():
     if st.button("Convert Document"):
         try:
             param_manager = st.session_state['param_manager']
-            # Update target file in parameters (in case of pre-processed file)
+            # Determine the input file path
             input_file_path = os.path.join(st.session_state['result_folder'], st.session_state['uploaded_file'].name)
-            # If pre-processing was done, use the processed file
-            if st.session_state.get('preprocessing_done', False):
-                processed_file_path = os.path.join(st.session_state['result_folder'], st.session_state['uploaded_file'].name)
             st.write("Converting document...")
             # Ask for document title
             default_title = os.path.splitext(st.session_state['uploaded_file'].name)[0]
@@ -691,7 +688,8 @@ def convert_document():
                 st.error("Please enter a document title.")
                 return
             doc_converter = DocConverter(logger_manager=st.session_state['logger_manager'], param_manager=param_manager)
-            markdown_file_path = doc_converter.convert_document(input_file=param_manager.get_parameter('target'),
+            # Use 'input_file_path' instead of 'param_manager.get_parameter('target')'
+            markdown_file_path = doc_converter.convert_document(input_file=input_file_path,
                                                                 output_folder=st.session_state['result_folder'])
             st.session_state['converted_markdown_path'] = markdown_file_path
             # Read markdown content

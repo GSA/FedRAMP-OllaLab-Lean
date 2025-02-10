@@ -1,10 +1,12 @@
+# anydoc2json_cli.py
+
 import os
 import sys
 import argparse
-from pathlib import Path
 import datetime
 import shutil
 import json
+from pathlib import Path
 
 # Import modules
 from anydoc_2_json.modules.param_manager import ParamManager
@@ -13,6 +15,7 @@ from anydoc_2_json.modules.doc_preprocessor import DocPreprocessor
 from anydoc_2_json.modules.doc_converter import DocConverter
 from anydoc_2_json.modules.md_parser import MdParser
 from anydoc_2_json.modules.table_processor import TableProcessor
+from anydoc_2_json.modules.markdown_preprocessor import MarkdownPreprocessor
 
 def parse_arguments():
     """
@@ -40,13 +43,13 @@ def parse_arguments():
     Command-line Arguments:
         --target, -t:
             Type: str
-            Description: Path to the target file (mandatory). This should be a DOCX or PDF file.
+            Description: Path to the target file (mandatory). This should be a DOCX, DOC, or PDF file.
         --param, -p:
             Type: str
-            Description: Path to the parameter YAML file. The file must already exist.
+            Description: Path to the parameter file (mandatory). This parameter file must already exist.
     """
     parser = argparse.ArgumentParser(description='AnyDoc to JSON CLI Application.')
-    parser.add_argument('--target', '-t', required=True, help='Path to the target DOCX or PDF file.')
+    parser.add_argument('--target', '-t', required=True, help='Path to the target DOCX, DOC, or PDF file.')
     parser.add_argument('--param', '-p', required=True, help='Path to the parameter YAML file.')
     args = parser.parse_args()
     return args
@@ -57,7 +60,7 @@ def validate_files(target_file_path: str, param_file_path: str):
 
     Parameters:
         target_file_path (str):
-            The path to the target DOCX or PDF file. This file must exist and have a .docx or .pdf extension.
+            The path to the target DOCX, DOC, or PDF file. This file must exist.
         param_file_path (str):
             The path to the parameter YAML file. This file must exist.
 
@@ -86,8 +89,63 @@ def validate_files(target_file_path: str, param_file_path: str):
         sys.exit(1)
     _, file_extension = os.path.splitext(target_file_path)
     if file_extension.lower() not in ['.docx', '.pdf', '.doc']:
-        print(f"Error: Target file '{target_file_path}' must be a DOCX or PDF file.")
+        print(f"Error: Target file '{target_file_path}' must be a DOCX, DOC, or PDF file.")
         sys.exit(1)
+
+def convert_doc_to_docx(doc_file_path: str, output_folder: str) -> str:
+    """
+    Converts a .doc file to a .docx file using LibreOffice command-line tool.
+
+    Parameters:
+        doc_file_path (str):
+            The path to the .doc file to be converted.
+        output_folder (str):
+            The directory where the converted .docx file will be saved.
+
+    Returns:
+        str:
+            The path to the converted .docx file.
+
+    Raises:
+        Exception:
+            If conversion fails due to any reason (e.g., LibreOffice not installed, conversion error).
+
+    Upstream functions:
+        - Called by main() when the target file is a .doc file.
+
+    Downstream functions:
+        - Utilizes the system's LibreOffice 'soffice' command-line tool to perform the conversion.
+
+    Dependencies:
+        - Requires LibreOffice installed on the system and accessible via the command line.
+
+    Notes:
+        - The function uses 'subprocess' module to call 'soffice' command.
+        - The converted .docx file is saved in the output_folder with the same base name.
+    """
+    import subprocess
+    try:
+        if not os.path.exists(doc_file_path):
+            raise FileNotFoundError(f"Input file '{doc_file_path}' not found.")
+
+        base_name = os.path.basename(doc_file_path)
+        output_path = os.path.join(output_folder, os.path.splitext(base_name)[0] + '.docx')
+
+        command = [
+            'soffice',
+            '--headless',
+            '--convert-to',
+            'docx',
+            '--outdir',
+            output_folder,
+            doc_file_path
+        ]
+        subprocess.run(command, check=True)
+        if not os.path.exists(output_path):
+            raise Exception(f"Conversion failed, output file '{output_path}' not found.")
+        return output_path
+    except Exception as e:
+        raise Exception(f"Error converting '{doc_file_path}' to DOCX: {e}")
 
 def perform_pre_processing(input_file_path: str, output_folder: str, param_manager: ParamManager, logger_manager: LoggerManager):
     """
@@ -134,6 +192,59 @@ def perform_pre_processing(input_file_path: str, output_folder: str, param_manag
         logger.info("Pre-processing completed successfully.")
     except Exception as e:
         logger_manager.log_exception(e, "Error during pre-processing", input_file_path)
+        raise e
+
+def perform_markdown_preprocessing(markdown_file_path: str, param_manager: ParamManager, logger_manager: LoggerManager):
+    """
+    Performs post-conversion preprocessing steps on the Markdown file, as specified in the parameter file.
+
+    If the '2pass_cleanup' parameter in the parameter file is 'yes', this function will apply the same preprocessing steps
+    to the converted Markdown file. The implementation differs from the pre-conversion processing because it operates on Markdown content.
+
+    Parameters:
+        markdown_file_path (str):
+            The path to the Markdown (.md) file to be processed.
+        param_manager (ParamManager):
+            An instance of ParamManager containing processing parameters.
+        logger_manager (LoggerManager):
+            An instance of LoggerManager for logging events and errors.
+
+    Returns:
+        None
+
+    Raises:
+        Exception:
+            If any error occurs during markdown preprocessing, it is logged and re-raised.
+
+    Upstream functions:
+        - Called by main() if the '2pass_cleanup' parameter is 'yes'.
+
+    Downstream functions:
+        - markdown_preprocessor.MarkdownPreprocessor()
+        - markdown_preprocessor.MarkdownPreprocessor.process_markdown()
+
+    Dependencies:
+        - Requires the 'markdown_preprocessor' module.
+        - Depends on the parameters specified in 'param_manager'.
+        - The '2pass_cleanup' parameter in 'param_manager' must be 'yes' to perform markdown preprocessing.
+
+    Notes:
+        - The processed Markdown file is saved in-place, overwriting the original Markdown file.
+    """
+    try:
+        logger = logger_manager.get_logger()
+        two_pass_cleanup = param_manager.get_parameter('2pass_cleanup', 'no')
+        if two_pass_cleanup.lower() != 'yes':
+            logger.info("Skipping Markdown post-processing as per parameters.")
+            return
+
+        md_preprocessor = MarkdownPreprocessor(markdown_file=markdown_file_path,
+                                               param_manager=param_manager,
+                                               logger_manager=logger_manager)
+        md_preprocessor.process_markdown()
+        logger.info("Markdown post-processing completed successfully.")
+    except Exception as e:
+        logger_manager.log_exception(e, "Error during Markdown post-processing", markdown_file_path)
         raise e
 
 def convert_document(input_file_path: str, output_folder: str, param_manager: ParamManager, logger_manager: LoggerManager):
@@ -291,19 +402,20 @@ def main():
     """
     Main function for the AnyDoc to JSON CLI application.
 
-    The function orchestrates the entire process of converting an unstructured document
+    This function orchestrates the entire process of converting an unstructured document
     (DOCX or PDF) into a structured JSON file, following the specified steps:
 
     1. Parse command-line arguments.
     2. Validate provided parameters and files.
     3. Initialize logging and parameter management.
     4. Create result folder and copy the target file.
-    5. Validate parameters using ParamManager.validate_parameters().
+    5. Convert DOC files to DOCX if necessary.
     6. Perform pre-conversion processing steps as per the parameter file.
     7. Convert the document to Markdown using Docling.
-    8. Extract structured data from the Markdown file.
-    9. Process tables and enrich the JSON data.
-    10. Save the resulting JSON files to the result folder.
+    8. Perform post-conversion processing (2-pass cleanup) if specified.
+    9. Extract structured data from the Markdown file.
+    10. Process tables and enrich the JSON data.
+    11. Save the resulting JSON files to the result folder.
 
     Parameters:
         None
@@ -321,9 +433,10 @@ def main():
     Downstream functions:
         - parse_arguments()
         - validate_files()
-        - param_manager.validate_parameters()
+        - convert_doc_to_docx()
         - perform_pre_processing()
         - convert_document()
+        - perform_markdown_preprocessing()
         - extract_structured_data()
         - process_tables()
 
@@ -333,7 +446,6 @@ def main():
             - sys
             - argparse
             - datetime
-            - pathlib.Path
             - shutil
             - json
             - AnyDoc to JSON modules:
@@ -343,6 +455,7 @@ def main():
                 - doc_converter
                 - md_parser
                 - table_processor
+                - markdown_preprocessor
     """
     # Parse command-line arguments
     args = parse_arguments()
@@ -368,39 +481,44 @@ def main():
 
     try:
         # Copy target file to result folder
+        target_file_extension = os.path.splitext(args.target)[1].lower()
         target_file_in_result_folder = os.path.join(result_folder, os.path.basename(args.target))
         shutil.copy(args.target, target_file_in_result_folder)
         logger.info(f"Copied target file to {target_file_in_result_folder}")
 
-        # Update 'target' parameter in param_manager
-        param_manager.set_parameter('target', target_file_in_result_folder)
+        # If the target file is a .doc file, convert it to .docx
+        if target_file_extension == '.doc':
+            logger.info(f"Converting '{target_file_in_result_folder}' to DOCX format.")
+            input_file_path = convert_doc_to_docx(target_file_in_result_folder, result_folder)
+            logger.info(f"Conversion completed. New file: '{input_file_path}'")
+            # Remove the original .doc file from the result folder
+            os.remove(target_file_in_result_folder)
+            logger.info(f"Removed original .doc file '{target_file_in_result_folder}'")
+        else:
+            input_file_path = target_file_in_result_folder
 
-        # Validate parameters
-        try:
-            param_manager.validate_parameters()
-        except ValueError as ve:
-            print(f"Parameter validation error: {ve}")
-            logger.error(f"Parameter validation error: {ve}")
-            sys.exit(1)
-        except Exception as e:
-            logger_manager.log_exception(e, "An error occurred during parameter validation.")
-            print(f"An error occurred during parameter validation: {e}")
-            sys.exit(1)
+        # Update 'target' parameter in param_manager
+        param_manager.set_parameter('target', input_file_path)
 
         # Perform pre-processing
-        perform_pre_processing(input_file_path=target_file_in_result_folder,
+        perform_pre_processing(input_file_path=input_file_path,
                                output_folder=result_folder,
                                param_manager=param_manager,
                                logger_manager=logger_manager)
 
         # Convert document
-        markdown_file_path = convert_document(input_file_path=target_file_in_result_folder,
+        markdown_file_path = convert_document(input_file_path=input_file_path,
                                               output_folder=result_folder,
                                               param_manager=param_manager,
                                               logger_manager=logger_manager)
 
+        # Perform Markdown post-processing (2-pass cleanup) if specified
+        perform_markdown_preprocessing(markdown_file_path=markdown_file_path,
+                                       param_manager=param_manager,
+                                       logger_manager=logger_manager)
+
         # Base file name
-        base_file_name = os.path.splitext(os.path.basename(target_file_in_result_folder))[0]
+        base_file_name = os.path.splitext(os.path.basename(input_file_path))[0]
 
         # Extract structured data
         json_data = extract_structured_data(markdown_file_path=markdown_file_path,

@@ -1,10 +1,16 @@
+2pass_cleanup: 'yes'
 anonymization:
   email: redact
-  organization: redact
-  person name: redact
+  organization: realistic
+  person name: realistic
 document_title: SSP-Appendix-A-Moderate-FedRAMP-Security-Controls(1)
+removeEmptyColumns: 'no'
+removeEmptyRows: 'yes'
+removeRowsWithString: '{{unchecked box}}'
 removeTexts:
-- end: '{{unchecked box}}'
+- end: end of line
   start: '{{unchecked box}}'
 replaceFormControls: 'yes'
-target: app_data\anydoc_2_json\SSP-Appendix-A-Moderate-FedRAMP-Security-Controls(1)_2025020711\SSP-Appendix-A-Moderate-FedRAMP-Security-Controls(1).docx
+replaceText:
+- from: '{{unchecked box}}'
+  to: '{{unchecked box}}'

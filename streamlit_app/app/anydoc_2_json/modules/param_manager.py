@@ -102,6 +102,8 @@ class ParamManager:
             with open(param_file_path, 'r', encoding='utf-8') as file:
                 self.parameters = yaml.safe_load(file) or {}
                 self.param_file_path = param_file_path
+            # Remove 'target' parameter if it exists
+            self.parameters.pop('target', None)
         except yaml.YAMLError as e:
             raise yaml.YAMLError(f"Error parsing YAML file '{param_file_path}': {e}")
         except Exception as e:
@@ -139,7 +141,8 @@ class ParamManager:
             if not self.param_file_path:
                 raise ValueError("No parameter file path specified to save parameters.")
             param_file_path = self.param_file_path
-
+        # Remove 'target' parameter if it exists
+        self.parameters.pop('target', None)
         try:
             with open(param_file_path, 'w', encoding='utf-8') as file:
                 yaml.safe_dump(self.parameters, file)
