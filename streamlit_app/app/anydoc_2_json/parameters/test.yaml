@@ -1,16 +1,15 @@
 2pass_cleanup: 'yes'
-anonymization:
+anonymization: # not recommended
   email: redact
   organization: realistic
   person name: realistic
-document_title: SampleFile
-removeEmptyColumns: 'no'
+document_title: SampleFile # the title of your document here
 removeEmptyRows: 'yes'
 removeRowsWithString: ''
-removeTexts:
+removeTexts: # remove texts within 2 markers, can be more than 1 rule
 - end: end of line
-  start: '{{unchecked box}}'
-replaceFormControls: 'yes'
-replaceText:
+  start: '{{unchecked box}}' # {{unchecked box}} is an example of dynamic form field
+replaceFormControls: 'yes' 
+replaceText: # find and replace
 - from: '{{unchecked box}}'
   to: '{{unchecked box}}'
