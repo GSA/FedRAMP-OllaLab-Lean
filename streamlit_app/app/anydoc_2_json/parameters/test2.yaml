@@ -1,0 +1,11 @@
+2pass_cleanup: 'yes'
+document_title: SampleFile
+removeEmptyRows: 'yes'
+removeRowsWithString: ''
+removeTexts:
+- end: end of line
+  start: '{{unchecked box}}'
+replaceFormControls: 'yes'
+replaceText:
+- from: ''
+  to: ''
