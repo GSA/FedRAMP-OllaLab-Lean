@@ -965,29 +965,30 @@ class DocPreprocessor:
 
         if self.doc_type == 'docx':
             try:
-                for table in self.document.tables:
-                    # Determine the maximum number of cells in any row to set the column range
-                    max_num_cells = max(len(row.cells) for row in table.rows)
-                    cols_to_delete = []
-                    for col_idx in range(max_num_cells):
-                        is_empty = True
-                        for row in table.rows:
-                            # Check if the cell at the current column index exists in this row
-                            if col_idx < len(row.cells):
-                                cell = row.cells[col_idx]
-                                if cell.text.strip():
-                                    is_empty = False
-                                    break
-                        if is_empty:
-                            cols_to_delete.append(col_idx)
-                    # Delete columns from the rightmost to avoid index shifting
-                    for col_idx in sorted(cols_to_delete, reverse=True):
-                        for row in table.rows:
-                            if col_idx < len(row.cells):
-                                cell = row.cells[col_idx]
-                                # Remove cell's XML element
-                                cell._tc.getparent().remove(cell._tc)
-                    self.logger.info("Empty columns removed from tables successfully.")
+                # for table in self.document.tables:
+                #     # Determine the maximum number of cells in any row to set the column range
+                #     max_num_cells = max(len(row.cells) for row in table.rows)
+                #     cols_to_delete = []
+                #     for col_idx in range(max_num_cells):
+                #         is_empty = True
+                #         for row in table.rows:
+                #             # Check if the cell at the current column index exists in this row
+                #             if col_idx < len(row.cells):
+                #                 cell = row.cells[col_idx]
+                #                 if cell.text.strip():
+                #                     is_empty = False
+                #                     break
+                #         if is_empty:
+                #             cols_to_delete.append(col_idx)
+                #     # Delete columns from the rightmost to avoid index shifting
+                #     for col_idx in sorted(cols_to_delete, reverse=True):
+                #         for row in table.rows:
+                #             if col_idx < len(row.cells):
+                #                 cell = row.cells[col_idx]
+                #                 # Remove cell's XML element
+                #                 cell._tc.getparent().remove(cell._tc)
+                #     self.logger.info("Empty columns removed from tables successfully.")
+                pass
             except Exception as e:
                 self.logger.error(f"Error removing empty columns from tables: {e}")
                 raise Exception(f"Error removing empty columns from tables: {e}")

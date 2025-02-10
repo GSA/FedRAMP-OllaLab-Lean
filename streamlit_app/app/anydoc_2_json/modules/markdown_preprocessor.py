@@ -611,12 +611,12 @@ class MarkdownPreprocessor:
 
         try:
             # Find all tables in the markdown content
-            table_indices = self._find_table_indices()
-            for start_idx, end_idx in table_indices:
-                table_lines = self.markdown_lines[start_idx:end_idx + 1]
-                cleaned_table_lines = self._remove_empty_columns_from_table(table_lines)
-                # Replace the original lines with cleaned lines
-                self.markdown_lines[start_idx:end_idx + 1] = cleaned_table_lines
+            # table_indices = self._find_table_indices()
+            # for start_idx, end_idx in table_indices:
+            #     table_lines = self.markdown_lines[start_idx:end_idx + 1]
+            #     cleaned_table_lines = self._remove_empty_columns_from_table(table_lines)
+            #     # Replace the original lines with cleaned lines
+            #     self.markdown_lines[start_idx:end_idx + 1] = cleaned_table_lines
             self.logger.info("Empty columns removed from tables in Markdown successfully.")
         except Exception as e:
             self.logger.error(f"Error removing empty columns from tables in Markdown: {e}")

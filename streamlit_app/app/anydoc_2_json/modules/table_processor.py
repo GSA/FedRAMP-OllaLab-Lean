@@ -295,56 +295,55 @@ class TableProcessor:
         """
         Removes empty columns from the table.
 
+        Note: As per additional requirements, the column removal functionality is disabled.
+        This function does not alter the table and returns it unchanged.
+
         Parameters:
-            table (list of list of str):
-                The table represented as a list of rows, where each row is a list of cell strings.
+        table (list):
+            Type: list of list of str
+            Description: The table represented as a list of rows, where each row is a list of cell strings.
 
         Returns:
-            list of list of str:
-                The table after removing empty columns.
+        list:
+            Type: list of list of str
+            Description: The original table is returned without any modifications.
 
         Raises:
-            None
+        None
 
         Upstream functions:
-            - `remove_empty_rows_and_columns`: Calls this function to remove empty columns.
+        - Called by remove_empty_rows_and_columns() within this TableProcessor module.
 
         Downstream functions:
-            - None
+        - None
 
         Dependencies:
-            - None
+        - Requires that the table be provided as a list of rows.
+        - Uses self.logger to log a debug message.
         """
-        if not table:
-            return table
-
-        num_rows = len(table)
-        num_cols = max(len(row) for row in table)
-
-        # Pad rows with empty strings to have equal length
-        padded_table = [row + [''] * (num_cols - len(row)) for row in table]
-
-        # Transpose the table to get columns
-        columns = list(zip(*padded_table))
-
-        # Identify empty columns
-        columns_to_keep = []
-        for idx, col in enumerate(columns):
-            if len(col) <= 2:
-                columns_to_keep.append(idx)
-            else:
-                # Check if first cell is empty or not
-                remaining_cells = col[1:]
-                if all(cell.strip() == '' for cell in remaining_cells):
-                    continue  # Empty column
-                else:
-                    columns_to_keep.append(idx)
-
-        # Reconstruct table with columns to keep
-        new_columns = [columns[idx] for idx in columns_to_keep]
-        new_table = list(map(list, zip(*new_columns)))
-
-        return new_table
+        self.logger.info("Column removal is disabled per additional requirements. Returning original table.")
+        # The original code below was commented out to disable empty column removal:
+        # if not table:
+        #    return table
+        #
+        # num_rows = len(table)
+        # num_cols = max(len(row) for row in table)
+        # padded_table = [row + [''] * (num_cols - len(row)) for row in table]
+        # columns = list(zip(*padded_table))
+        # columns_to_keep = []
+        # for idx, col in enumerate(columns):
+        #     if len(col) <= 2:
+        #         columns_to_keep.append(idx)
+        #     else:
+        #         remaining_cells = col[1:]
+        #         if all(cell.strip() == '' for cell in remaining_cells):
+        #             continue  # Empty column
+        #         else:
+        #             columns_to_keep.append(idx)
+        # new_columns = [columns[idx] for idx in columns_to_keep]
+        # new_table = list(map(list, zip(*new_columns)))
+        # return new_table
+        return table
 
     def resolve_spanning_cells(self, table: list) -> list:
         """
