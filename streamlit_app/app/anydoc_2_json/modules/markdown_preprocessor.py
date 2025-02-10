@@ -499,6 +499,84 @@ class MarkdownPreprocessor:
             self.logger.error(f"Error adjusting dates in Markdown: {e}")
             raise Exception(f"Error adjusting dates in Markdown: {e}")
 
+    def remove_empty_rows_in_tables(self):
+    """
+    Remove empty rows from all tables in the markdown content.
+
+    This method finds all the tables in the markdown content and removes rows that are empty,
+    where "empty" means all cells in the row are empty or contain only whitespace.
+
+    Parameters:
+        None
+
+    Returns:
+        None
+
+    Raises:
+        Exception:
+            If there is an error during processing.
+
+    Upstream functions:
+        - `process_markdown()`: This method is called by the `process_markdown` method during markdown pre-processing.
+
+    Downstream functions:
+        - None
+
+    Dependencies:
+        - Requires `self.markdown_lines` to contain the markdown content as a list of lines.
+        - Uses `re` module for regular expressions.
+    """
+    try:
+        # Find all tables in the markdown content
+        table_indices = self._find_table_indices()
+        for start_idx, end_idx in table_indices:
+            table_lines = self.markdown_lines[start_idx:end_idx + 1]
+            cleaned_table_lines = self._remove_empty_rows_from_table(table_lines)
+            # Replace the original lines with cleaned lines
+            self.markdown_lines[start_idx:end_idx + 1] = cleaned_table_lines
+        self.logger.info("Empty rows removed from tables in Markdown successfully.")
+    except Exception as e:
+        self.logger.error(f"Error removing empty rows from tables in Markdown: {e}")
+        raise Exception(f"Error removing empty rows from tables in Markdown: {e}")
+
+    def _remove_empty_rows_from_table(self, table_lines: List[str]) -> List[str]:
+        """
+        Remove empty rows from a Markdown table.
+
+        Parameters:
+            table_lines (List[str]):
+                The lines of the table to process.
+
+        Returns:
+            List[str]:
+                The table lines after removing empty rows.
+
+        Raises:
+            None
+
+        Upstream functions:
+            - `remove_empty_rows_in_tables()`
+
+        Dependencies:
+            - Uses `re` module for regular expressions.
+        """
+        new_table_lines = []
+        for line in table_lines:
+            stripped_line = line.strip()
+            # Check if it's a separator line (e.g., '| --- | --- |')
+            if re.match(r'^\s*\|?\s*(?:---|\:?\-+\:)\s*\|?', stripped_line):
+                new_table_lines.append(line)
+                continue
+            # Split line into cells
+            cells = [cell.strip() for cell in stripped_line.strip('|').split('|')]
+            # Check if row is empty (all cells are empty)
+            if not any(cell for cell in cells):
+                self.logger.debug(f"Removing empty row: '{line.strip()}'")
+                continue  # Skip empty row
+            else:
+                new_table_lines.append(line)
+        return new_table_lines
+        
     def remove_rows_with_string_in_tables(self):
         """
         Remove rows containing a specific string from all tables in the markdown content.

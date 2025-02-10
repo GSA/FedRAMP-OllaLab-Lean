@@ -9,13 +9,13 @@ import json
 from pathlib import Path
 
 # Import modules
-from anydoc_2_json.modules.param_manager import ParamManager
-from anydoc_2_json.modules.logger_manager import LoggerManager
-from anydoc_2_json.modules.doc_preprocessor import DocPreprocessor
-from anydoc_2_json.modules.doc_converter import DocConverter
-from anydoc_2_json.modules.md_parser import MdParser
-from anydoc_2_json.modules.table_processor import TableProcessor
-from anydoc_2_json.modules.markdown_preprocessor import MarkdownPreprocessor
+from modules.param_manager import ParamManager
+from modules.logger_manager import LoggerManager
+from modules.doc_preprocessor import DocPreprocessor
+from modules.doc_converter import DocConverter
+from modules.md_parser import MdParser
+from modules.table_processor import TableProcessor
+from modules.markdown_preprocessor import MarkdownPreprocessor
 
 def parse_arguments():
     """
