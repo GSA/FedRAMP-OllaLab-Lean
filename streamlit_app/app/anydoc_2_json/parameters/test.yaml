@@ -3,10 +3,10 @@ anonymization:
   email: redact
   organization: realistic
   person name: realistic
-document_title: SSP-Appendix-A-Moderate-FedRAMP-Security-Controls(1)
+document_title: SampleFile
 removeEmptyColumns: 'no'
 removeEmptyRows: 'yes'
-removeRowsWithString: '{{unchecked box}}'
+removeRowsWithString: ''
 removeTexts:
 - end: end of line
   start: '{{unchecked box}}'

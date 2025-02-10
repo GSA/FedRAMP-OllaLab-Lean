@@ -3,7 +3,7 @@
 import os
 import re
 import datetime
-from typing import List
+from typing import List, Tuple
 from dateutil.parser import parse as parse_date, ParserError
 import datefinder
 from .param_manager import ParamManager
@@ -82,6 +82,85 @@ class MarkdownPreprocessor:
 
         self.load_markdown_file()
 
+    def _is_table_line(self, line: str) -> bool:
+        """
+        Checks if a line is part of a Markdown table.
+
+        Parameters:
+            line (str):
+                The line to check.
+
+        Returns:
+            bool:
+                True if the line is part of a table; False otherwise.
+
+        Raises:
+            None
+
+        Upstream functions:
+            - Called by `_find_table_indices`
+            - Called by `_remove_empty_rows_from_table`
+            - Called by `_remove_rows_with_string_from_table`
+
+        Downstream functions:
+            - None
+
+        Dependencies:
+            - Uses `re` module for regular expressions.
+        """
+        stripped_line = line.strip()
+        # Check if line contains '|' and starts or ends with '|'
+        return '|' in line and (stripped_line.startswith('|') or stripped_line.endswith('|'))
+
+    def _find_table_indices(self) -> List[Tuple[int, int]]:
+        """
+        Identify the start and end indices of all tables in the markdown content.
+
+        Parameters:
+            None
+
+        Returns:
+            List[Tuple[int, int]]:
+                A list of (start_index, end_index) tuples where each tuple represents the indices of the start and end of a table in `self.markdown_lines`.
+
+        Raises:
+            None
+
+        Upstream functions:
+            - Called by `remove_empty_rows_in_tables`
+            - Called by `remove_rows_with_string_in_tables`
+            - Called by `remove_empty_columns_in_tables`
+
+        Downstream functions:
+            - `_is_table_line`
+
+        Dependencies:
+            - Requires `self.markdown_lines` to contain the markdown content as a list of lines.
+            - Uses `re` module for regular expressions.
+            - Relies on `_is_table_line` to detect table lines.
+        """
+        table_indices = []
+        in_table = False
+        start_idx = None
+        for idx, line in enumerate(self.markdown_lines):
+            if self._is_table_line(line):
+                if not in_table:
+                    # Start of a new table
+                    in_table = True
+                    start_idx = idx
+            else:
+                if in_table:
+                    # End of the current table
+                    in_table = False
+                    end_idx = idx - 1
+                    table_indices.append((start_idx, end_idx))
+                    start_idx = None
+        # Check if we ended while still in a table
+        if in_table and start_idx is not None:
+            end_idx = len(self.markdown_lines) - 1
+            table_indices.append((start_idx, end_idx))
+        return table_indices
+        
     def load_markdown_file(self):
         """
         Load the Markdown file content into a list of lines.
@@ -500,44 +579,44 @@ class MarkdownPreprocessor:
             raise Exception(f"Error adjusting dates in Markdown: {e}")
 
     def remove_empty_rows_in_tables(self):
-    """
-    Remove empty rows from all tables in the markdown content.
+        """
+        Remove empty rows from all tables in the markdown content.
 
-    This method finds all the tables in the markdown content and removes rows that are empty,
-    where "empty" means all cells in the row are empty or contain only whitespace.
+        This method finds all the tables in the markdown content and removes rows that are empty,
+        where "empty" means all cells in the row are empty or contain only whitespace.
 
-    Parameters:
-        None
+        Parameters:
+            None
 
-    Returns:
-        None
+        Returns:
+            None
 
-    Raises:
-        Exception:
-            If there is an error during processing.
+        Raises:
+            Exception:
+                If there is an error during processing.
 
-    Upstream functions:
-        - `process_markdown()`: This method is called by the `process_markdown` method during markdown pre-processing.
+        Upstream functions:
+            - `process_markdown()`: This method is called by the `process_markdown` method during markdown pre-processing.
 
-    Downstream functions:
-        - None
+        Downstream functions:
+            - None
 
-    Dependencies:
-        - Requires `self.markdown_lines` to contain the markdown content as a list of lines.
-        - Uses `re` module for regular expressions.
-    """
-    try:
-        # Find all tables in the markdown content
-        table_indices = self._find_table_indices()
-        for start_idx, end_idx in table_indices:
-            table_lines = self.markdown_lines[start_idx:end_idx + 1]
-            cleaned_table_lines = self._remove_empty_rows_from_table(table_lines)
-            # Replace the original lines with cleaned lines
-            self.markdown_lines[start_idx:end_idx + 1] = cleaned_table_lines
-        self.logger.info("Empty rows removed from tables in Markdown successfully.")
-    except Exception as e:
-        self.logger.error(f"Error removing empty rows from tables in Markdown: {e}")
-        raise Exception(f"Error removing empty rows from tables in Markdown: {e}")
+        Dependencies:
+            - Requires `self.markdown_lines` to contain the markdown content as a list of lines.
+            - Uses `re` module for regular expressions.
+        """
+        try:
+            # Find all tables in the markdown content
+            table_indices = self._find_table_indices()
+            for start_idx, end_idx in table_indices:
+                table_lines = self.markdown_lines[start_idx:end_idx + 1]
+                cleaned_table_lines = self._remove_empty_rows_from_table(table_lines)
+                # Replace the original lines with cleaned lines
+                self.markdown_lines[start_idx:end_idx + 1] = cleaned_table_lines
+            self.logger.info("Empty rows removed from tables in Markdown successfully.")
+        except Exception as e:
+            self.logger.error(f"Error removing empty rows from tables in Markdown: {e}")
+            raise Exception(f"Error removing empty rows from tables in Markdown: {e}")
 
     def _remove_empty_rows_from_table(self, table_lines: List[str]) -> List[str]:
         """
@@ -576,7 +655,7 @@ class MarkdownPreprocessor:
             else:
                 new_table_lines.append(line)
         return new_table_lines
-        
+
     def remove_rows_with_string_in_tables(self):
         """
         Remove rows containing a specific string from all tables in the markdown content.
