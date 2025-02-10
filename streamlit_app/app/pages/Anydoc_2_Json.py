@@ -344,24 +344,53 @@ def remove_texts_step():
     Dependencies:
         - Streamlit inputs
         - ParamManager
+
+    Updated Behavior:
+        - Loads existing 'removeTexts' rules from param_manager and displays them.
+        - Allows the user to edit existing rules or add new ones.
+        - Displays note about supported special markers (e.g., 'end of line').
+
     """
     st.subheader("3.2 Remove Texts Between Markers")
-    remove_text_option = st.radio("Do you want to remove texts between markers?", options=["Skip this step", "Add text removal rule"], key="remove_text_option")
-    if remove_text_option == "Add text removal rule":
-        remove_texts = []
-        num_rules = st.number_input("How many text removal rules do you want to add?", min_value=1, step=1, key="remove_text_num_rules")
+    param_manager = st.session_state['param_manager']
+    remove_texts = param_manager.get_parameter('removeTexts', [])
+    remove_text_option = st.radio(
+        "Do you want to remove texts between markers?",
+        options=["Skip this step", "Add or edit text removal rules"],
+        key="remove_text_option"
+    )
+    if remove_text_option == "Add or edit text removal rules":
+        st.write("Note: Supported special markers include 'end of line' (enter 'end of line').")
+        remove_texts = remove_texts if isinstance(remove_texts, list) else []
+        num_existing_rules = len(remove_texts)
+        num_rules = st.number_input(
+            "Number of text removal rules",
+            min_value=1,
+            value=num_existing_rules if num_existing_rules > 0 else 1,
+            step=1,
+            key="remove_text_num_rules"
+        )
+        rules = []
         for i in range(num_rules):
             st.write(f"Rule {i+1}")
             col1, col2 = st.columns(2)
             with col1:
-                start_marker = st.text_input("Start marker", key=f"remove_text_start_{i}")
+                start_marker = st.text_input(
+                    "Start marker",
+                    value=remove_texts[i]['start'] if i < num_existing_rules else '',
+                    key=f"remove_text_start_{i}"
+                )
             with col2:
-                end_marker = st.text_input("End marker", key=f"remove_text_end_{i}")
+                end_marker = st.text_input(
+                    "End marker",
+                    value=remove_texts[i]['end'] if i < num_existing_rules else '',
+                    key=f"remove_text_end_{i}"
+                )
             if start_marker and end_marker:
-                remove_texts.append({'start': start_marker, 'end': end_marker})
-        st.session_state['param_manager'].set_parameter('removeTexts', remove_texts)
-        st.session_state['param_manager'].save_parameters()
-        st.success("Text removal rules added.")
+                rules.append({'start': start_marker, 'end': end_marker})
+        param_manager.set_parameter('removeTexts', rules)
+        param_manager.save_parameters()
+        st.success("Text removal rules updated.")
     else:
         st.write("Skipping removing texts between markers.")
 
@@ -369,6 +398,9 @@ def find_and_replace_texts_step():
     """
     Handles the Find and Replace Texts pre-processing step.
 
+    This function loads existing 'replaceText' rules from the ParamManager and displays them in the UI.
+    It allows the user to edit existing rules or add new ones, and updates the ParamManager accordingly.
+
     Parameters:
         None
 
@@ -379,32 +411,67 @@ def find_and_replace_texts_step():
         None
 
     Upstream functions:
-        - Called by pre_conversion_processing()
+        - pre_conversion_processing()
 
     Downstream functions:
-        - Updates param_manager
+        - param_manager.get_parameter()
+        - param_manager.set_parameter()
+        - param_manager.save_parameters()
+        - Streamlit UI elements:
+            - st.subheader()
+            - st.radio()
+            - st.number_input()
+            - st.text_input()
+            - st.columns()
+            - st.write()
+            - st.success()
+            - st.session_state
 
     Dependencies:
-        - Streamlit inputs
-        - ParamManager
+        - st.session_state['param_manager'] (ParamManager): Must be initialized and stored in the session state.
+        - The 'replaceText' parameter in ParamManager is expected to be a list of dictionaries with 'from' and 'to' keys.
+        - Streamlit (imported as 'st'): Required for UI elements.
+        - st.session_state: Must be properly initialized.
     """
     st.subheader("3.3 Find and Replace Texts")
-    replace_text_option = st.radio("Do you want to find and replace texts?", options=["Skip this step", "Add text replacement rule"], key="replace_text_option")
-    if replace_text_option == "Add text replacement rule":
-        replace_texts = []
-        num_rules = st.number_input("How many text replacement rules do you want to add?", min_value=1, step=1, key="replace_text_num_rules")
+    param_manager = st.session_state['param_manager']
+    replace_texts = param_manager.get_parameter('replaceText', [])
+    replace_text_option = st.radio(
+        "Do you want to find and replace texts?",
+        options=["Skip this step", "Add or edit text replacement rules"],
+        key="replace_text_option"
+    )
+    if replace_text_option == "Add or edit text replacement rules":
+        replace_texts = replace_texts if isinstance(replace_texts, list) else []
+        num_existing_rules = len(replace_texts)
+        num_rules = st.number_input(
+            "Number of text replacement rules",
+            min_value=1,
+            value=num_existing_rules if num_existing_rules > 0 else 1,
+            step=1,
+            key="replace_text_num_rules"
+        )
+        rules = []
         for i in range(num_rules):
             st.write(f"Rule {i+1}")
             col1, col2 = st.columns(2)
             with col1:
-                find_text = st.text_input("Find", key=f"replace_text_find_{i}")
+                find_text = st.text_input(
+                    "Find",
+                    value=replace_texts[i]['from'] if i < num_existing_rules else '',
+                    key=f"replace_text_find_{i}"
+                )
             with col2:
-                replace_with = st.text_input("Replace", key=f"replace_text_replace_{i}")
+                replace_with = st.text_input(
+                    "Replace",
+                    value=replace_texts[i]['to'] if i < num_existing_rules else '',
+                    key=f"replace_text_replace_{i}"
+                )
             if find_text is not None:
-                replace_texts.append({'from': find_text, 'to': replace_with})
-        st.session_state['param_manager'].set_parameter('replaceText', replace_texts)
-        st.session_state['param_manager'].save_parameters()
-        st.success("Text replacement rules added.")
+                rules.append({'from': find_text, 'to': replace_with})
+        param_manager.set_parameter('replaceText', rules)
+        param_manager.save_parameters()
+        st.success("Text replacement rules updated.")
     else:
         st.write("Skipping find and replace texts.")
 
@@ -412,6 +479,9 @@ def anonymize_texts_step():
     """
     Handles the Anonymize Texts pre-processing step.
 
+    This function loads existing 'anonymization' rules from the ParamManager and displays them in the UI.
+    It allows the user to edit existing rules or add new ones, and updates the ParamManager accordingly.
+
     Parameters:
         None
 
@@ -422,28 +492,51 @@ def anonymize_texts_step():
         None
 
     Upstream functions:
-        - Called by pre_conversion_processing()
+        - pre_conversion_processing()
 
     Downstream functions:
-        - Updates param_manager
+        - param_manager.get_parameter()
+        - param_manager.set_parameter()
+        - param_manager.save_parameters()
+        - Streamlit UI elements:
+            - st.subheader()
+            - st.radio()
+            - st.write()
+            - st.selectbox()
+            - st.success()
+            - st.session_state
 
     Dependencies:
-        - Streamlit inputs
-        - ParamManager
+        - st.session_state['param_manager'] (ParamManager): Must be initialized and stored in the session state.
+        - The 'anonymization' parameter in ParamManager is expected to be a dictionary with categories as keys and methods as values.
+        - Streamlit (imported as 'st'): Required for UI elements.
+        - st.session_state: Must be properly initialized.
     """
     st.subheader("3.4 Anonymize Texts")
-    anonymize_option = st.radio("Do you want to anonymize texts?", options=["Skip this step", "Add anonymization rule"], key="anonymize_option")
-    if anonymize_option == "Add anonymization rule":
-        anonymization = {}
+    param_manager = st.session_state['param_manager']
+    existing_anonymization = param_manager.get_parameter('anonymization', {})
+    anonymize_option = st.radio(
+        "Do you want to anonymize texts?",
+        options=["Skip this step", "Add or edit anonymization rules"],
+        key="anonymize_option"
+    )
+    if anonymize_option == "Add or edit anonymization rules":
         categories = ['email', 'person name', 'organization']
         methods = ['redact', 'jibberish', 'realistic']
+        anonymization = {}
         for category in categories:
             st.write(f"Anonymization for {category}:")
-            method = st.selectbox(f"Select method", methods, key=f"anonymize_{category}")
+            current_method = existing_anonymization.get(category, methods[0])
+            method = st.selectbox(
+                f"Select method for {category}",
+                methods,
+                index=methods.index(current_method) if current_method in methods else 0,
+                key=f"anonymize_{category}"
+            )
             anonymization[category] = method
-        st.session_state['param_manager'].set_parameter('anonymization', anonymization)
-        st.session_state['param_manager'].save_parameters()
-        st.success("Anonymization rules added.")
+        param_manager.set_parameter('anonymization', anonymization)
+        param_manager.save_parameters()
+        st.success("Anonymization rules updated.")
     else:
         st.write("Skipping anonymization.")
 
@@ -451,6 +544,9 @@ def adjust_dates_step():
     """
     Handles the Adjust Dates pre-processing step.
 
+    This function loads existing 'adjustDates' rule from the ParamManager and displays it in the UI.
+    It allows the user to edit the existing rule or define a new one, and updates the ParamManager accordingly.
+
     Parameters:
         None
 
@@ -461,26 +557,62 @@ def adjust_dates_step():
         None
 
     Upstream functions:
-        - Called by pre_conversion_processing()
+        - pre_conversion_processing()
 
     Downstream functions:
-        - Updates param_manager
+        - param_manager.get_parameter()
+        - param_manager.set_parameter()
+        - param_manager.save_parameters()
+        - Streamlit UI elements:
+            - st.subheader()
+            - st.radio()
+            - st.selectbox()
+            - st.number_input()
+            - st.success()
+            - st.session_state
 
     Dependencies:
-        - Streamlit inputs
-        - ParamManager
+        - st.session_state['param_manager'] (ParamManager): Must be initialized and stored in the session state.
+        - The 'adjustDates' parameter in ParamManager is expected to be a dictionary with a single key (e.g., 'add', 'subtract') and an integer value.
+        - Streamlit (imported as 'st'): Required for UI elements.
+        - st.session_state: Must be properly initialized.
     """
     st.subheader("3.5 Adjust Dates")
-    adjust_dates_option = st.radio("Do you want to adjust dates?", options=["Skip this step", "Add date adjustment rule"], key="adjust_dates_option")
-    if adjust_dates_option == "Add date adjustment rule":
+    param_manager = st.session_state['param_manager']
+    existing_adjust_dates = param_manager.get_parameter('adjustDates', {})
+    adjust_dates_option = st.radio(
+        "Do you want to adjust dates?",
+        options=["Skip this step", "Add or edit date adjustment rule"],
+        key="adjust_dates_option"
+    )
+    if adjust_dates_option == "Add or edit date adjustment rule":
         methods = {'Add days': 'add', 'Subtract days': 'subtract', 'Days before now': 'daysBefore', 'Days after now': 'daysAfter'}
-        method_option = st.selectbox("Select adjustment method", list(methods.keys()), key="adjust_dates_method")
-        days_value = st.number_input("Number of days", min_value=1, step=1, key="adjust_dates_days")
+        inverse_methods = {v: k for k, v in methods.items()}
+        if existing_adjust_dates:
+            method_key = next(iter(existing_adjust_dates.keys()))
+            days_value = existing_adjust_dates[method_key]
+            method_name = inverse_methods.get(method_key, 'Add days')
+        else:
+            method_name = 'Add days'
+            days_value = 1
+        method_option = st.selectbox(
+            "Select adjustment method",
+            list(methods.keys()),
+            index=list(methods.keys()).index(method_name),
+            key="adjust_dates_method"
+        )
+        days_value = st.number_input(
+            "Number of days",
+            min_value=1,
+            value=days_value,
+            step=1,
+            key="adjust_dates_days"
+        )
         if days_value:
             adjust_dates = {methods[method_option]: int(days_value)}
-            st.session_state['param_manager'].set_parameter('adjustDates', adjust_dates)
-            st.session_state['param_manager'].save_parameters()
-            st.success("Date adjustment rule added.")
+            param_manager.set_parameter('adjustDates', adjust_dates)
+            param_manager.save_parameters()
+            st.success("Date adjustment rule updated.")
     else:
         st.write("Skipping adjust dates.")
 
@@ -518,9 +650,6 @@ def convert_document():
             # If pre-processing was done, use the processed file
             if st.session_state.get('preprocessing_done', False):
                 processed_file_path = os.path.join(st.session_state['result_folder'], st.session_state['uploaded_file'].name)
-                param_manager.set_parameter('target', processed_file_path)
-            else:
-                param_manager.set_parameter('target', input_file_path)
             st.write("Converting document...")
             # Ask for document title
             default_title = os.path.splitext(st.session_state['uploaded_file'].name)[0]
@@ -662,5 +791,48 @@ def process_tables():
             st.error(f"Error during table processing: {e}")
             st.session_state['logger_manager'].log_exception(e, "Error during table processing")
 
+def replace_form_controls_step():
+    """
+    Handles the Replace Form Controls pre-processing step.
+
+    Parameters:
+        None
+
+    Returns:
+        None
+
+    Raises:
+        None
+
+    Upstream functions:
+        - Called by pre_conversion_processing()
+
+    Downstream functions:
+        - Updates param_manager
+
+    Dependencies:
+        - Streamlit inputs
+        - ParamManager
+
+    """
+    st.subheader("3.1 Replace Interactive Form Controls")
+
+    # Get the current value from param_manager
+    param_manager = st.session_state['param_manager']
+    current_value = param_manager.get_parameter('replaceFormControls', 'yes')
+
+    # Map 'yes'/'no' to index for options
+    options = ["yes", "no"]
+    index = options.index(current_value) if current_value in options else 0
+
+    replace_form_controls = st.radio("Replace interactive form controls?", options=options, index=index)
+
+    param_manager.set_parameter('replaceFormControls', replace_form_controls)
+    param_manager.save_parameters()
+
+    if replace_form_controls == 'yes':
+        st.write("The program will replace interactive form controls with text strings.")
+    else:
+        st.write("The program will skip replacing interactive form controls.")
 if __name__ == '__main__':
     main()

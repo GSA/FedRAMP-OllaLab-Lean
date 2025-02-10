@@ -43,7 +43,7 @@ def parse_arguments():
             Description: Path to the target file (mandatory). This should be a DOCX or PDF file.
         --param, -p:
             Type: str
-            Description: Path to the parameter file (mandatory). This parameter file must already exist.
+            Description: Path to the parameter YAML file. The file must already exist.
     """
     parser = argparse.ArgumentParser(description='AnyDoc to JSON CLI Application.')
     parser.add_argument('--target', '-t', required=True, help='Path to the target DOCX or PDF file.')
@@ -291,18 +291,19 @@ def main():
     """
     Main function for the AnyDoc to JSON CLI application.
 
-    This function orchestrates the entire process of converting an unstructured document
+    The function orchestrates the entire process of converting an unstructured document
     (DOCX or PDF) into a structured JSON file, following the specified steps:
 
     1. Parse command-line arguments.
     2. Validate provided parameters and files.
     3. Initialize logging and parameter management.
     4. Create result folder and copy the target file.
-    5. Perform pre-conversion processing steps as per the parameter file.
-    6. Convert the document to Markdown using Docling.
-    7. Extract structured data from the Markdown file.
-    8. Process tables and enrich the JSON data.
-    9. Save the resulting JSON files to the result folder.
+    5. Validate parameters using ParamManager.validate_parameters().
+    6. Perform pre-conversion processing steps as per the parameter file.
+    7. Convert the document to Markdown using Docling.
+    8. Extract structured data from the Markdown file.
+    9. Process tables and enrich the JSON data.
+    10. Save the resulting JSON files to the result folder.
 
     Parameters:
         None
@@ -320,6 +321,7 @@ def main():
     Downstream functions:
         - parse_arguments()
         - validate_files()
+        - param_manager.validate_parameters()
         - perform_pre_processing()
         - convert_document()
         - extract_structured_data()
@@ -372,6 +374,18 @@ def main():
 
         # Update 'target' parameter in param_manager
         param_manager.set_parameter('target', target_file_in_result_folder)
+
+        # Validate parameters
+        try:
+            param_manager.validate_parameters()
+        except ValueError as ve:
+            print(f"Parameter validation error: {ve}")
+            logger.error(f"Parameter validation error: {ve}")
+            sys.exit(1)
+        except Exception as e:
+            logger_manager.log_exception(e, "An error occurred during parameter validation.")
+            print(f"An error occurred during parameter validation: {e}")
+            sys.exit(1)
 
         # Perform pre-processing
         perform_pre_processing(input_file_path=target_file_in_result_folder,

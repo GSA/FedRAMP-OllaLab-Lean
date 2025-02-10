@@ -228,9 +228,6 @@ class ParamManager:
             - None
 
         """
-        # Validate mandatory 'target' parameter
-        if not self.parameters.get('target'):
-            raise ValueError("Mandatory parameter 'target' is missing.")
 
         # Validate 'replaceFormControls'
         replace_form_controls = self.parameters.get('replaceFormControls', 'yes')
