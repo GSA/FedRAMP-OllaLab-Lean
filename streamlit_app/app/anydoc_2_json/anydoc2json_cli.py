@@ -51,8 +51,72 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='AnyDoc to JSON CLI Application.')
     parser.add_argument('--target', '-t', required=True, help='Path to the target DOCX, DOC, or PDF file.')
     parser.add_argument('--param', '-p', required=True, help='Path to the parameter YAML file.')
+    parser.add_argument('--output', '-o', required=False, default='app_data/anydoc_2_json/', help='Path to the folder where output folders will be stored.')
     args = parser.parse_args()
     return args
+
+def validate_target(target_path: str) -> list:
+    """
+    Validates the target path, which can be a file or a directory, and collects applicable files.
+
+    Parameters:
+        target_path (str):
+            The path to the target DOCX, DOC, or PDF file, or directory containing them.
+
+    Returns:
+        List[str]:
+            A list of valid file paths to process.
+
+    Raises:
+        SystemExit:
+            If the target path does not exist or contains no valid files.
+            - If the target path does not exist.
+            - If the target is a directory but contains no valid files with supported extensions.
+
+    Upstream functions:
+        - Called by main() to validate and collect target files.
+
+    Downstream functions:
+        - None
+
+    Dependencies:
+        - os.path.exists() to check if the path exists.
+        - os.path.isfile() and os.path.isdir() to check the type of the path.
+        - os.walk() to traverse directories.
+        - os.path.splitext() to get file extensions.
+
+    Notes:
+        - Supported file extensions are '.docx', '.doc', and '.pdf'.
+        - If the target is a file, it must have a supported extension.
+        - If the target is a directory, all files with supported extensions within it (and subdirectories) are collected.
+    """
+    import os
+    import sys
+    if not os.path.exists(target_path):
+        print(f"Error: Target path '{target_path}' does not exist.")
+        sys.exit(1)
+    files_to_process = []
+    if os.path.isfile(target_path):
+        _, file_extension = os.path.splitext(target_path)
+        if file_extension.lower() in ['.docx', '.pdf', '.doc']:
+            files_to_process.append(target_path)
+        else:
+            print(f"Error: Target file '{target_path}' must be a DOCX, DOC, or PDF file.")
+            sys.exit(1)
+    elif os.path.isdir(target_path):
+        # List all files in the directory
+        for root, dirs, files in os.walk(target_path):
+            for file in files:
+                _, file_extension = os.path.splitext(file)
+                if file_extension.lower() in ['.docx', '.pdf', '.doc']:
+                    files_to_process.append(os.path.join(root, file))
+        if not files_to_process:
+            print(f"Error: No DOCX, DOC, or PDF files found in directory '{target_path}'.")
+            sys.exit(1)
+    else:
+        print(f"Error: Target path '{target_path}' is neither a file nor a directory.")
+        sys.exit(1)
+    return files_to_process
 
 def validate_files(target_file_path: str, param_file_path: str):
     """
@@ -402,20 +466,23 @@ def main():
     """
     Main function for the AnyDoc to JSON CLI application.
 
-    This function orchestrates the entire process of converting an unstructured document
-    (DOCX or PDF) into a structured JSON file, following the specified steps:
+    This function orchestrates the entire process of converting unstructured documents
+    (DOCX or PDF) into structured JSON files, following the specified steps:
 
     1. Parse command-line arguments.
-    2. Validate provided parameters and files.
-    3. Initialize logging and parameter management.
-    4. Create result folder and copy the target file.
-    5. Convert DOC files to DOCX if necessary.
-    6. Perform pre-conversion processing steps as per the parameter file.
-    7. Convert the document to Markdown using Docling.
-    8. Perform post-conversion processing (2-pass cleanup) if specified.
-    9. Extract structured data from the Markdown file.
-    10. Process tables and enrich the JSON data.
-    11. Save the resulting JSON files to the result folder.
+    2. Validate provided parameters and target path.
+    3. For each file in target path:
+        - Initialize parameter management.
+        - Create result folder in the specified output directory.
+        - Initialize logging for that file.
+        - Copy the target file to the result folder.
+        - Convert DOC files to DOCX if necessary.
+        - Perform pre-conversion processing steps as per the parameter file.
+        - Convert the document to Markdown using Docling.
+        - Perform post-conversion processing (2-pass cleanup) if specified.
+        - Extract structured data from the Markdown file.
+        - Process tables and enrich the JSON data.
+        - Save the resulting JSON files to the result folder.
 
     Parameters:
         None
@@ -432,7 +499,9 @@ def main():
 
     Downstream functions:
         - parse_arguments()
-        - validate_files()
+        - validate_target()
+        - ParamManager()
+        - LoggerManager()
         - convert_doc_to_docx()
         - perform_pre_processing()
         - convert_document()
@@ -441,105 +510,100 @@ def main():
         - process_tables()
 
     Dependencies:
-        - Requires the modules:
-            - os
-            - sys
-            - argparse
-            - datetime
-            - shutil
-            - json
-            - AnyDoc to JSON modules:
-                - param_manager
-                - logger_manager
-                - doc_preprocessor
-                - doc_converter
-                - md_parser
-                - table_processor
-                - markdown_preprocessor
+        - os, sys, argparse, datetime, shutil, json modules.
+        - modules.param_manager.ParamManager
+        - modules.logger_manager.LoggerManager
+        - Custom functions defined in the script.
     """
+    import os
+    import sys
+    import datetime
+    import shutil
+
     # Parse command-line arguments
     args = parse_arguments()
 
-    # Validate files
-    validate_files(args.target, args.param)
+    # Validate target and get list of files to process
+    files_to_process = validate_target(args.target)
 
-    # Initialize param_manager
-    param_manager = ParamManager(param_file_path=args.param)
+    # For each file in files_to_process
+    for file_path in files_to_process:
+        try:
+            # Initialize param_manager for this file
+            param_manager = ParamManager(param_file_path=args.param)
 
-    # Initialize logger_manager with log file in result folder
-    # Create result folder
-    timestamp = datetime.datetime.now().strftime("%Y%m%d%H")  # only use the hour
-    target_file_name = os.path.splitext(os.path.basename(args.target))[0]
-    result_folder_name = f"{target_file_name}_{timestamp}"
-    result_folder = os.path.join('app_data', 'anydoc_2_json', result_folder_name)
-    os.makedirs(result_folder, exist_ok=True)
+            # Get base name of the file
+            base_file_name = os.path.splitext(os.path.basename(file_path))[0]
+            # Create result folder in the output directory
+            timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")  # include seconds for uniqueness
+            result_folder_name = f"{base_file_name}_{timestamp}"
+            result_folder = os.path.join(args.output, result_folder_name)
+            os.makedirs(result_folder, exist_ok=True)
 
-    # Initialize logger_manager
-    log_file_path = os.path.join(result_folder, 'processing.log')
-    logger_manager = LoggerManager(log_file_path=log_file_path)
-    logger = logger_manager.get_logger()
+            # Initialize logger_manager for this file
+            log_file_path = os.path.join(result_folder, 'processing.log')
+            logger_manager = LoggerManager(log_file_path=log_file_path)
+            logger = logger_manager.get_logger()
 
-    try:
-        # Copy target file to result folder
-        target_file_extension = os.path.splitext(args.target)[1].lower()
-        target_file_in_result_folder = os.path.join(result_folder, os.path.basename(args.target))
-        shutil.copy(args.target, target_file_in_result_folder)
-        logger.info(f"Copied target file to {target_file_in_result_folder}")
+            # Copy target file to result folder
+            target_file_extension = os.path.splitext(file_path)[1].lower()
+            target_file_in_result_folder = os.path.join(result_folder, os.path.basename(file_path))
+            shutil.copy(file_path, target_file_in_result_folder)
+            logger.info(f"Copied target file to {target_file_in_result_folder}")
 
-        # If the target file is a .doc file, convert it to .docx
-        if target_file_extension == '.doc':
-            logger.info(f"Converting '{target_file_in_result_folder}' to DOCX format.")
-            input_file_path = convert_doc_to_docx(target_file_in_result_folder, result_folder)
-            logger.info(f"Conversion completed. New file: '{input_file_path}'")
-            # Remove the original .doc file from the result folder
-            os.remove(target_file_in_result_folder)
-            logger.info(f"Removed original .doc file '{target_file_in_result_folder}'")
-        else:
-            input_file_path = target_file_in_result_folder
+            # If the target file is a .doc file, convert it to .docx
+            if target_file_extension == '.doc':
+                logger.info(f"Converting '{target_file_in_result_folder}' to DOCX format.")
+                input_file_path = convert_doc_to_docx(target_file_in_result_folder, result_folder)
+                logger.info(f"Conversion completed. New file: '{input_file_path}'")
+                # Remove the original .doc file from the result folder
+                os.remove(target_file_in_result_folder)
+                logger.info(f"Removed original .doc file '{target_file_in_result_folder}'")
+            else:
+                input_file_path = target_file_in_result_folder
 
-        # Update 'target' parameter in param_manager
-        param_manager.set_parameter('target', input_file_path)
+            # Update 'target' parameter in param_manager
+            param_manager.set_parameter('target', input_file_path)
 
-        # Perform pre-processing
-        perform_pre_processing(input_file_path=input_file_path,
-                               output_folder=result_folder,
-                               param_manager=param_manager,
-                               logger_manager=logger_manager)
+            # Perform pre-processing
+            perform_pre_processing(input_file_path=input_file_path,
+                                   output_folder=result_folder,
+                                   param_manager=param_manager,
+                                   logger_manager=logger_manager)
 
-        # Convert document
-        markdown_file_path = convert_document(input_file_path=input_file_path,
-                                              output_folder=result_folder,
-                                              param_manager=param_manager,
-                                              logger_manager=logger_manager)
+            # Convert document
+            markdown_file_path = convert_document(input_file_path=input_file_path,
+                                                  output_folder=result_folder,
+                                                  param_manager=param_manager,
+                                                  logger_manager=logger_manager)
 
-        # Perform Markdown post-processing (2-pass cleanup) if specified
-        perform_markdown_preprocessing(markdown_file_path=markdown_file_path,
-                                       param_manager=param_manager,
-                                       logger_manager=logger_manager)
+            # Perform Markdown post-processing (2-pass cleanup) if specified
+            perform_markdown_preprocessing(markdown_file_path=markdown_file_path,
+                                           param_manager=param_manager,
+                                           logger_manager=logger_manager)
 
-        # Base file name
-        base_file_name = os.path.splitext(os.path.basename(input_file_path))[0]
+            # Base file name for output files
+            base_file_name = os.path.splitext(os.path.basename(input_file_path))[0]
 
-        # Extract structured data
-        json_data = extract_structured_data(markdown_file_path=markdown_file_path,
-                                            output_folder=result_folder,
-                                            logger_manager=logger_manager,
-                                            base_file_name=base_file_name)
+            # Extract structured data
+            json_data = extract_structured_data(markdown_file_path=markdown_file_path,
+                                                output_folder=result_folder,
+                                                logger_manager=logger_manager,
+                                                base_file_name=base_file_name)
 
-        # Process tables
-        process_tables(json_data=json_data,
-                       output_folder=result_folder,
-                       logger_manager=logger_manager,
-                       base_file_name=base_file_name)
+            # Process tables
+            process_tables(json_data=json_data,
+                           output_folder=result_folder,
+                           logger_manager=logger_manager,
+                           base_file_name=base_file_name)
 
-        logger.info("Processing completed successfully.")
-        print("Processing completed successfully.")
-        print(f"Results are saved in {result_folder}")
+            logger.info(f"Processing completed successfully for '{file_path}'.")
+            print(f"Processing completed successfully for '{file_path}'. Results are saved in {result_folder}")
 
-    except Exception as e:
-        logger_manager.log_exception(e, "An error occurred during processing.")
-        print(f"An error occurred: {e}")
-        sys.exit(1)
+        except Exception as e:
+            logger_manager.log_exception(e, f"An error occurred while processing '{file_path}'.")
+            print(f"An error occurred while processing '{file_path}': {e}")
+            continue  # Continue with the next file
 
 if __name__ == "__main__":
     main()
