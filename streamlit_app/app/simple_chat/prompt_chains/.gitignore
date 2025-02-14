@@ -1,0 +1,3 @@
+*.json
+!*_promptchains.json
+my*.json
