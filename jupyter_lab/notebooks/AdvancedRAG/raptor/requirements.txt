@@ -9,3 +9,4 @@ torch
 transformers==4.38.1
 umap-learn==0.5.5
 urllib3==1.26.6 
+setuptools>=78.1.1 # not directly required, pinned by Snyk to avoid a vulnerability
