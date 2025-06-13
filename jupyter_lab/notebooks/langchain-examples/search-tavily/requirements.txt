@@ -2,3 +2,4 @@ streamlit==1.33.0
 langchain==0.1.16
 langchain-community==0.0.32
 tavily-python==0.3.3
+requests>=2.32.4 # not directly required, pinned by Snyk to avoid a vulnerability
