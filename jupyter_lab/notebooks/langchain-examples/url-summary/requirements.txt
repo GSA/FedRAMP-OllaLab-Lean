@@ -9,3 +9,4 @@ pdf2image==1.17.0
 pytesseract==0.3.10
 pytube==15.0.0
 youtube-transcript-api==0.6.2
+requests>=2.32.4 # not directly required, pinned by Snyk to avoid a vulnerability
