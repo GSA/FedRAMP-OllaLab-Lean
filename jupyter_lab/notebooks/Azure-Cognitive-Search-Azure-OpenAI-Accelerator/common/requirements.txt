@@ -27,3 +27,4 @@ pydantic==1.10.13
 fastapi
 
 
+zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
