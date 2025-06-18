@@ -27,3 +27,5 @@ pydantic==1.10.13
 fastapi
 
 
+protobuf>=4.25.8 # not directly required, pinned by Snyk to avoid a vulnerability
+requests>=2.32.4 # not directly required, pinned by Snyk to avoid a vulnerability
